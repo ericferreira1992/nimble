@@ -1,0 +1,12 @@
+{
+    "name": "mistic",
+    "version": "1.0.0",
+    "scripts": {},
+    "private": true,
+    "dependencies": {
+        "@webcomponents/custom-elements": "^1.3.0"
+    },
+    "devDependencies": {
+        "@types/node": "^12.12.7"
+    }
+}

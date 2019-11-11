@@ -1,0 +1,8 @@
+{
+    "vendors": {
+        "js": [],
+        "css": [
+            "assets/css/animate.css"
+        ]
+    }
+}

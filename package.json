@@ -1,0 +1,11 @@
+{
+    "name": "mistic-example",
+    "version": "1.0.0",
+    "scripts": {
+    },
+    "private": true,
+    "dependencies": {
+    },
+    "devDependencies": {
+    }
+}
