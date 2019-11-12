@@ -1,0 +1,55 @@
+@import 'src/scss/variables';
+
+.main-page {
+    height: 100vh;
+    width: 100vw;
+
+    > div {
+
+        > h2 {
+            font-weight: 200;
+            color: #FFF;
+            background-color: $accentColor;
+            margin: 0;
+            padding: 10px;
+        }
+        
+        > ul {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            display: table;
+            width: 100%;
+            background-color: $primaryColor;
+
+            > li {
+                cursor: pointer;
+                list-style: none;
+                display: inline-block;
+                vertical-align: middle;
+                margin: 0;
+                padding: 10px 20px;
+                color: #FFF;
+                text-transform: uppercase;
+
+                &:hover {
+                    background-color: rgba($accentColor, .25);
+                }
+
+                > a,
+                > a:hover,
+                > a:focus,
+                > a:visited,
+                > a:active {
+                    color: #FFF;
+                    text-decoration: none;
+                }
+            }
+        }
+    }
+
+    .main-content {
+        padding: 20px;
+        display: block;
+    }
+}
