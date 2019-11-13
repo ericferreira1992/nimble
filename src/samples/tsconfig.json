@@ -1,0 +1,22 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "module": "esnext",
+        "target": "es6",
+        "sourceMap": true,
+        "baseUrl": "./",
+        "outDir": "./dist/",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "declaration": false,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "paths": {
+            "@nimble/*": ["./../src/*"]
+        }
+    },
+    "include": [
+        "src/**/*"
+    ]
+}
