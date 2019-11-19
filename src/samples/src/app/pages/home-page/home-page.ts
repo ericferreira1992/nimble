@@ -1,10 +1,10 @@
-import { Page } from "../../../../../src/nimble";
-import './home-page.html';
-import './home-page.scss';
+import { Page, PreparePage } from "nimble";;
 
-class HomePage extends Page {
-    public template: string = require('./home-page.html');
-    
+@PreparePage({
+    template: require('./home-page.html'),
+    style: require('./home-page.scss'),
+})
+export class HomePage extends Page {
 }
 
 export default () => new HomePage();

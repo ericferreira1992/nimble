@@ -21,7 +21,7 @@ export class NimbleApp {
     public get routes() { return Router.routes; }
 
     constructor(public config: StartConfig) {
-        this.defineRootElement(config.selector);
+        this.defineRootElement();
         this.render = new Render(this);
         Router.app = this;
         Router.useHash = config.useHash;
@@ -33,9 +33,16 @@ export class NimbleApp {
         return this.app;
     }
 
-    private defineRootElement(selector: string) {
-        this.rootElement.real = document.querySelector(selector);
-        this.rootElement.virtual = this.rootElement.real.cloneNode(true) as HTMLElement;
+    private defineRootElement() {
+        this.rootElement.real = document.querySelector('nimble-root');
+        if (this.rootElement.real) {
+            this.rootElement.real.innerHTML = '';
+            this.rootElement.real.style.removeProperty('visibility');
+            this.rootElement.virtual = this.rootElement.real.cloneNode(true) as HTMLElement;
+        }
+        else {
+            console.error(`Nimble not work, because the '<nimble-root></nimble-root>' element not found in body.`);
+        }
     }
 
     public start() {
@@ -98,8 +105,6 @@ export class NimbleApp {
 
     private onRouteFinishedRerender(route: Route){
         // console.log(`RERENDER FINISHED: (/${route.completePath()})`);
-        console.log(this.rootElement.real.cloneNode(true));
-        console.log(this.rootElement.virtual.cloneNode(true));
         this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
         document.dispatchEvent(new Event('render-event'))
     }

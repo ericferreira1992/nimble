@@ -1,3 +1,7 @@
 .subscribe-page {
-    background: #CCC
+    background: #CCC;
+
+    > h3 {
+        color: cornflowerblue;
+    }
 }

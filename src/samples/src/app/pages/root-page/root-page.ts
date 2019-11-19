@@ -1,10 +1,10 @@
-import { Page, Router, RouterEvent } from "../../../../../src/nimble";
-import './root-page.html';
-import './root-page.scss';
+import { Page, Router, RouterEvent, PreparePage } from "nimble";
 
-class RootPage extends Page {
-    public template: string = require('./root-page.html');
-
+@PreparePage({
+    template: require('./root-page.html'),
+    style: require('./root-page.scss'),
+})
+export class RootPage extends Page {
     public loading: boolean = false;
 
     private listeners: any[] = [];

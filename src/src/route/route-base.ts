@@ -1,9 +1,9 @@
-import { Page } from './../page';
+import { Page } from './../page/page';
 
 export class RouteBase {
     public path: string = '';
     public isPriority?: boolean = false;
-    public page: (() => Promise<any>) | string;
+    public page: (() => Promise<any>) | (() => Page) | string;
     public children?: RouteBase[];
 
     constructor(route?: Partial<RouteBase>) {

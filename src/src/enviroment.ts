@@ -1,0 +1,1 @@
+export const enviroment: { [key: string]: any } = { ...process.env };

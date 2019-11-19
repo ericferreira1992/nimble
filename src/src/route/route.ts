@@ -1,7 +1,8 @@
 import { Router } from './router';
 import { RouteBase } from './route-base';
-import { Page, TemplatedPage } from './../page';
-import { isNullOrUndefined } from 'util';
+import { Page } from './../page/page';
+import { isNullOrUndefined, isObject, isFunction } from 'util';
+import { TemplatedPage } from '../page/templated-page';
 
 export class Route extends RouteBase {
     public parent?: Route;
@@ -36,16 +37,26 @@ export class Route extends RouteBase {
                     complete();
                 }
                 else {
-                    this.page()
-                        .then((page) => {
+                    let response = this.page();
+
+                    if (response instanceof Promise) {
+                        response.then((page) => {
                             this.prevPageInstance = this.pageInstance;
                             if (makeNewInstancePage || !this.pageInstance)
-                                this.pageInstance = (typeof page.default === 'function') ? page.default() : page.default;
+                                this.pageInstance = ((typeof page.default === 'function') ? page.default() : page.default) as Page;
 
                             this.pageInstance.route = this;
                             success({page: this.pageInstance, route: this});
                         }, error)
                         .finally(complete);
+                    }
+                    else {
+                        if (makeNewInstancePage || !this.pageInstance)
+                            this.pageInstance = response as Page;
+                        this.pageInstance.route = this;
+                        success({page: this.pageInstance, route: this});
+                        complete();
+                    }
                 }
             }
         }
@@ -70,11 +81,11 @@ export class Route extends RouteBase {
             return false;
         }
         else
-            return Router.currentLocationPath === this.completePath() || (alsoCheckPriority && this.isPriority);
+            return Router.currentPath === this.completePath() || (alsoCheckPriority && this.isPriority);
     }
 
     public getMatchedPageWithLocation(alsoCheckPriority: boolean = false) {
-        if (this.isAbstract && Router.currentLocationPath.startsWith(this.completePath())) {
+        if (this.isAbstract && Router.currentPath.startsWith(this.completePath())) {
             for (let route of this.children as Route[]) {
                 if (route.checkIfMatchCurrentLocation())
                     return route.getMatchedPageWithLocation();
@@ -84,7 +95,7 @@ export class Route extends RouteBase {
                     return route.getMatchedPageWithLocation(true);
             }
         }
-        else if (Router.currentLocationPath === this.completePath() || (alsoCheckPriority && this.isPriority))
+        else if (Router.currentPath === this.completePath() || (alsoCheckPriority && this.isPriority))
             return this;
         
         return null;

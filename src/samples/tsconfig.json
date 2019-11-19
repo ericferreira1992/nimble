@@ -1,22 +1,32 @@
 {
     "compileOnSave": false,
     "compilerOptions": {
+        "allowJs": true,
         "module": "esnext",
         "target": "es6",
         "sourceMap": true,
         "baseUrl": "./",
         "outDir": "./dist/",
+        "downlevelIteration": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "declaration": false,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "node",
         "typeRoots": [
             "node_modules/@types"
         ],
+        "lib": [
+            "es2018",
+            "dom"
+        ],
         "paths": {
-            "@nimble/*": ["./../src/*"]
+            "nimble": ["../src/nimble"]
         }
     },
     "include": [
-        "src/**/*"
+        "./src/**/*",
+        "./../src/**/*"
     ]
 }

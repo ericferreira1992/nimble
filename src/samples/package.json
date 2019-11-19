@@ -2,10 +2,16 @@
     "name": "nimble-samples",
     "version": "1.0.0",
     "scripts": {
-        "start": "npm run serve",
-        "serve": "webpack-dev-server --watch true --devtool source-map --mode development",
-        "build": " webpack --mode production",
-        "install-webpack": "npm install webpack webpack-cli webpack-dev-server -g"
+        "start": "npm run serve:local",
+        "build": "npm run build:prod",
+
+        "serve:local": "webpack-dev-server --env=local --devtool source-map",
+        "serve:dev": "webpack-dev-server --env=dev --devtool source-map",
+
+        "build:prod": "webpack --env=prod",
+        "build:dev": "webpack --env=dev",
+
+        "initialize": "npm install webpack webpack-cli webpack-dev-server -g"
     },
     "private": true,
     "dependencies": {
@@ -14,6 +20,7 @@
     },
     "devDependencies": {
         "@types/node": "^12.12.7",
+        "@types/webpack-env": "^1.14.1",
         "clean-webpack-plugin": "^2.0.1",
         "copy-webpack-plugin": "^5.0.2",
         "css-loader": "^2.1.1",
@@ -27,6 +34,7 @@
         "style-loader": "^0.23.1",
         "ts-loader": "^5.4.5",
         "typescript": "^3.4.5",
+        "typescript-require": "^0.2.10",
         "webpack": "^4.28.1",
         "webpack-cli": "^3.2.1",
         "webpack-dev-server": "^3.1.14"

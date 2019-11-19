@@ -1,7 +1,10 @@
-import { Route } from "./route/route";
+import { Route } from "../route/route";
+import { MetaConfig } from "./decorators/classes/meta-config";
 
-export abstract class Page {
-    public abstract template: string;
+export class Page {
+    public template: string;
+    public title?: string;
+    public meta?: MetaConfig;
 
     public route: Route;
     public isInitialized: boolean = false;
@@ -32,11 +35,5 @@ export abstract class Page {
             }
             throw e;
         }
-    }
-}
-
-export class TemplatedPage extends Page {
-    constructor(public template: string) {
-        super();
     }
 }

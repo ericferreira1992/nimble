@@ -1,18 +1,21 @@
-import { NimbleApp } from "./app";
-import { Page } from "./page";
-import { GenericPage } from "./generic-page";
-import { Route } from "./route/route";
-import { Router } from "./route/router";
 import { isArray } from "util";
+import { NimbleApp } from "./../app";
+import { Page } from "./../page/page";
+import { GenericPage } from "./../page/generic-page";
+import { Route } from "./../route/route";
+import { Router } from "./../route/router";
+import { HeaderRender } from "./header-render";
 
 const { DiffDOM } = require('diff-dom');
 
 export class Render {
 
     private diffDOM: any;
+    private headerRender: HeaderRender;
 
     constructor(public app: NimbleApp) {
         this.diffDOM = new DiffDOM();
+        this.headerRender = new HeaderRender(app);
     }
 
     public renderRoute(route: Route) {
@@ -235,7 +238,10 @@ export class Render {
                 else if (!Router.useHash) {
                     attribute.value = value.replace(/^(#)/g, '');
                     element.addEventListener('click', (e) => {
-                        Router.redirect((e.target as HTMLElement).attributes['href'].value);
+                        let attr = element.attributes['href'];
+                        if (attr) {
+                            Router.redirect(attr.value);
+                        }
                         e.preventDefault();
                     });
                 }
@@ -297,6 +303,7 @@ export class Render {
         this.removeAllChildren(rootElement.real);
         rootElement.real.appendChild(highestParentRoute.element.virtual);
 
+        this.headerRender.resolveTitleAndMetaTags(currentRoute);
 
         this.checkNewRoutesRendered(commonParentRoute, highestParentRoute, currentRoute);
         this.checkOldRoutesRemoved(commonParentRoute, highestParentRoute, previousRoute);

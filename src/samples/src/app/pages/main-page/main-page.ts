@@ -1,9 +1,10 @@
-import { Page } from "../../../../../src/nimble";
-import './main-page.html';
-import './main-page.scss';
+import { Page, PreparePage } from "nimble";
 
-class MainPage extends Page {
-    public template: string = require('./main-page.html');
+@PreparePage({
+    template: require('./main-page.html'),
+    style: require('./main-page.scss'),
+})
+export class MainPage extends Page {
     
     public menuItems: any[] = [
         { name: 'Home', href: '/home' },

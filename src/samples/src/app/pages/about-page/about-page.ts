@@ -1,9 +1,11 @@
-import { Page } from "../../../../../src/nimble";
-import './about-page.html';
-import './about-page.scss';
+import { Page, PreparePage } from "nimble";
 
+@PreparePage({
+    template: require('./about-page.html'),
+    style: require('./about-page.scss'),
+    title: 'About'
+})
 class AboutPage extends Page {
-    public template: string = require('./about-page.html');
 
     onInit() {
         console.log('About -> INITIALIZED');

@@ -1,9 +1,9 @@
-import { RouteBase } from '../../../src/nimble';
+import { RootPage } from './pages/root-page/root-page';
 
-export const ROUTES: RouteBase[] = [
+export const ROUTES = [
     {
         path: '',
-        page: () => import('./pages/root-page/root-page'),
+        page: () => new RootPage(),
         children: [
             {
                 path: '',

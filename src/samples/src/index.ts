@@ -1,10 +1,7 @@
-import { NimbleApp } from '../../src/nimble';
 import { ROUTES } from './app/routes';
-
 import './style.scss';
+import { NimbleApp } from 'nimble';
 
 NimbleApp.config({
-    selector: '#app',
-    routes: ROUTES,
-    useHash: false
+    routes: ROUTES
 }).start();

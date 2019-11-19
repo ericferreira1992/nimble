@@ -1,8 +1,15 @@
 {
+    "pre-render": {
+        "enabled": true,
+        "routes": [
+            "/",
+            "/home",
+            "/about",
+            "/subscribe"
+        ]
+    },
     "vendors": {
         "js": [],
-        "css": [
-            "assets/css/animate.css"
-        ]
+        "css": []
     }
 }

@@ -1,8 +1,8 @@
 import { Route } from './route';
 import { isNullOrUndefined } from 'util';
 import { RouteBase } from './route-base';
-import { NimbleApp } from 'src/app';
-import { Page } from 'src/page';
+import { NimbleApp } from '../app';
+import { Page } from '../page/page';
 import { RouterEvent } from './router-event.enum';
 import { RouterEventType } from './router-event-type.enum';
 
@@ -31,7 +31,7 @@ export class Router {
 
     public static get onRoute() { return !isNullOrUndefined(this._current); }
 
-    public static get currentLocationPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)/g, ''); }
+    public static get currentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
 
     public static defineRoutes(routes: RouteBase[]) {
         this._routes = routes.map(routeBase => new Route(routeBase));
@@ -78,8 +78,8 @@ export class Router {
 
     private static listen() {
         if (!this.stopListening) {
-            if (!this.onRoute || this.currentLocationPath !== this.lastLocationPath) {
-                this.lastLocationPath = this.currentLocationPath;
+            if (!this.onRoute || this.currentPath !== this.lastLocationPath) {
+                this.lastLocationPath = this.currentPath;
                 let changed = false;
                 if (this.checkPageCanBeCurrent()) {
                     changed = this.defineCurrentPage();
@@ -125,7 +125,7 @@ export class Router {
 
     private static onRouterChange(changedPage: boolean) {
         if (changedPage && this.current) {
-            if (!this.current.isPriority || this.current.completePath() === this.currentLocationPath) {
+            if (!this.current.isPriority || this.current.completePath() === this.currentPath) {
                 this.loadCurrentRoutePage();
             }
             else {
@@ -134,7 +134,7 @@ export class Router {
             }
         }
         else if (!this.current) {
-            console.error(`No pages matched with this path: "/${this.currentLocationPath}". If it path is abstract (has childrens), set one child as 'isPriority: true' in "routes.ts".`);
+            console.error(`No pages matched with this path: "/${this.currentPath}". If it path is abstract (has childrens), set one child as 'isPriority: true' in "routes.ts".`);
             this.redirect('');
             this.stopListening = true;
         }
@@ -217,8 +217,9 @@ export class Router {
     }
 
     public static redirect(route: string) {
+        route = (route.startsWith('/') ? '' : '/') + route;
         if (this.useHash)
-            location.hash = (route.startsWith('/') ? '' : '/') + route;
+            location.hash = route;
         else
             history.pushState(null, null, route);
     }

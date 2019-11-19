@@ -1,12 +1,14 @@
-import { Page } from "../../../../../src/nimble";
-import './subscribe-page.html';
-import './subscribe-page.scss';
+import { Page, PreparePage, enviroment } from "nimble";
 
-class SubscribePage extends Page {
-    public template: string = require(`./subscribe-page.html`);
+@PreparePage({
+    template: require('./subscribe-page.html'),
+    style: require('./subscribe-page.scss'),
+    title: 'Subscribe',
+})
+export class SubscribePage extends Page {
 
     public showAlert() {
-        alert('TESTE');
+        console.log(enviroment);
     }
 
 }
