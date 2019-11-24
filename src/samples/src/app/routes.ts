@@ -1,9 +1,9 @@
-import { RootPage } from './pages/root-page/root-page';
+import RootPage from './pages/root-page/root-page';
 
 export const ROUTES = [
     {
         path: '',
-        page: () => new RootPage(),
+        page: RootPage,
         children: [
             {
                 path: '',

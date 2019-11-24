@@ -1,10 +1,13 @@
 import { NimbleApp } from "./../app";
 import { Route } from "./../route/route";
 import { isNullOrUndefined } from "util";
+import { Injectable } from "../inject/injectable";
 
+@Injectable()
 export class HeaderRender {
+    private get app() { return NimbleApp.instance; }
 
-    constructor(private app: NimbleApp) {
+    constructor() {
     }
 
     public resolveTitleAndMetaTags(route: Route) {
@@ -42,7 +45,7 @@ export class HeaderRender {
 
     private resolveMetaAndContent(metaSelector: string, content: String) {
         if (metaSelector) {
-            let metaEl = document.head.querySelector(metaSelector);
+            let metaEl = document.head.querySelector(`[${metaSelector}]`);
             if (metaEl) {
                 metaEl.attributes['content'] = content;
             }

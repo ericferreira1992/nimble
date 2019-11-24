@@ -2,9 +2,9 @@ import { Page, PreparePage } from "nimble";
 
 @PreparePage({
     template: require('./main-page.html'),
-    style: require('./main-page.scss'),
+    style: require('./main-page.scss')
 })
-export class MainPage extends Page {
+export default class MainPage extends Page {
     
     public menuItems: any[] = [
         { name: 'Home', href: '/home' },
@@ -20,5 +20,3 @@ export class MainPage extends Page {
         });
     }
 }
-
-export default () => new MainPage();

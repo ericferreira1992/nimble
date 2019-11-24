@@ -7,7 +7,7 @@ import { RouterEvent } from './router-event.enum';
 import { RouterEventType } from './router-event-type.enum';
 
 export class Router {
-    public static app: NimbleApp;
+    public static get app() { return NimbleApp.instance; }
 
     private static _routes: Route[] = [];
     private static _current: Route;
@@ -33,7 +33,7 @@ export class Router {
 
     public static get currentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
 
-    public static defineRoutes(routes: RouteBase[]) {
+    public static registerRoutes(routes: RouteBase[]) {
         this._routes = routes.map(routeBase => new Route(routeBase));
     }
 
@@ -236,10 +236,10 @@ export class Router {
             let routesToRerender = [currentRoute, ...currentRoute.getAllParents()];
 
             for(let route of routesToRerender.reverse())
-                this.app.renderRoute(route);
+                this.app.virtualizeRoute(route);
         }
         else
-            this.app.renderRoute(route);
+            this.app.virtualizeRoute(route);
         
         this.setState(RouterEvent.FINISHED_RERENDER, page.route);
 

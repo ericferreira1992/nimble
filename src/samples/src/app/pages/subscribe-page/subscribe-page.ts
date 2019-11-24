@@ -5,11 +5,10 @@ import { Page, PreparePage, enviroment } from "nimble";
     style: require('./subscribe-page.scss'),
     title: 'Subscribe',
 })
-export class SubscribePage extends Page {
+export default class SubscribePage extends Page {
 
     public showAlert() {
         console.log(enviroment);
     }
 
 }
-export default () => new SubscribePage();

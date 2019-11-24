@@ -5,7 +5,7 @@ import { Page, PreparePage } from "nimble";
     style: require('./about-page.scss'),
     title: 'About'
 })
-class AboutPage extends Page {
+export default class AboutPage extends Page {
 
     onInit() {
         console.log('About -> INITIALIZED');
@@ -16,4 +16,3 @@ class AboutPage extends Page {
     }
 
 }
-export default () => new AboutPage();

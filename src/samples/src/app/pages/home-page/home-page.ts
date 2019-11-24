@@ -3,8 +3,12 @@ import { Page, PreparePage } from "nimble";;
 @PreparePage({
     template: require('./home-page.html'),
     style: require('./home-page.scss'),
+    title: 'Home'
 })
-export class HomePage extends Page {
-}
+export default class HomePage extends Page {
+    
+    constructor(){
+        super();
+    }
 
-export default () => new HomePage();
+}

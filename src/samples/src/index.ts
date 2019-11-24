@@ -3,5 +3,7 @@ import './style.scss';
 import { NimbleApp } from 'nimble';
 
 NimbleApp.config({
-    routes: ROUTES
+    routes: ROUTES,
+    directives: [],
+    providers: []
 }).start();

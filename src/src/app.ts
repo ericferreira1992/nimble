@@ -2,14 +2,26 @@ import '@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js';
 import { Route } from './route/route';
 import { StartConfig } from './start-config';
 import { Router } from './route/router';
-import { Render } from './render';
 import { NimblePage } from './elements/nimble-page-element';
 import { NimbleRouter } from './elements/nimble-router-element';
 import { RouterEvent } from './route/router-event.enum';
+import { Directive } from './directives/abstracts/directive';
+import { INTERNAL_DIRECTIVES } from './directives/internal-directives';
+import { Type } from './inject/type.interface';
+import { IterationDirective } from './directives/abstracts/iteration-directive';
+import { Container } from './inject/container';
+import { Injectable } from './inject/injectable';
+import { Render } from './render/render';
+import { DirectivesRender } from './render/directives-render';
+import { HeaderRender } from './render/header-render';
+import { INTERNAL_PROVIDERS } from './providers/internal-providers';
 
 export class NimbleApp {
-    private static app: NimbleApp;
+    public static instance: NimbleApp;
+
     public render: Render;
+
+    public containerInjector: Container = new Container();
 
     public state: 'INITIALIZING' | 'INITIALIZED' = 'INITIALIZING';
 
@@ -18,19 +30,26 @@ export class NimbleApp {
         virtual: null
     };
 
+    public directives: Type<Directive | IterationDirective>[];
+    public providers: Type<any>[];
+
     public get routes() { return Router.routes; }
 
     constructor(public config: StartConfig) {
         this.defineRootElement();
-        this.render = new Render(this);
-        Router.app = this;
+        this.registerDirectives(config.directives);
+        this.registerProvidersInContainerInjector(config.providers);
+        
+        this.render = this.containerInjector.inject(Render);
+
+        // Router
         Router.useHash = config.useHash;
-        Router.defineRoutes(config.routes);
+        Router.registerRoutes(config.routes);
     }
 
     public static config(config: StartConfig){
-        this.app = new NimbleApp(config);
-        return this.app;
+        this.instance = new NimbleApp(config);
+        return this.instance;
     }
 
     private defineRootElement() {
@@ -43,6 +62,26 @@ export class NimbleApp {
         else {
             console.error(`Nimble not work, because the '<nimble-root></nimble-root>' element not found in body.`);
         }
+    }
+
+    private registerDirectives(externalDirectives: Type<Directive | IterationDirective>[]) {
+        let directives = [...INTERNAL_DIRECTIVES];
+        if (externalDirectives && externalDirectives.length > 0)
+            directives = directives.concat(externalDirectives);
+
+        this.directives = directives;
+    }
+
+    private registerProvidersInContainerInjector(externalProviders: Type<any>[]) {
+        let providers = [...INTERNAL_PROVIDERS];
+        if (externalProviders && externalProviders.length > 0)
+            providers = providers.concat(externalProviders);
+
+        this.providers = providers;
+
+        this.providers.forEach(service => {
+            this.containerInjector.addProvider({ provide: service, useClass: service });
+        });
     }
 
     public start() {
@@ -91,7 +130,7 @@ export class NimbleApp {
 
     private onRouteFinishedLoading(route: Route){
         // console.log('LOADED!');
-        this.renderRoute(route);
+        this.virtualizeRoute(route);
     }
 
     private onRouteErrorLoading(error, route: Route){
@@ -109,7 +148,11 @@ export class NimbleApp {
         document.dispatchEvent(new Event('render-event'))
     }
 
-    public renderRoute(route: Route) {
-        this.render.renderRoute(route);  
+    public virtualizeRoute(route: Route) {
+        this.render.virtualizeRoute(route);  
+    }
+
+    public static inject<T>(type: Type<T>): T {
+        return this.instance.containerInjector.inject<T>(type);
     }
 }

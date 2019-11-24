@@ -4,7 +4,7 @@ import { Page, Router, RouterEvent, PreparePage } from "nimble";
     template: require('./root-page.html'),
     style: require('./root-page.scss'),
 })
-export class RootPage extends Page {
+export default class RootPage extends Page {
     public loading: boolean = false;
 
     private listeners: any[] = [];
@@ -29,5 +29,3 @@ export class RootPage extends Page {
         this.listeners.forEach((cancelFunc) => cancelFunc());
     }
 }
-
-export default () => new RootPage();

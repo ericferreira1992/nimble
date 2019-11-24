@@ -1,7 +1,8 @@
 import { Route } from "../route/route";
 import { MetaConfig } from "./decorators/classes/meta-config";
+import { IScope } from "./interfaces/scope.interface";
 
-export class Page {
+export class Page implements IScope {
     public template: string;
     public title?: string;
     public meta?: MetaConfig;

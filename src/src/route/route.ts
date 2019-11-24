@@ -3,6 +3,8 @@ import { RouteBase } from './route-base';
 import { Page } from './../page/page';
 import { isNullOrUndefined, isObject, isFunction } from 'util';
 import { TemplatedPage } from '../page/templated-page';
+import { Type } from '../inject/type.interface';
+import { NimbleApp } from '../app';
 
 export class Route extends RouteBase {
     public parent?: Route;
@@ -30,32 +32,58 @@ export class Route extends RouteBase {
         if (this.page) {
             this.loadPage = (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true) => {
                 if (typeof this.page === 'string') {
-                    if (makeNewInstancePage || !this.pageInstance)
-                        this.pageInstance = new TemplatedPage(this.page);
-                    this.pageInstance.route = this;
-                    success({page: this.pageInstance, route: this});
-                    complete();
-                }
-                else {
-                    let response = this.page();
-
-                    if (response instanceof Promise) {
-                        response.then((page) => {
-                            this.prevPageInstance = this.pageInstance;
-                            if (makeNewInstancePage || !this.pageInstance)
-                                this.pageInstance = ((typeof page.default === 'function') ? page.default() : page.default) as Page;
-
-                            this.pageInstance.route = this;
-                            success({page: this.pageInstance, route: this});
-                        }, error)
-                        .finally(complete);
-                    }
-                    else {
+                    try{
                         if (makeNewInstancePage || !this.pageInstance)
-                            this.pageInstance = response as Page;
+                            this.pageInstance = new TemplatedPage(this.page);
                         this.pageInstance.route = this;
                         success({page: this.pageInstance, route: this});
                         complete();
+                    }
+                    catch(e) {
+                        error(e);
+                        throw e;
+                    }
+                }
+                else {
+                    if (this.page.name === 'page') {
+                        try {
+                            (this.page as () => Promise<any>)()
+                                .then(
+                                    (pageType) => {
+                                        try {
+                                            this.prevPageInstance = this.pageInstance;
+                                            if (makeNewInstancePage || !this.pageInstance)
+                                                this.pageInstance = NimbleApp.inject<Page>(pageType.default);
+        
+                                            this.pageInstance.route = this;
+                                            success({page: this.pageInstance, route: this});
+                                        }
+                                        catch(e) {
+                                            error(e);
+                                            throw e;
+                                        }
+                                    },
+                                    error
+                                )
+                                .finally(complete);
+                        }
+                        catch(e) {
+                            error(e);
+                            throw e;
+                        }
+                    }
+                    else {
+                        try{
+                            if (makeNewInstancePage || !this.pageInstance)
+                                this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
+                            this.pageInstance.route = this;
+                            success({page: this.pageInstance, route: this});
+                            complete();
+                        }
+                        catch(e) {
+                            error(e);
+                            throw e;
+                        }
                     }
                 }
             }

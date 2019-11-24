@@ -4,7 +4,8 @@
     "scripts": {},
     "private": true,
     "dependencies": {
-        "diff-dom": "^4.1.6"
+        "diff-dom": "^4.1.6",
+        "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",
