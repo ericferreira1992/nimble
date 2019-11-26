@@ -19,4 +19,12 @@ export default class MainPage extends Page {
                 this.menuItems.push({ name: 'About', href: '/about' });
         });
     }
+
+    onEnter() {
+        console.log('Main -> ENTER');
+    }
+
+    onExit() {
+        console.log('Main -> EXIT');
+    }
 }

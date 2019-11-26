@@ -1,6 +1,6 @@
 import { IterationDirective } from './abstracts/iteration-directive';
 import { IScope } from '../page/interfaces/scope.interface';
-import { AfterIterateElement } from '../render/directives-render';
+import { AfterIterateElement } from '../render/attributes-render';
 import { PrepareIterateDirective } from './decorators/prepare-iterate-directive.decor';
 
 @PrepareIterateDirective({

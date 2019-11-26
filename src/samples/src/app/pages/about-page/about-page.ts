@@ -1,4 +1,5 @@
 import { Page, PreparePage } from "nimble";
+import AuthService from "../../services/auth.service";
 
 @PreparePage({
     template: require('./about-page.html'),
@@ -7,12 +8,15 @@ import { Page, PreparePage } from "nimble";
 })
 export default class AboutPage extends Page {
 
-    onInit() {
-        console.log('About -> INITIALIZED');
+    constructor(public authService: AuthService) {
+        super();
     }
 
-    onDestroy() {
-        console.log('About -> DESTROYED');
+    onEnter() {
+        this.authService.teste = 'ENTER ABOUT';
+    }
+
+    onExit() {
     }
 
 }

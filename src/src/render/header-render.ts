@@ -3,7 +3,7 @@ import { Route } from "./../route/route";
 import { isNullOrUndefined } from "util";
 import { Injectable } from "../inject/injectable";
 
-@Injectable()
+@Injectable({ single: true })
 export class HeaderRender {
     private get app() { return NimbleApp.instance; }
 

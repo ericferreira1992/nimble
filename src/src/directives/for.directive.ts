@@ -1,9 +1,9 @@
 import { IterationDirective } from './abstracts/iteration-directive';
 import { IScope } from '../page/interfaces/scope.interface';
-import { AfterIterateElement } from '../render/directives-render';
+import { AfterIterateElement } from '../render/attributes-render';
 import { PrepareIterateDirective } from './decorators/prepare-iterate-directive.decor';
 import { isArray } from 'util';
-import { DirectivesRender } from '../render/directives-render';
+import { AttributesRender } from '../render/attributes-render';
 import { GenericPage } from '../page/generic-page';
 
 @PrepareIterateDirective({
@@ -11,7 +11,7 @@ import { GenericPage } from '../page/generic-page';
 })
 export class ForDirective extends IterationDirective {
 
-    constructor(private render: DirectivesRender) {
+    constructor(private render: AttributesRender) {
         super();
     }
 

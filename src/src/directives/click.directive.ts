@@ -3,11 +3,16 @@ import { Directive } from './abstracts/directive';
 import { PrepareDirective } from './decorators/prepare-directive.decor';
 
 @PrepareDirective({
-    selector: 'teste'
+    selector: '(click)'
 })
-export class TesteDirective extends Directive {
+export class ClickDirective extends Directive {
 
     public resolve(value: any, element: HTMLElement, scope: IScope): void {
-
+        element.addEventListener('click', (e) => {
+            Object.assign(scope, { $event: e });
+            scope.eval(value);
+            delete scope['$event'];
+        });
     }
+
 }

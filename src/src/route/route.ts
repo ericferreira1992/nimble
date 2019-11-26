@@ -33,8 +33,10 @@ export class Route extends RouteBase {
             this.loadPage = (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true) => {
                 if (typeof this.page === 'string') {
                     try{
-                        if (makeNewInstancePage || !this.pageInstance)
+                        if (makeNewInstancePage || !this.pageInstance) {
                             this.pageInstance = new TemplatedPage(this.page);
+                            this.pageInstance.onEnter();
+                        }
                         this.pageInstance.route = this;
                         success({page: this.pageInstance, route: this});
                         complete();
@@ -52,8 +54,10 @@ export class Route extends RouteBase {
                                     (pageType) => {
                                         try {
                                             this.prevPageInstance = this.pageInstance;
-                                            if (makeNewInstancePage || !this.pageInstance)
+                                            if (makeNewInstancePage || !this.pageInstance){
                                                 this.pageInstance = NimbleApp.inject<Page>(pageType.default);
+                                                this.pageInstance.onEnter();
+                                            }
         
                                             this.pageInstance.route = this;
                                             success({page: this.pageInstance, route: this});
@@ -74,8 +78,10 @@ export class Route extends RouteBase {
                     }
                     else {
                         try{
-                            if (makeNewInstancePage || !this.pageInstance)
+                            if (makeNewInstancePage || !this.pageInstance) {
                                 this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
+                                this.pageInstance.onEnter();
+                            }
                             this.pageInstance.route = this;
                             success({page: this.pageInstance, route: this});
                             complete();

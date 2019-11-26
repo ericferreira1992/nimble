@@ -13,10 +13,30 @@ export class Page implements IScope {
 
     public onNeedRerender: (page: Page) => void;
 
+    /**
+     * When element is rendered
+     */
     onInit() {
     }
 
+    /**
+     * When element is destroyed
+     */
     onDestroy() {
+    }
+
+    /**
+     * When route match with this page and prepares to be rendered
+     */
+    onEnter() {
+
+    }
+
+    /**
+     * When the route changes and the page no longer matches and will be removed
+     */
+    onExit() {
+
     }
 
     public render(action: () => void) {

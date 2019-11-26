@@ -1,13 +1,13 @@
 import { Route } from "./../route/route";
 import { Router } from "./../route/router";
 import { HeaderRender } from "./header-render";
-import { DirectivesRender } from "./directives-render";
+import { AttributesRender } from "./attributes-render";
 import { Injectable } from "../inject/injectable";
 import { NimbleApp } from "./../app";
 
 const { DiffDOM } = require('diff-dom');
 
-@Injectable()
+@Injectable({ single: true })
 export class Render {
     private get app() { return NimbleApp.instance; }
 
@@ -15,7 +15,7 @@ export class Render {
 
     constructor(
         private headerRender: HeaderRender,
-        private directivesRender: DirectivesRender
+        private attributesRender: AttributesRender
     ) {
         this.diffDOM = new DiffDOM();
     }
@@ -23,8 +23,15 @@ export class Render {
     public virtualizeRoute(route: Route) {
         if (route.parent)
             this.virtualizeRouteInParent(route);
-        else
+        else {
+            this.attributesRender.clearPendingAttributesToProcess();
             this.virtualizeRouteInRootElement(route);
+        }
+    }
+
+    public virtualizeSequenceRoutes(routes: Route[]) {
+        for(let route of routes)
+            this.virtualizeRoute(route);
     }
 
     private virtualizeRouteInParent(route: Route) {
@@ -74,7 +81,7 @@ export class Render {
 
     private createPageElementAndResolve(template: string, pageInstance: any) {
         let virtualElement = this.createVirtualElement(template);
-        this.directivesRender.resolveChildren(virtualElement.children, pageInstance);
+        this.attributesRender.resolveChildren(virtualElement.children, pageInstance);
         return virtualElement;
     }
 
@@ -97,6 +104,7 @@ export class Render {
             let diff = this.diffDOM.diff(oldTreeElments, newTreeElements)
             this.diffDOM.apply(oldTreeElments, diff);
         }
+        this.attributesRender.processesPendingAttributes(true);
     }
 
     public resolveAndRenderRoute(currentRoute: Route) {
@@ -113,11 +121,13 @@ export class Render {
 
         this.headerRender.resolveTitleAndMetaTags(currentRoute);
 
-        this.checkNewRoutesRendered(commonParentRoute, highestParentRoute, currentRoute);
-        this.checkOldRoutesRemoved(commonParentRoute, previousRoute);
+        this.notifyOldRoutesElementDestroyed(commonParentRoute, previousRoute);
+        this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, currentRoute);
+
+        this.attributesRender.processesPendingAttributes();
     }
 
-    private checkOldRoutesRemoved(commonParentRoute: Route, previousRoute: Route) {
+    private notifyOldRoutesElementDestroyed(commonParentRoute: Route, previousRoute: Route) {
         if (previousRoute) {
             let onlyOldRoutesRemoved: Route[] = [];
 
@@ -136,7 +146,7 @@ export class Render {
         }
     }
 
-    private checkNewRoutesRendered(commonParentRoute: Route, highestParentRoute: Route, currentRoute: Route) {
+    private notifyNewRoutesElementRendered(commonParentRoute: Route, highestParentRoute: Route, currentRoute: Route) {
         let onlyNewRoutesRendered: Route[] = [];
 
         if (commonParentRoute !== highestParentRoute && highestParentRoute !== currentRoute)

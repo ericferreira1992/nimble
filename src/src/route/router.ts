@@ -1,7 +1,7 @@
 import { Route } from './route';
 import { isNullOrUndefined } from 'util';
 import { RouteBase } from './route-base';
-import { NimbleApp } from '../app';
+import { NimbleApp, NimbleAppState } from '../app';
 import { Page } from '../page/page';
 import { RouterEvent } from './router-event.enum';
 import { RouterEventType } from './router-event-type.enum';
@@ -34,7 +34,9 @@ export class Router {
     public static get currentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
 
     public static registerRoutes(routes: RouteBase[]) {
-        this._routes = routes.map(routeBase => new Route(routeBase));
+        if (this.app.state === NimbleAppState.INITIALIZING) {
+            this._routes = routes.map(routeBase => new Route(routeBase));
+        }
     }
 
     private static setState(state: RouterEvent, senderNotify?: any, silentMode: boolean = false) {
@@ -43,11 +45,19 @@ export class Router {
     }
 
     public static start() {
-        this.startListening();
+        if (this.app.state === NimbleAppState.INITIALIZING) {
+            this.startListening();
+        }
     }
 
+    /**
+     * Adds a listener for when the routing state changes.
+     * Also it returns a void function to cancel listen when want. 
+     * @param type 
+     * @param callback 
+     */
     public static addListener(type: RouterEvent, callback: () => void) {
-        let listener = { type, callback, internal: this.app.state === 'INITIALIZING' };
+        let listener = { type, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
         this.listeners.push(listener);
         return () => this.listeners = this.listeners.filter(x => x !== listener);
     }
@@ -72,7 +82,7 @@ export class Router {
                 let internalB = b.internal;
                 return (internalA === internalB)? 0 : (internalA ? 1 : -1);
             });
-
+        
         listeners.forEach((listener) => listener.callback(sender));
     }
 
@@ -146,7 +156,7 @@ export class Router {
     private static loadCurrentRoutePage() {
         this.setState(RouterEvent.START_CHANGE, this.current);
 
-        let state = this.state;
+        this.notifyOldRoutesElementExit();
 
         if (this.current.hasParent)
             this.loadRoutesPageFromAllParents();
@@ -176,7 +186,9 @@ export class Router {
             if (parents.length > 0) {
                 let parent = parents.pop();
                 this.loadRoutePage(parent.route, parent.makeNewInstance).then(
-                    () => action(),
+                    () => {
+                        action()
+                    },
                     (error) => {
                         this.setState(RouterEvent.COMPLETED_LOADING);
                         this.setState(RouterEvent.ERROR_LOADING, error);
@@ -224,24 +236,40 @@ export class Router {
             history.pushState(null, null, route);
     }
 
+    private static notifyOldRoutesElementExit() {
+        let highestParentRoute = this.current.getHighestParentOrHimself();
+        let commonParentRoute = this.previous ? Router.getCommonParentOfTwoRoutes(this.current, this.previous) : highestParentRoute;
+        
+        if (this.previous) {
+            let onlyOldRoutes: Route[] = [];
+
+            for(let route of [this.previous, ...this.previous.getAllParents()]) {
+                if (route === commonParentRoute)
+                    break;
+                onlyOldRoutes.push(route);
+            }
+
+            onlyOldRoutes.reverse().forEach((route) => {
+                route.pageInstance.onExit();
+            });
+        }
+    }
+
     private static whenRerenderIsRequested(page: Page) {
         let changingRouteInProgress = this.state === RouterEvent.START_CHANGE;
+        let routeChangeFinished = this.state === RouterEvent.FINISHED_CHANGE;
         
         this.setState(RouterEvent.STARTED_RERENDER, page.route);
 
-        let route = page.route;
+        let currentRoute = changingRouteInProgress ? this.previous : this.current;
+        let routesToRerender = [currentRoute, ...currentRoute.getAllParents()];
 
-        if (route.isAbstract) {
-            let currentRoute = changingRouteInProgress ? this.previous : this.current;
-            let routesToRerender = [currentRoute, ...currentRoute.getAllParents()];
-
-            for(let route of routesToRerender.reverse())
-                this.app.virtualizeRoute(route);
-        }
-        else
-            this.app.virtualizeRoute(route);
+        this.app.virtualizeSequenceRoutes(routesToRerender.reverse());
         
-        this.setState(RouterEvent.FINISHED_RERENDER, page.route);
+        if (!routeChangeFinished)
+            this.setState(RouterEvent.FINISHED_RERENDER, page.route);
+        else {
+        }
 
         if (changingRouteInProgress)
             this._state = RouterEvent.START_CHANGE;

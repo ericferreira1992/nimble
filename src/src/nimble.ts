@@ -21,3 +21,6 @@ export { PreparePage } from './page/decorators/page-prepare.decor';
 export { PrepareDirective } from './directives/decorators/prepare-directive.decor';
 export { PrepareIterateDirective } from './directives/decorators/prepare-iterate-directive.decor';
 export { Provider } from './inject/injectable';
+
+// PROVIDERS
+export * from './providers/http-client/index';
