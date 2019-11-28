@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "commonjs",
         "moduleResolution": "node",
-        "target": "esnext",
+        "target": "es5",
         "sourceMap": true,
         "baseUrl": "./",
         "outDir": "./dist/",

@@ -26,4 +26,28 @@ export class Helper {
 		else
 			return random4() + random4() + '-' + random4() + '-' + random4() + '-' + random4() + '-' + random4() + random4() + random4();
 	}
+
+	public splitStringJSONtoKeyValue(jsonString: string): { key: string, value: string }[] {
+		let list = [];
+		jsonString.replace(/(?:\"|\')([^"]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[-0-9]+[\.]*[\d]*(?=,)|[0-9a-zA-Z\(\)\@\:\,\/\!\+\-\.\$\#\ \\\']*)(?:\")?/g,
+			(track) => {
+				if (track) {
+					track = track.trim();
+					let splitIndex = track.indexOf(':');
+					if (splitIndex > 2) {
+						let key = track.substr(0, splitIndex)
+									.trim()
+									.replace(/(\"|\')/g, '')
+									.trim();
+						let value = track.substr(splitIndex + 1).trim()
+																.replace(/\,$/g, '')
+																.trim();
+						list.push({ key: key, value: value });
+					}
+				}
+				return '';
+			}
+		);
+		return list;
+	}
 }

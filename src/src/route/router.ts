@@ -33,6 +33,8 @@ export class Router {
 
     public static get currentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
 
+    public static nextPath: string;
+
     public static registerRoutes(routes: RouteBase[]) {
         if (this.app.state === NimbleAppState.INITIALIZING) {
             this._routes = routes.map(routeBase => new Route(routeBase));
@@ -101,8 +103,12 @@ export class Router {
     }
 
     private static checkPageCanBeCurrent(): boolean {
-        return this.routes.some(route => {
-            return route.checkIfMatchCurrentLocation(true);
+        return this.routes.some((route, index) => {
+            if (route.checkIfMatchCurrentLocation())
+                return true;
+            else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
+                return route.checkIfMatchCurrentLocation(true);
+            return false;
         });
     }
 
@@ -116,10 +122,15 @@ export class Router {
         }
 
         if (!newRoute)
-            for (let route of this.abstactRoutes) {
+            for (let i = 0; i < this.abstactRoutes.length; i++) {
+                let route = this.abstactRoutes[i];
                 newRoute = route.getMatchedPageWithLocation();
-                if (newRoute)
-                    break;
+
+                if (newRoute) break;
+                else if(i < ((this.routes.length - 1)) && !this.routes.slice(i + 1).some(x => x.path === route.path)) {
+                    newRoute = route.getMatchedPageWithLocation(true);
+                    if (newRoute) break;
+                }
             }
 
         if (newRoute !== this.current) {
@@ -187,7 +198,7 @@ export class Router {
                 let parent = parents.pop();
                 this.loadRoutePage(parent.route, parent.makeNewInstance).then(
                     () => {
-                        action()
+                        action();
                     },
                     (error) => {
                         this.setState(RouterEvent.COMPLETED_LOADING);
@@ -207,18 +218,23 @@ export class Router {
     }
 
     private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true, silentMode: boolean = false, notifyStart: boolean = true) {
-        return new Promise<Route>((resolve, error) => {
+        return new Promise<Route>((resolve, reject) => {
             this.setState(RouterEvent.STARTED_LOADING, route, silentMode || notifyStart);
             
             route.loadPage(
                 (response: {page: Page, route: Route}) => {
-                    response.page.onNeedRerender = this.whenRerenderIsRequested.bind(this);
-                    this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
-                    resolve(route);
+                    if (this.routeCanActivate(route)) {
+                        response.page.onNeedRerender = this.whenRerenderIsRequested.bind(this);
+                        this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
+                        resolve(route);
+                    } {
+                        this.setState(RouterEvent.REJECTED, route, silentMode);
+                        reject(null);
+                    }
                 },
                 (error) => {
                     this.setState(RouterEvent.ERROR_LOADING, error, silentMode);
-                    error(error);
+                    reject(error);
                 },
                 () => {
                     this.setState(RouterEvent.COMPLETED_LOADING, null, silentMode);
@@ -226,6 +242,10 @@ export class Router {
                 makeNewInstacePage
             );
         });
+    }
+
+    private static routeCanActivate(route: Route) {
+        return true;
     }
 
     public static redirect(route: string) {

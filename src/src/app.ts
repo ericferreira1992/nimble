@@ -27,8 +27,8 @@ export class NimbleApp {
         virtual: null
     };
 
-    public directives: Type<Directive | IterationDirective>[];
-    private providers: Type<any>[];
+    public directives: Type<Directive | IterationDirective>[] = [];
+    private providers: Type<{}>[];
 
     public get routes() { return Router.routes; }
 
@@ -72,7 +72,15 @@ export class NimbleApp {
         if (this.config.directives && this.config.directives.length > 0)
             directives = directives.concat(this.config.directives);
 
-        this.directives = directives;
+        directives.forEach((directive) => {
+            try {
+                directive.prototype.validate(this.directives);
+                this.directives.push(directive);
+            }
+            catch(e) {
+                console.error(e);
+            }
+        });
     }
 
     private registerProvidersInContainerInjector() {

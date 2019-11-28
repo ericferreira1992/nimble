@@ -1,0 +1,10 @@
+@import 'variables.scss';
+@import 'base.scss';
+@import 'font.scss';
+@import 'general/general.scss';
+@import 'components/components.scss';
+@import 'mat-icons.scss';
+
+.animated {
+    animation-duration: 300ms;
+}

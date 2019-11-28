@@ -1,0 +1,13 @@
+.material-icons {
+    &.md-18 { font-size: 18px; }
+    &.md-20 { font-size: 20px; }
+    &.md-24 { font-size: 24px; }
+    &.md-36 { font-size: 36px; }
+    &.md-48 { font-size: 48px; }
+
+    &.md-dark { color: rgba(0, 0, 0, 0.54); }
+    &.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+    &.md-light { color: rgba(255, 255, 255, 1); }
+    &.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+}

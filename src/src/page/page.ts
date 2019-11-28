@@ -39,9 +39,9 @@ export class Page implements IScope {
 
     }
 
-    public render(action: () => void) {
+    public render(action?: () => void) {
         if (this.onNeedRerender) {
-            action();
+            if (action) action();
             this.onNeedRerender(this);
         }
     }

@@ -1,10 +1,14 @@
 import { IScope } from "../../page/interfaces/scope.interface";
 
 export abstract class Directive {
-    public selector: string;
+    public selectors: string[];
 
     constructor() {
     }
 
-    abstract resolve(value: any, element: HTMLElement, scope: IScope): void;
+    pureSelector(selector: string): string {
+        return selector.replace(/\[|\(|\]|\)/g, '');
+    }
+
+    abstract resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void;
 }

@@ -3,9 +3,8 @@
         "enabled": true,
         "routes": [
             "/",
-            "/home",
-            "/about",
-            "/subscribe"
+            "/login",
+            "/tasks"
         ]
     },
     "vendors": {
