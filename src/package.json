@@ -25,9 +25,8 @@
         "url": "https://github.com/ericferreira1992/nimble/issues"
     },
     "dependencies": {
-        "diff-dom": "^4.1.6",
-        "reflect-metadata": "^0.1.13",
-        "@webcomponents/webcomponentsjs": "^2.3.0"
+        "@webcomponents/webcomponentsjs": "^2.3.0",
+        "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",

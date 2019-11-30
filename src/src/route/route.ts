@@ -13,6 +13,8 @@ export class Route extends RouteBase {
         real: null
     };
 
+    public pageType: Type<Page>;
+
     public loadPage?: (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean) => void;
 
     public pageInstance?: Page;
@@ -35,8 +37,8 @@ export class Route extends RouteBase {
                 if (typeof this.page === 'string') {
                     try {
                         if (makeNewInstancePage || !this.pageInstance) {
+                            this.pageType = TemplatedPage;
                             this.pageInstance = new TemplatedPage(this.page);
-                            this.pageInstance.onEnter();
                         }
                         this.pageInstance.route = this;
                         success({ page: this.pageInstance, route: this });
@@ -56,8 +58,8 @@ export class Route extends RouteBase {
                                         try {
                                             this.prevPageInstance = this.pageInstance;
                                             if (makeNewInstancePage || !this.pageInstance) {
+                                                this.pageType = pageType.default;
                                                 this.pageInstance = NimbleApp.inject<Page>(pageType.default);
-                                                this.pageInstance.onEnter();
                                             }
 
                                             this.pageInstance.route = this;
@@ -80,8 +82,8 @@ export class Route extends RouteBase {
                     else {
                         try {
                             if (makeNewInstancePage || !this.pageInstance) {
+                                this.pageType = this.page as Type<Page>;
                                 this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
-                                this.pageInstance.onEnter();
                             }
                             this.pageInstance.route = this;
                             success({ page: this.pageInstance, route: this });

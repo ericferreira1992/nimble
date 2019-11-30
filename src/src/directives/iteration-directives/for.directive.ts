@@ -4,19 +4,26 @@ import { AfterIterateElement } from '../../render/attributes-render';
 import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive.decor';
 import { isArray } from 'util';
 import { AttributesRender } from '../../render/attributes-render';
-import { GenericPage } from '../../page/generic-page';
+import { Helper } from '../../providers/helper';
+import { NimbleApp } from '../../app';
+import { Page } from '../../page/page';
 
 @PrepareIterateDirective({
     selector: 'for'
 })
 export class ForDirective extends IterationDirective {
 
-    constructor(private render: AttributesRender) {
+    constructor(
+        private attrRender: AttributesRender,
+        private helper: Helper,
+    ) {
         super();
     }
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): AfterIterateElement {
-        let resolved = new AfterIterateElement();
+        let resolved = new AfterIterateElement({
+            resolvedAllElements: true
+        });
 
         let forExpression = (value as string).trim();
 
@@ -45,17 +52,19 @@ export class ForDirective extends IterationDirective {
         }
 
         let beforeElement = element;
-        let index = 0;
         for(var i = 0; i < iterationArray.value.length; i++) {
             let iterateElement = element.cloneNode(true) as HTMLElement;
             beforeElement.insertAdjacentElement('afterend', iterateElement);
             beforeElement = iterateElement;
 
-            let scopeItem = {} as any;
             let item = iterationArray.value[i];
-            scopeItem[iterationVarName] = item;
+
+            let scopeCopy = NimbleApp.inject(((scope) as Page).route.pageType);
+            Object.assign(scopeCopy, scope);
+            scopeCopy[iterationVarName] = item;
+            scopeCopy['$index'] = i;
             
-            this.render.resolveElement(iterateElement, new GenericPage(scope, scopeItem, { $index: index++ }));
+            this.attrRender.resolveElement(iterateElement, scopeCopy);
         }
 
         element.remove();

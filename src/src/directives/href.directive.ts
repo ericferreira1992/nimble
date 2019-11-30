@@ -2,11 +2,18 @@ import { IScope } from '../page/interfaces/scope.interface';
 import { Directive } from './abstracts/directive';
 import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Router } from '../route/router';
+import { ListenersCollector } from '../providers/listeners-collector';
 
 @PrepareDirective({
     selector: 'href'
 })
 export class HrefDirective extends Directive {
+
+    constructor(
+        private listenersCollector: ListenersCollector
+    ){
+        super();
+    }
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
         selector = this.pureSelector(selector);
@@ -16,7 +23,7 @@ export class HrefDirective extends Directive {
                 value = '#/' + value.replace(/^(\/)/g, '');
             else if (!Router.useHash) {
                 value = value.replace(/^(#)/g, '');
-                element.addEventListener('click', (e) => {
+                this.listenersCollector.subscribe(element, 'click', (e) => {
                     let attr = element.attributes[selector];
                     if (attr)
                         Router.redirect(attr.value);

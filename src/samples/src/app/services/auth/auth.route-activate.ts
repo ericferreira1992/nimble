@@ -1,6 +1,7 @@
-import { ActivateRoute, Route, Router } from "@nimble";
+import { ActivateRoute, Route, Router, Injectable } from "@nimble";
 import { AuthService } from "./auth.service";
 
+@Injectable()
 export class AuthRouteActivate extends ActivateRoute {
 
     constructor(

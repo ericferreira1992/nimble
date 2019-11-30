@@ -42,6 +42,7 @@ export class Page implements IScope {
     public render(action?: () => void) {
         if (this.onNeedRerender) {
             if (action) action();
+            this.route.pageInstance = this;
             this.onNeedRerender(this);
         }
     }
@@ -51,10 +52,7 @@ export class Page implements IScope {
             return (new Function(`with(this) { return ${expression} }`)).call(this);
         }
         catch(e) {
-            if (e.message.includes('is not defined')) {
-                return '';
-            }
-            throw e;
+            console.error(e.message);
         }
     }
 }

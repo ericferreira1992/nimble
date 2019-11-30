@@ -1,0 +1,24 @@
+<div  class="teste-page animated fadeIn" [class]="{ 'teste1': option1 }">
+    <h3 (click)="add()">
+        Toggle
+    </h3>
+    <button (click)="teste()">CHANGE MID ITEM</button>
+
+    <ul>
+        <li @for="let opt of options" class="animated fadeIn">
+            <span>{{opt}}</span>
+            <button style="margin-left: 20px" (click)="remove($index)">REMOVE</button>
+        </li>
+    </ul>
+</div>
+
+<!-- <div  class="teste-page animated fadeIn" [class]="{ 'teste1': option1 }">
+
+    <span></span>
+
+    <div @if="option1">TESTE 01</div>
+    <div>TESTE 02</div>
+
+    <span></span>
+    
+</div> -->

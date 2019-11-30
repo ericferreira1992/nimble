@@ -10,13 +10,13 @@ import { INTERNAL_DIRECTIVES } from './directives/internal-directives';
 import { Type } from './inject/type.interface';
 import { IterationDirective } from './directives/abstracts/iteration-directive';
 import { Container } from './inject/container';
-import { Render } from './render/render';
+import { ApplicationRender } from './render/application-render';
 import { INTERNAL_PROVIDERS } from './providers/internal-providers';
 
 export class NimbleApp {
     public static instance: NimbleApp;
 
-    private render: Render;
+    private render: ApplicationRender;
 
     private containerInjector: Container = new Container();
 
@@ -52,7 +52,7 @@ export class NimbleApp {
         Router.useHash = this.config.useHash;
         Router.registerRoutes(this.config.routes);
 
-        this.render = this.containerInjector.inject(Render);
+        this.render = this.containerInjector.inject(ApplicationRender);
     }
 
     private defineRootElement() {
@@ -160,8 +160,8 @@ export class NimbleApp {
 
     private onRouteFinishedRerender(route: Route) {
         // console.log(`RERENDER FINISHED: (/${route.completePath()})`);
-        // console.log(this.rootElement.real);
-        // console.log(this.rootElement.virtual);
+        console.log(this.rootElement.real);
+        console.log(this.rootElement.virtual);
         this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
         document.dispatchEvent(new Event('render-event'))
     }

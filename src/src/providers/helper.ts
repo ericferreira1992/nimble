@@ -1,4 +1,5 @@
 import { Injectable } from "../inject/injectable";
+import { isArray } from "util";
 
 @Injectable({ single: true })
 export class Helper {
@@ -29,25 +30,20 @@ export class Helper {
 
 	public splitStringJSONtoKeyValue(jsonString: string): { key: string, value: string }[] {
 		let list = [];
-		jsonString.replace(/(?:\"|\')([^"]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[-0-9]+[\.]*[\d]*(?=,)|[0-9a-zA-Z\(\)\@\:\,\/\!\+\-\.\$\#\ \\\']*)(?:\")?/g,
-			(track) => {
-				if (track) {
-					track = track.trim();
-					let splitIndex = track.indexOf(':');
-					if (splitIndex > 2) {
-						let key = track.substr(0, splitIndex)
-									.trim()
-									.replace(/(\"|\')/g, '')
-									.trim();
-						let value = track.substr(splitIndex + 1).trim()
-																.replace(/\,$/g, '')
-																.trim();
-						list.push({ key: key, value: value });
-					}
-				}
-				return '';
-			}
-		);
+		let matchGroup = jsonString.replace(/\"/g, `'`)['matchAll']((/(?:\"|\')([^("|'|)]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[0-9a-zA-Z\(\)\@\:\/\!\+\-\.\$\&\%\ \\\']*|[-0-9]+[\.]*[\d]*(?=,))(?:\")?/gm));
+		let grouped = matchGroup.next();
+		while(grouped && isArray(grouped.value) && grouped.value.length > 2) {
+			let key = grouped.value[1].trim();
+			let value = grouped.value[2].trim()
+										.replace(/\,$/g, '')
+										.trim();
+			list.push({ key: key, value: value });
+			grouped = matchGroup.next();
+		}
 		return list;
+	}
+
+	public cloneObject(obj: any) {
+		return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 	}
 }

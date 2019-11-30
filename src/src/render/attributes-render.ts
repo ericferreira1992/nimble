@@ -6,6 +6,7 @@ import { DirectiveHelper } from '../directives/directive.helper';
 import { Type } from '../inject/type.interface';
 import { Injectable } from '../inject/injectable';
 import { Helper } from '../providers/helper';
+import { ListenersCollector } from '../providers/listeners-collector';
 
 @Injectable({ single: true })
 export class AttributesRender {
@@ -26,7 +27,8 @@ export class AttributesRender {
     }
 
     constructor(
-        private helper: Helper
+        private helper: Helper,
+        private listenersCollector: ListenersCollector
     ) {
     }
 
@@ -34,21 +36,17 @@ export class AttributesRender {
         for(let attributeProc of this.attrProccessPending) {
             let element = this.app.rootElement.real.querySelector(`[nimble-id="${attributeProc.procId}"]`) as HTMLElement;
             if (element) {
-                if (fromRerender && attributeProc.originalElement) {
-                    let newElement = element.cloneNode(true);
-                    element.parentNode.replaceChild(newElement, element);
-                    element = newElement as HTMLElement;
-                }
+                this.listenersCollector.unsubscribeAllFromElement(element);
                     
                 for(let process of attributeProc.processes) {
                     if (process instanceof DirectiveExecute) {
                         let directive = NimbleApp.inject(process.directive) as Directive;
                         process.applicables.forEach((applicable) => {
-                            directive.resolve(applicable.selector, applicable.content, element, attributeProc.scope);
+                            directive.resolve(applicable.selector, applicable.content, element, process.scope);
                         });
                     }
                     else
-                        process.action(element, element.attributes[process.attr], process.content, attributeProc.scope);
+                        process.action(element, element.attributes[process.attr], process.content, process.scope);
                 }
 
                 element.removeAttribute('nimble-id');
@@ -57,13 +55,12 @@ export class AttributesRender {
         this.clearPendingAttributesToProcess();
     }
 
-    private addAttributeToProcess(currentElement: HTMLElement, scope: IScope, procExec: AttrProcExecute | DirectiveExecute) {
+    private addAttributeToProcess(currentElement: HTMLElement, procExec: AttrProcExecute | DirectiveExecute) {
         let attributeProcess = this.attrProccessPending.find(x => x.originalElement === currentElement);
 
         if (!attributeProcess) {
             attributeProcess = new AttributeToProcess();
             attributeProcess.originalElement = currentElement;
-            attributeProcess.scope = scope;
             attributeProcess.procId = this.helper.uid();
 
             if (!currentElement.hasAttribute('nimble-id'))
@@ -72,7 +69,7 @@ export class AttributesRender {
                 (currentElement.attributes['nimble-id'] as Attr).value = attributeProcess.procId;
 
             attributeProcess.processes.push(procExec);
-            this.attrProccessPending.push(attributeProcess);
+            this.attrProccessPending = [attributeProcess, ...this.attrProccessPending];
         }
         else {
             let sameProcess: DirectiveExecute = (procExec instanceof DirectiveExecute)
@@ -85,7 +82,7 @@ export class AttributesRender {
                     sameProcess.applicables.push(applicable);
             }
             else
-                attributeProcess.processes.push(procExec);
+                attributeProcess.processes = [procExec, ...attributeProcess.processes];
         }
     }
 
@@ -112,12 +109,14 @@ export class AttributesRender {
         let afterIterate = this.resolveIterateDirective(element, scope);
 
         if (!afterIterate.removed) {
-            if (element.children.length > 0) {
-                this.resolveChildren(element.children, scope);
-            }
+            if (!afterIterate.resolvedAllElements) {
+                if (element.children.length > 0) {
+                    this.resolveChildren(element.children, scope);
+                }
 
-            this.resolveInsideText(element, scope);
-            this.resolveNormalDirectives(element, scope);
+                this.resolveInsideText(element, scope);
+                this.resolveNormalDirectives(element, scope);
+            }
         }
 
         return afterIterate;
@@ -184,7 +183,6 @@ export class AttributesRender {
 
             for(let attribute of attributes) {
                 let name = attribute.name;
-
                 let directive:{selector: string, directive: Type<Directive>} = null;
 
                 for(let x of this.normalDirectives) {
@@ -205,19 +203,6 @@ export class AttributesRender {
                         break;
                     }
                 }
-                this.normalDirectives.find(x => {
-                    let selectors = x.prototype.selectors as string[];
-                    return selectors.some(selector => {
-                        if (selector) {
-                            selector = selector.toLowerCase();
-                            if (/^\[([^)]+)\]$/g.test(name) && /^(?!\(\/).*(?<!\))$/g.test(selector))
-                                return name === `[${selector.replace(/\[|\]/g, '')}]`;
-                            else
-                                return name === selector;
-                        }
-                        return false;
-                    });
-                });
 
                 if (directive) {
                     let value = attribute.value;
@@ -236,8 +221,9 @@ export class AttributesRender {
                         }
                     }
 
-                    this.addAttributeToProcess(element, scope, new DirectiveExecute({
+                    this.addAttributeToProcess(element, new DirectiveExecute({
                         applicables: [{ selector: directive.selector, content: value }],
+                        scope: scope,
                         directive: directive.directive
                     }));
                     
@@ -274,37 +260,10 @@ export class AttributesRender {
         // this.resolveAttrHref(element, attribute);
     }
 
-    /* private resolveAttrHref(element: HTMLElement, attribute: Attr) {
-        if (attribute.name === 'href') {
-            let value = attribute.value;
-            if (!value.startsWith('http:') && !value.startsWith('https:')) {
-                this.addAttributeToProcess(element, null, new AttrProcExecute({
-                    attr: attribute.name,
-                    content: value,
-                    action: (element: HTMLElement) => {
-                        if (Router.useHash && !value.startsWith('#') && !value.startsWith('/#'))
-                            attribute.value = '#/' + value.replace(/^(\/)/g, '');
-                        else if (!Router.useHash) {
-                            attribute.value = value.replace(/^(#)/g, '');
-                            element.addEventListener('click', (e) => {
-                                let attr = element.attributes['href'];
-                                if (attr) {
-                                    Router.redirect(attr.value);
-                                }
-                                e.preventDefault();
-                                return false;
-                            });
-                        }
-                    }
-                }));
-            }
-        }
-    } */
-
     private resolveInterpolationIfHave(value: any, scope: IScope) {
         if (value) {
-            value = value.toString();
-            let regex = /{{\s*[\w\ \.\$\!\%\+\-\*\/\>\<\=\'\']+\s*}}/g;
+            value = value.toString().trim();
+            let regex = /{{\s*[\w\ \.\$\!\?\:\%\+\-\*\/\>\<\=\'\']+\s*}}/g;
             if (regex.test(value)) {
                 value = value.replace(regex, (expression) => {
                     expression = scope.eval(expression.replace(/(^{{)|(}}$)/g, ''));
@@ -318,6 +277,7 @@ export class AttributesRender {
 }
 
 export class AfterIterateElement {
+    resolvedAllElements: boolean;
     removed: boolean = false;
     quantityNewChild: number = 0;
 
@@ -329,7 +289,6 @@ export class AfterIterateElement {
 export class AttributeToProcess {
     procId: string;
     originalElement: HTMLElement;
-    scope: IScope;
     processes?: (AttrProcExecute | DirectiveExecute)[] = [];
 
     constructor(obj?: Partial<AttributeToProcess>) {
@@ -340,6 +299,7 @@ export class AttributeToProcess {
 export class AttrProcExecute {
     attr: string;
     content: any;
+    scope: IScope;
     action: (element: HTMLElement, attr: Attr, content: any, scope: IScope) => void;
 
     constructor(obj?: Partial<AttrProcExecute>) {
@@ -349,6 +309,7 @@ export class AttrProcExecute {
 
 export class DirectiveExecute {
     directive: Type<Directive>;
+    scope: IScope;
     applicables: { selector: string, content: any }[];
     afterExecute?: (element: HTMLElement) => void;
 

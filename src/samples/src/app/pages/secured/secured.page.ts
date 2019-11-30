@@ -1,4 +1,4 @@
-import { Page, PreparePage } from '@nimble';
+import { Page, PreparePage, Router } from '@nimble';
 import { AuthService } from '../../services/auth/auth.service';
 
 @PreparePage({
@@ -12,6 +12,10 @@ export default class SecuredPage extends Page {
     }
 
     onInit() {
+    }
+
+    public logout() {
+        this.authService.logout();
     }
 
 }

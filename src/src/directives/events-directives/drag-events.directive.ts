@@ -1,6 +1,7 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
+import { ListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: [
@@ -16,8 +17,14 @@ import { PrepareDirective } from '../decorators/prepare-directive.decor';
 })
 export class DragEventsDirective extends Directive {
 
+    constructor(
+        private listenersCollector: ListenersCollector
+    ){
+        super();
+    }
+
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
-        element.addEventListener(this.pureSelector(selector), (e) => {
+        this.listenersCollector.subscribe(element, this.pureSelector(selector), (e) => {
             Object.assign(scope, { $event: e });
             scope.eval(value);
             delete scope['$event'];

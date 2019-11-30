@@ -11,6 +11,7 @@ export class Router {
 
     private static _routes: Route[] = [];
     private static _current: Route;
+    private static _next: Route;
     private static _previous: Route;
 
     private static _state: RouterEvent;
@@ -23,17 +24,22 @@ export class Router {
 
     public static useHash: boolean = false;
 
+    public static _nextPath: string = null;
+
+    private static nextRejectedAndRedirectAfter: boolean = false;
+
+    public static get currentPath() { return (!isNullOrUndefined(this.nextPath) ? this.nextPath : (this.useHash ? location.hash : location.pathname)).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
+    public static get nextPath() { return this._nextPath; }
+
     public static get routes() { return this._routes; }
     public static get abstactRoutes() { return this._routes.filter(x => x.isAbstract); }
     public static get singleRoutes() { return this._routes.filter(x => !x.isAbstract); }
     public static get current() { return this._current; }
+    public static get next() { return this._next; }
     public static get previous() { return this._previous; }
 
     public static get onRoute() { return !isNullOrUndefined(this._current); }
 
-    public static get currentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
-
-    public static nextPath: string;
 
     public static registerRoutes(routes: RouteBase[]) {
         if (this.app.state === NimbleAppState.INITIALIZING) {
@@ -90,8 +96,10 @@ export class Router {
 
     private static listen() {
         if (!this.stopListening) {
-            if (!this.onRoute || this.currentPath !== this.lastLocationPath) {
-                this.lastLocationPath = this.currentPath;
+            if (!this.onRoute || this.currentPath !== this.lastLocationPath || (!isNullOrUndefined(this.nextPath) && !this.next)) {
+                if (isNullOrUndefined(this.nextPath))
+                    this.lastLocationPath = this.currentPath;
+
                 let changed = false;
                 if (this.checkPageCanBeCurrent()) {
                     changed = this.defineCurrentPage();
@@ -134,10 +142,7 @@ export class Router {
             }
 
         if (newRoute !== this.current) {
-            if (this._current)
-                this._previous = this._current;
-            
-                this._current = newRoute;
+            this._next = newRoute;
             return true;
         }
 
@@ -145,42 +150,43 @@ export class Router {
     }
 
     private static onRouterChange(changedPage: boolean) {
-        if (changedPage && this.current) {
-            if (!this.current.isPriority || this.current.completePath() === this.currentPath) {
+        if (changedPage && this.next) {
+            if (!this.next.isPriority || this.next.completePath() === this.currentPath) {
                 this.loadCurrentRoutePage();
             }
             else {
-                this.redirect(this.current.completePath());
-                this._current = null;
+                this.redirect(this.next.completePath());
+                this._next = null;
             }
         }
-        else if (!this.current) {
+        else if (!this.next) {
             console.error(`No pages matched with this path: "/${this.currentPath}". If it path is abstract (has childrens), set one child as 'isPriority: true' in "routes.ts".`);
-            this.redirect('');
+            this._next = null;
             this.stopListening = true;
-        }
-        else {
-            this.redirect(this.current.completePath());
         }
     }
 
     private static loadCurrentRoutePage() {
-        this.setState(RouterEvent.START_CHANGE, this.current);
+        this.setState(RouterEvent.START_CHANGE, this.next);
 
-        this.notifyOldRoutesElementExit();
-
-        if (this.current.hasParent)
+        if (this.next.hasParent)
             this.loadRoutesPageFromAllParents();
         else
-            this.loadRoutePage(this.current).then(
-                () => this.setState(RouterEvent.FINISHED_CHANGE, this.current),
-                () => this.setState(RouterEvent.CHANGE_ERROR, this.current),
+            this.loadRoutePage(this.next).then(
+                () => {
+                    this.defineCurrentAfterFinished();
+                    this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+                },
+                () => {
+                    this.abortChangeRoute();
+                    this.setState(RouterEvent.CHANGE_ERROR, this.current)
+                },
             );
     }
 
     private static loadRoutesPageFromAllParents() {
-        let commonParentRoute = this.previous ? Router.getCommonParentOfTwoRoutes(this.current, this.previous) : null;
-        let parents = this.current.getAllParents().map((parentRoute) => ({
+        let commonParentRoute = this.previous ? Router.getCommonParentOfTwoRoutes(this.next, this.previous) : null;
+        let parents = this.next.getAllParents().map((parentRoute) => ({
             route: parentRoute,
             makeNewInstance: true
         }));
@@ -201,20 +207,61 @@ export class Router {
                         action();
                     },
                     (error) => {
+                        this.abortChangeRoute();
                         this.setState(RouterEvent.COMPLETED_LOADING);
                         this.setState(RouterEvent.ERROR_LOADING, error);
                     }
                 );
             }
             else{
-                this.loadRoutePage(this.current).then(
-                    () => this.setState(RouterEvent.FINISHED_CHANGE, this.current),
-                    () => this.setState(RouterEvent.CHANGE_ERROR, this.current),
+                this.loadRoutePage(this.next).then(
+                    () => {
+                        this.defineCurrentAfterFinished();
+                        this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+                    },
+                    () => {
+                        this.abortChangeRoute();
+                        this.setState(RouterEvent.CHANGE_ERROR, this.current)
+                    },
                 );
             }
         }
 
         action();
+    }
+
+    private static defineCurrentAfterFinished() {
+        if (this._current)
+            this._previous = this._current;
+    
+        if (this.next) {
+            this._current = this.next;
+            this._next = null;
+        }
+
+        if (!isNullOrUndefined(this._nextPath)) {
+            let routePath = (this._nextPath.startsWith('/') ? '' : '/') + this._nextPath;
+            if (this.useHash) 
+                location.hash = routePath;
+            else
+                history.pushState(null, null, routePath);
+
+            this._nextPath = null;
+        }
+        
+        this.lastLocationPath = this.currentPath;
+
+        if(!this.current) {
+            debugger;
+        }
+        this.notifyOldRoutesElementExit();
+    }
+
+    private static abortChangeRoute() {
+        if(!isNullOrUndefined(this.nextPath) && !this.nextRejectedAndRedirectAfter && this.current) {
+            this._next = null;
+            this._nextPath = null;
+        }
     }
 
     private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true, silentMode: boolean = false, notifyStart: boolean = true) {
@@ -224,6 +271,7 @@ export class Router {
             route.loadPage(
                 (response: {page: Page, route: Route}) => {
                     if (this.routeCanActivate(route)) {
+                        response.page.onEnter();
                         response.page.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
                         resolve(route);
@@ -245,15 +293,20 @@ export class Router {
     }
 
     private static routeCanActivate(route: Route) {
+        let routePath = (this.currentPath.startsWith('/') ? '' : '/') + this.currentPath;
+        if (route.routeActivate && route.routeActivate.length > 0) {
+            for(let routeActivate of route.routeActivate) {
+                let instance = NimbleApp.inject(routeActivate);
+                if (instance && !instance.doActivate(routePath, route))
+                    return false;
+            }
+        }
         return true;
     }
 
     public static redirect(route: string) {
-        route = (route.startsWith('/') ? '' : '/') + route;
-        if (this.useHash)
-            location.hash = route;
-        else
-            history.pushState(null, null, route);
+        this.nextRejectedAndRedirectAfter = isNullOrUndefined(this.nextPath) ? false : true;
+        this._nextPath = route;
     }
 
     private static notifyOldRoutesElementExit() {
@@ -285,11 +338,10 @@ export class Router {
         let routesToRerender = [currentRoute, ...currentRoute.getAllParents()];
 
         this.app.virtualizeSequenceRoutes(routesToRerender.reverse());
+
         
-        if (!routeChangeFinished)
+        if (!routeChangeFinished || this.state === RouterEvent.STARTED_RERENDER)
             this.setState(RouterEvent.FINISHED_RERENDER, page.route);
-        else {
-        }
 
         if (changingRouteInProgress)
             this._state = RouterEvent.START_CHANGE;

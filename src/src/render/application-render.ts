@@ -4,20 +4,18 @@ import { HeaderRender } from "./header-render";
 import { AttributesRender } from "./attributes-render";
 import { Injectable } from "../inject/injectable";
 import { NimbleApp } from "./../app";
-
-const { DiffDOM } = require('diff-dom');
+import { DiffDOM } from "./diff-dom";
 
 @Injectable({ single: true })
-export class Render {
+export class ApplicationRender {
     private get app() { return NimbleApp.instance; }
 
-    private diffDOM: any;
+    private diffDOM: DiffDOM = new DiffDOM();
 
     constructor(
         private headerRender: HeaderRender,
         private attributesRender: AttributesRender
     ) {
-        this.diffDOM = new DiffDOM();
     }
 
     public virtualizeRoute(route: Route) {
@@ -101,8 +99,7 @@ export class Render {
 
     public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement) {
         if (oldTreeElments.outerHTML !== newTreeElements.outerHTML) {
-            let diff = this.diffDOM.diff(oldTreeElments, newTreeElements)
-            this.diffDOM.apply(oldTreeElments, diff);
+            this.app.rootElement.real = this.diffDOM.diff(oldTreeElments, newTreeElements);
         }
         this.attributesRender.processesPendingAttributes(true);
     }
