@@ -11,6 +11,7 @@ import { FormEventsDirective } from './events-directives/form-events.directive';
 import { KeyboardEventsDirective } from './events-directives/keyboard-events.directive';
 import { MouseEventsDirective } from './events-directives/mouse-events.directive';
 import { FormFieldDirective } from './forms/form-field.directive';
+import { FieldMaskDirective } from './forms/field-mask.directive';
 
 export const INTERNAL_DIRECTIVES: Type<Directive | IterationDirective>[] = [
     IfDirective,
@@ -22,5 +23,6 @@ export const INTERNAL_DIRECTIVES: Type<Directive | IterationDirective>[] = [
     FormEventsDirective,
     KeyboardEventsDirective,
     MouseEventsDirective,
-    FormFieldDirective
+    FormFieldDirective,
+    FieldMaskDirective
 ];

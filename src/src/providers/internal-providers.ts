@@ -5,7 +5,7 @@ import { AttributesRender } from '../render/attributes-render';
 import { HttpClient } from './http-client/http-client';
 import { Helper } from './helper';
 import { ListenersCollector } from './listeners-collector';
-import { Renderer } from '../render/renderer';
+import { Listener } from '../render/listener';
 
 export const INTERNAL_PROVIDERS: Type<{}>[] = [
     Helper,
@@ -13,6 +13,6 @@ export const INTERNAL_PROVIDERS: Type<{}>[] = [
     HeaderRender,
     AttributesRender,
     HttpClient,
-    Renderer,
+    Listener,
     ListenersCollector
 ];

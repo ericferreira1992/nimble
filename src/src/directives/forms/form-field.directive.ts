@@ -1,8 +1,8 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { FormField } from '../../forms/form-field';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { FormField } from '../../core/forms/form-field';
+import { Listener } from '../../render/listener';
 
 @PrepareDirective({
     selector: [
@@ -12,13 +12,18 @@ import { ListenersCollector } from '../../providers/listeners-collector';
 })
 export class FormFieldDirective extends Directive {
 
+    private get formField(): FormField {
+        let selectorApplied = this.selectorsApplied.find(x => x.selector === '[form-field]');
+        if (selectorApplied) return selectorApplied.content;
+        return null;
+    }
+
     constructor(
-        private listenersCollector: ListenersCollector
+        private listener: Listener
+
     ){
         super();
     }
-
-    private formField: FormField;
 
     public static get selectorsMustHavePureValue() {
         return [];
@@ -26,24 +31,23 @@ export class FormFieldDirective extends Directive {
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
         if (selector === '[form-field]') {
-            if(this.elementIsValid(element) && value instanceof FormField) {
+            if(this.elementIsValid() && value instanceof FormField) {
                 value.element = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-                this.formField = value;
-                this.resolveFormFieldSelector(value, element, scope);
+                this.resolveFormFieldSelector(value);
             }
         }
         else if (selector === '(valueChange)')
-            this.resolveValueChangeSelector(value, element, scope);
+            this.resolveValueChangeSelector(value, scope);
     }
 
-    private resolveFormFieldSelector(field: FormField, element: HTMLElement, scope: IScope) {
+    private resolveFormFieldSelector(field: FormField) {
         field.setValue(field.value, { noNotify: true });
-        this.listenersCollector.subscribe(element, 'input', (e) => {
-            field.setValue((element as HTMLInputElement).value);
+        this.listener.listen(this.element, 'input', (e) => {
+            field.setValue((this.element as HTMLInputElement).value);
         });
     }
 
-    private resolveValueChangeSelector(expression: any, element: HTMLElement, scope: IScope) {
+    private resolveValueChangeSelector(expression: any, scope: IScope) {
         if (this.formField) {
             this.formField.valueChanges.subscribe((value) => {
                 Object.assign(scope, { $event: value });
@@ -51,15 +55,18 @@ export class FormFieldDirective extends Directive {
                 delete scope['$event'];
             });
         }
+        else {
+            console.error('The directive (valueChanges) cannot be appplied, because the [form-field] directive must exist before it.');
+        }
     }
 
-    private elementIsValid(element: HTMLElement) {
+    private elementIsValid() {
         let types = [
             HTMLInputElement,
             HTMLTextAreaElement,
             HTMLSelectElement,
         ];
-        return types.some(type => element instanceof type);
+        return types.some(type => this.element instanceof type);
     }
 
 }

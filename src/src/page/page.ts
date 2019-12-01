@@ -42,7 +42,7 @@ export class Page implements IScope {
     public render(action?: () => void) {
         if (this.onNeedRerender) {
             if (action) action();
-            this.route.pageInstance = this;
+            // his.route.pageInstance = this;
             this.onNeedRerender(this);
         }
     }

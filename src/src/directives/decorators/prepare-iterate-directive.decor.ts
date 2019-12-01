@@ -1,4 +1,4 @@
-import { DirectiveIterateConfig } from './classes/iterate-directive-config';
+import { DirectiveIterationConfig } from './classes/iteration-directive-config';
 import { Directive } from '../abstracts/directive';
 import { IterationDirective } from "../../directives/abstracts/iteration-directive";
 import { Type } from "../../inject/type.interface";
@@ -6,9 +6,10 @@ import { isArray } from 'util';
 import { INJECTABLE_METADATA_KEY } from '../../inject/injectable';
 import 'reflect-metadata';
 
-export function PrepareIterateDirective(config: DirectiveIterateConfig) {
+export function PrepareIterateDirective(config: DirectiveIterationConfig) {
     return function <T extends { new(...args: any[]): Directive }>(constructor: T) {
-        config = new DirectiveIterateConfig(config);
+        config = new DirectiveIterationConfig(config);
+        constructor.prototype.type = 'IterationDirective';
         constructor.prototype.selectors = (isArray(config.selector) ? config.selector : [config.selector]) as string[];
 
         if (constructor.prototype.selectors.length > 0) {

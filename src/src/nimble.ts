@@ -16,7 +16,7 @@ export { NimblePage } from './elements/nimble-page-element';
 export { NimbleRouter } from './elements/nimble-router-element';
 
 // RENDER
-export { Renderer } from './render/renderer';
+export { Listener as Renderer } from './render/listener';
 
 // DECORATORS
 export { PreparePage } from './page/decorators/page-prepare.decor';
@@ -27,6 +27,3 @@ export { Injectable } from './inject/injectable';
 
 // PROVIDERS
 export * from './providers/http-client';
-
-//FORMS
-export * from './forms';

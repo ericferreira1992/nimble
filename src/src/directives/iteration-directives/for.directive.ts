@@ -7,6 +7,7 @@ import { AttributesRender } from '../../render/attributes-render';
 import { Helper } from '../../providers/helper';
 import { NimbleApp } from '../../app';
 import { Page } from '../../page/page';
+import { GenericPage } from '../../page/generic-page';
 
 @PrepareIterateDirective({
     selector: 'for'
@@ -58,13 +59,20 @@ export class ForDirective extends IterationDirective {
             beforeElement = iterateElement;
 
             let item = iterationArray.value[i];
-
-            let scopeCopy = NimbleApp.inject(((scope) as Page).route.pageType);
-            Object.assign(scopeCopy, scope);
-            scopeCopy[iterationVarName] = item;
-            scopeCopy['$index'] = i;
+            let index = i;
             
-            this.attrRender.resolveElement(iterateElement, scopeCopy);
+            this.attrRender.resolveElement(
+                iterateElement,
+                scope,
+                () => {
+                    scope[iterationVarName] = item;
+                    scope['$index'] = index;
+                },
+                () => {
+                    delete scope[iterationVarName];
+                    delete scope['$index'];
+                }
+            );
         }
 
         element.remove();

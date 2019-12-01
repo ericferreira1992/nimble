@@ -10,6 +10,7 @@ export function PrepareDirective(config: DirectiveConfig) {
 
     return function <T extends { new(...args: any[]): Directive }>(constructor: T) {
         config = new DirectiveConfig(config);
+        constructor.prototype.type = 'Directive';
         constructor.prototype.selectors = (isArray(config.selector) ? config.selector : [config.selector]) as string[];
 
         if (constructor.prototype.selectors.length > 0) {
@@ -31,7 +32,7 @@ export function PrepareDirective(config: DirectiveConfig) {
                 for (let selector of selectors) {
                     if (!regexValidates.some(regex => !regex.test(selector)))
                         throw Error(`The ${name} has invalid selector: "${selector}".`);
-                    else if (addedDirectives.some(added => added.name === name))
+                    else if (addedDirectives.some(added => added === constructor))
                         throw Error(`The ${name} is already added.`);
                     else {
                         let equalSelector = addedDirectives.find(added => added.prototype.selectors.some(x => x === selector));

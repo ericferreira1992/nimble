@@ -96,28 +96,42 @@ export class Router {
 
     private static listen() {
         if (!this.stopListening) {
-            if (!this.onRoute || this.currentPath !== this.lastLocationPath || (!isNullOrUndefined(this.nextPath) && !this.next)) {
-                if (isNullOrUndefined(this.nextPath))
-                    this.lastLocationPath = this.currentPath;
-
-                let changed = false;
-                if (this.checkPageCanBeCurrent()) {
-                    changed = this.defineCurrentPage();
+            try {
+                if (!this.onRoute || this.currentPath !== this.lastLocationPath) {
+                    if (isNullOrUndefined(this.nextPath)){ 
+                        this.lastLocationPath = this.currentPath;
+                    }
+    
+                    let changed = false;
+                    if (this.checkPageCanBeCurrent()) {
+                        changed = this.defineCurrentPage();
+                    }
+                    this.onRouterChange(changed);
                 }
-                this.onRouterChange(changed);
             }
-            setTimeout(this.listen.bind(this), 200);
+            finally {
+                setTimeout(this.listen.bind(this), 200);
+            }
         }
     }
 
     private static checkPageCanBeCurrent(): boolean {
-        return this.routes.some((route, index) => {
+        let found = this.routes.some((route, index) => {
             if (route.checkIfMatchCurrentLocation())
                 return true;
             else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
                 return route.checkIfMatchCurrentLocation(true);
             return false;
         });
+
+        if (!found) {
+            return this.routes.some((route, index) => {
+                if (route.checkIfMatchCurrentLocation(true))
+                    return true;
+                return false;
+            });
+        }
+        return true;
     }
 
     private static defineCurrentPage(): boolean {
@@ -139,6 +153,13 @@ export class Router {
                     newRoute = route.getMatchedPageWithLocation(true);
                     if (newRoute) break;
                 }
+            }
+        if (!newRoute)
+            for (let i = 0; i < this.abstactRoutes.length; i++) {
+                let route = this.abstactRoutes[i];
+                newRoute = route.getMatchedPageWithLocation(true);
+
+                if (newRoute) break;
             }
 
         if (newRoute !== this.current) {
@@ -240,28 +261,31 @@ export class Router {
         }
 
         if (!isNullOrUndefined(this._nextPath)) {
-            let routePath = (this._nextPath.startsWith('/') ? '' : '/') + this._nextPath;
-            if (this.useHash) 
-                location.hash = routePath;
-            else
-                history.pushState(null, null, routePath);
-
+            this.updateURLPath(this._nextPath);
             this._nextPath = null;
         }
         
         this.lastLocationPath = this.currentPath;
-
-        if(!this.current) {
-            debugger;
-        }
         this.notifyOldRoutesElementExit();
     }
 
     private static abortChangeRoute() {
         if(!isNullOrUndefined(this.nextPath) && !this.nextRejectedAndRedirectAfter && this.current) {
+            let currentPath = this.nextPath;
             this._next = null;
             this._nextPath = null;
+            
+            this.updateURLPath(currentPath);
+            this.lastLocationPath = this.currentPath;
         }
+    }
+
+    private static updateURLPath(path: string) {
+        path = (path.startsWith('/') ? '' : '/') + path;
+        if (this.useHash) 
+            location.hash = path;
+        else
+            history.pushState(null, null, path);
     }
 
     private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true, silentMode: boolean = false, notifyStart: boolean = true) {
@@ -269,10 +293,10 @@ export class Router {
             this.setState(RouterEvent.STARTED_LOADING, route, silentMode || notifyStart);
             
             route.loadPage(
-                (response: {page: Page, route: Route}) => {
+                (route: Route) => {
                     if (this.routeCanActivate(route)) {
-                        response.page.onEnter();
-                        response.page.onNeedRerender = this.whenRerenderIsRequested.bind(this);
+                        route.pageInstance.onEnter();
+                        route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
                         resolve(route);
                     } {

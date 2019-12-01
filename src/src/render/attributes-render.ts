@@ -1,4 +1,4 @@
-import { NimbleApp } from './../app';;
+import { NimbleApp } from './../app';
 import { IScope } from '../page/interfaces/scope.interface';
 import { IterationDirective } from '../directives/abstracts/iteration-directive';
 import { Directive } from '../directives/abstracts/directive';
@@ -17,13 +17,10 @@ export class AttributesRender {
 
     public get allDirectives() { return this.app.directives; }
     public get iterationDirectives() {
-        return this.allDirectives.filter(x => x['__proto__'].name === 'IterationDirective') as Type<IterationDirective>[];
+        return this.allDirectives.filter(x => x.prototype.type === 'IterationDirective') as Type<IterationDirective>[];
     }
     public get normalDirectives() {
-        let iterationDirectives = this.iterationDirectives;
-        return this.allDirectives.filter(x =>
-            !iterationDirectives.some(y => x === y)
-        ) as Type<Directive>[];
+        return this.allDirectives.filter(x => x.prototype.type === 'Directive') as Type<Directive>[];
     }
 
     constructor(
@@ -32,17 +29,29 @@ export class AttributesRender {
     ) {
     }
 
-    public processesPendingAttributes(fromRerender: boolean = false){
+    public processesPendingAttributes(){
         for(let attributeProc of this.attrProccessPending) {
             let element = this.app.rootElement.real.querySelector(`[nimble-id="${attributeProc.procId}"]`) as HTMLElement;
+            
             if (element) {
                 this.listenersCollector.unsubscribeAllFromElement(element);
                     
                 for(let process of attributeProc.processes) {
                     if (process instanceof DirectiveExecute) {
-                        let directive = NimbleApp.inject(process.directive) as Directive;
+                        process.directiveInstance.others = attributeProc.processes.filter(x => {
+                            return x instanceof DirectiveExecute && x.directiveType !== (process as DirectiveExecute).directiveType;
+                        }).map(x => (x as DirectiveExecute).directiveInstance);
+                        process.directiveInstance.element = element;
+
                         process.applicables.forEach((applicable) => {
-                            directive.resolve(applicable.selector, applicable.content, element, process.scope);
+                            if (applicable.beforeResolves) applicable.beforeResolves();
+                            
+                            (process as DirectiveExecute).directiveInstance
+                                .resolve(applicable.selector, applicable.content, element, process.scope);
+
+                            this.listenersCollector.addActionsInElementsListeners(element, applicable.beforeResolves, applicable.afterResolves)
+                            
+                            if (applicable.afterResolves) applicable.afterResolves();
                         });
                     }
                     else
@@ -55,7 +64,7 @@ export class AttributesRender {
         this.clearPendingAttributesToProcess();
     }
 
-    private addAttributeToProcess(currentElement: HTMLElement, procExec: AttrProcExecute | DirectiveExecute) {
+    private addAttributeToProcess(currentElement: HTMLElement, process: AttrProcExecute | DirectiveExecute) {
         let attributeProcess = this.attrProccessPending.find(x => x.originalElement === currentElement);
 
         if (!attributeProcess) {
@@ -68,21 +77,46 @@ export class AttributesRender {
             else
                 (currentElement.attributes['nimble-id'] as Attr).value = attributeProcess.procId;
 
-            attributeProcess.processes.push(procExec);
+            if (process instanceof DirectiveExecute){
+                process.directiveInstance = NimbleApp.inject(process.directiveType) as Directive;
+                process.directiveInstance.selectorsApplied.push({
+                    selector: process.applicables[0].selector,
+                    content: process.applicables[0].content,
+                });
+            }
+
+            attributeProcess.processes.push(process);
+
             this.attrProccessPending = [attributeProcess, ...this.attrProccessPending];
         }
         else {
-            let sameProcess: DirectiveExecute = (procExec instanceof DirectiveExecute)
-                ? (attributeProcess.processes.filter(x => x instanceof DirectiveExecute).find(p => (p as DirectiveExecute).directive.name === procExec.directive.name) as DirectiveExecute)
-                : null;
+            let sameProcess: DirectiveExecute = null;
+            
+            if (process instanceof DirectiveExecute)
+                sameProcess = attributeProcess.processes.filter(x => x instanceof DirectiveExecute)
+                                                        .find(p => (p as DirectiveExecute).directiveType === process.directiveType) as DirectiveExecute;
     
             if (sameProcess) {
-                let applicable = (procExec as DirectiveExecute).applicables[0];
-                if (!sameProcess.applicables.some(x => x.selector === applicable.selector))
+                let applicable = (process as DirectiveExecute).applicables[0];
+                if (!sameProcess.applicables.some(x => x.selector === applicable.selector)) {
                     sameProcess.applicables.push(applicable);
+                    sameProcess.directiveInstance.selectorsApplied.push({
+                        selector: applicable.selector,
+                        content: applicable.content,
+                    });
+                }
             }
-            else
-                attributeProcess.processes = [procExec, ...attributeProcess.processes];
+            else {
+                if (process instanceof DirectiveExecute) {
+                    process.directiveInstance = NimbleApp.inject(process.directiveType) as Directive;
+                    process.directiveInstance.selectorsApplied.push({
+                        selector: process.applicables[0].selector,
+                        content: process.applicables[0].content,
+                    });
+                }
+
+                attributeProcess.processes = [process, ...attributeProcess.processes];
+            }
         }
     }
 
@@ -90,10 +124,10 @@ export class AttributesRender {
         this.attrProccessPending = [];
     }
 
-    public resolveChildren(elements: HTMLCollection, scope: IScope) {
+    public resolveChildren(elements: HTMLCollection, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void) {
         for (var i = 0; i < elements.length; i++) {
             let child = elements[i] as HTMLElement;
-            let childAfterResolved = this.resolveElement(child, scope);
+            let childAfterResolved = this.resolveElement(child, scope, beforeResolves, afterResolves);
 
             if (childAfterResolved.removed)
                 i--;
@@ -105,17 +139,21 @@ export class AttributesRender {
         }
     }
 
-    public resolveElement(element: HTMLElement, scope: IScope): AfterIterateElement {
+    public resolveElement(element: HTMLElement, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void): AfterIterateElement {
         let afterIterate = this.resolveIterateDirective(element, scope);
 
         if (!afterIterate.removed) {
             if (!afterIterate.resolvedAllElements) {
+                if (beforeResolves) beforeResolves();
+
                 if (element.children.length > 0) {
-                    this.resolveChildren(element.children, scope);
+                    this.resolveChildren(element.children, scope, beforeResolves, afterResolves);
                 }
 
                 this.resolveInsideText(element, scope);
-                this.resolveNormalDirectives(element, scope);
+                this.resolveNormalDirectives(element, scope, beforeResolves, afterResolves);
+
+                if (afterResolves) afterResolves();
             }
         }
 
@@ -175,7 +213,7 @@ export class AttributesRender {
         });
     }
 
-    private resolveNormalDirectives(element: HTMLElement, scope: IScope) {
+    private resolveNormalDirectives(element: HTMLElement, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void) {
         if (element.attributes.length > 0) {
             let attributes = [];
             for (let i = 0; i < element.attributes.length; i++)
@@ -222,9 +260,15 @@ export class AttributesRender {
                     }
 
                     this.addAttributeToProcess(element, new DirectiveExecute({
-                        applicables: [{ selector: directive.selector, content: value }],
+                        applicables: [{
+                            selector: directive.selector,
+                            content: value,
+                            beforeResolves,
+                            afterResolves
+                        }],
                         scope: scope,
-                        directive: directive.directive
+
+                        directiveType: directive.directive
                     }));
                     
                     element.removeAttribute(name);
@@ -281,6 +325,9 @@ export class AfterIterateElement {
     removed: boolean = false;
     quantityNewChild: number = 0;
 
+    beforeResolves: () => void;
+    afterResolves: () => void;
+
     constructor(obj?: Partial<AfterIterateElement>) {
         if (obj) Object.assign(this, obj);
     }
@@ -308,9 +355,15 @@ export class AttrProcExecute {
 }
 
 export class DirectiveExecute {
-    directive: Type<Directive>;
+    directiveType: Type<Directive>;
+    directiveInstance: Directive;
     scope: IScope;
-    applicables: { selector: string, content: any }[];
+    applicables: {
+        selector: string,
+        content: any,
+        beforeResolves: () => void,
+        afterResolves: () => void
+    }[];
     afterExecute?: (element: HTMLElement) => void;
 
     constructor(obj?: Partial<DirectiveExecute>) {

@@ -160,8 +160,8 @@ export class NimbleApp {
 
     private onRouteFinishedRerender(route: Route) {
         // console.log(`RERENDER FINISHED: (/${route.completePath()})`);
-        console.log(this.rootElement.real);
-        console.log(this.rootElement.virtual);
+        // console.log(this.rootElement.real);
+        // console.log(this.rootElement.virtual);
         this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
         document.dispatchEvent(new Event('render-event'))
     }

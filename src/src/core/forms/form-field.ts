@@ -1,4 +1,4 @@
-import { Observer } from "../core";
+import { Observer } from "../observer";
 
 export class FormField {
     public element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;

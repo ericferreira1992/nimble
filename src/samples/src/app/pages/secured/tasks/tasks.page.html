@@ -3,7 +3,6 @@
         <form (submit)="addSubmit()">
             <input class="form-control"
                 [form-field]="form.get('name')"
-                name="task"
                 type="text"
                 autoComplete="off"
                 placeholder="Nome da tarefa"
@@ -13,7 +12,7 @@
             </button>
         </form>
     </div>
-    <div class="task-list-container">
+    <div @if="tasks.length > 0" class="task-list-container animated fadeIn">
         <div @for="let task of tasks" class="task-item animated fadeIn" [class]="{ 'done': !task.removing && task.done }">
             <section class="animated fadeIn">
                 <div class="check-cell">
@@ -32,6 +31,13 @@
                     </button>
                 </div>
             </section>
+        </div>
+    </div>
+    <div @if="tasks.length === 0" class="animated fadeIn">
+        <div class="tasks-empty animated fadeIn">
+            <i class="material-icons">style</i>
+            Nenhuma tarefa<br/>
+            pendente
         </div>
     </div>
 </div>

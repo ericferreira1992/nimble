@@ -1,8 +1,8 @@
 {
     "name": "nimble-ts",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "scripts": {
-        "build": "rimraf dist && tsc && node copy",
+        "build": "rm -r dist && tsc && node copy",
         "publish-version": "pushd dist && npm publish"
     },
     "main": "index.js",

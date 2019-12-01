@@ -3,7 +3,8 @@ import { AuthService } from '../../../services/auth/auth.service';
 
 @PreparePage({
     template: require('./login.page.html'),
-    style: require('./login.page.scss')
+    style: require('./login.page.scss'),
+    title: 'Login'
 })
 export default class LoginPage extends Page {
 

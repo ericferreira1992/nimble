@@ -1,7 +1,7 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { Listener } from '../../render/listener';
 
 @PrepareDirective({
     selector: [
@@ -20,7 +20,7 @@ import { ListenersCollector } from '../../providers/listeners-collector';
 export class FormEventsDirective extends Directive {
 
     constructor(
-        private listenersCollector: ListenersCollector
+        private listener: Listener
     ){
         super();
     }
@@ -28,7 +28,7 @@ export class FormEventsDirective extends Directive {
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
         selector = this.pureSelector(selector);
         if (selector === 'submit')
-            this.listenersCollector.subscribe(element, selector, (e) => {
+            this.listener.listen(element, selector, (e) => {
                 Object.assign(scope, { $event: e });
                 scope.eval(value);
                 delete scope['$event'];
@@ -37,7 +37,7 @@ export class FormEventsDirective extends Directive {
                 return false;
             });
         else
-            this.listenersCollector.subscribe(element, selector, (e) => {
+            this.listener.listen(element, selector, (e) => {
                 Object.assign(scope, { $event: e });
                 scope.eval(value);
                 delete scope['$event'];

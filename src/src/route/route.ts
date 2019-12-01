@@ -33,7 +33,7 @@ export class Route extends RouteBase {
 
     private checkRoutePage() {
         if (this.page) {
-            this.loadPage = (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true) => {
+            this.loadPage = (success: (route: Route) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true) => {
                 if (typeof this.page === 'string') {
                     try {
                         if (makeNewInstancePage || !this.pageInstance) {
@@ -41,7 +41,7 @@ export class Route extends RouteBase {
                             this.pageInstance = new TemplatedPage(this.page);
                         }
                         this.pageInstance.route = this;
-                        success({ page: this.pageInstance, route: this });
+                        success(this);
                         complete();
                     }
                     catch (e) {
@@ -63,7 +63,7 @@ export class Route extends RouteBase {
                                             }
 
                                             this.pageInstance.route = this;
-                                            success({ page: this.pageInstance, route: this });
+                                            success(this);
                                         }
                                         catch (e) {
                                             error(e);
@@ -86,7 +86,7 @@ export class Route extends RouteBase {
                                 this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
                             }
                             this.pageInstance.route = this;
-                            success({ page: this.pageInstance, route: this });
+                            success(this);
                             complete();
                         }
                         catch (e) {

@@ -1,24 +1,21 @@
 <div  class="teste-page animated fadeIn" [class]="{ 'teste1': option1 }">
-    <h3 (click)="add()">
-        Toggle
+    <h3>
+        Teste
     </h3>
-    <button (click)="teste()">CHANGE MID ITEM</button>
+    <button (click)="add()" style="margin-bottom: 15px">ADD</button>
 
-    <ul>
-        <li @for="let opt of options" class="animated fadeIn">
-            <span>{{opt}}</span>
+    <div @if="options.length > 0">
+        <div @for="let opt of options" class="animated fadeIn">
+            <span (click)="alert(opt)">{{opt}}</span>
             <button style="margin-left: 20px" (click)="remove($index)">REMOVE</button>
-        </li>
-    </ul>
+        </div>
+    </div>
+
+    <div @if="options.length === 0">
+        <div class="animated fadeIn">
+            <i class="material-icons">style</i>
+            Nenhuma tarefa<br/>
+            pendente
+        </div>
+    </div>
 </div>
-
-<!-- <div  class="teste-page animated fadeIn" [class]="{ 'teste1': option1 }">
-
-    <span></span>
-
-    <div @if="option1">TESTE 01</div>
-    <div>TESTE 02</div>
-
-    <span></span>
-    
-</div> -->

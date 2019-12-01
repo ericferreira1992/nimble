@@ -30,50 +30,11 @@ export class DiffDOM {
     }
 
     private diffChildren(target: HTMLElement, source: HTMLElement){
-        let targetNodes: ChildNode[] = [];
-        let sourceNodes: ChildNode[] = [];
+        let targetNodes = this.getNodesCanBeDiffedOfParent(target);
+        let sourceNodes = this.getNodesCanBeDiffedOfParent(source);
 
-        for(var i = 0; i < target.childNodes.length; i++){
-            let child = target.childNodes[i];
-            if (child.nodeType === Node.TEXT_NODE && !(child.textContent.trim())) {
-                target.removeChild(child);
-                i--;
-                continue;
-            }
-            if (child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE)
-                targetNodes.push(child);
-        }
-
-        for(var i = 0; i < source.childNodes.length; i++) {
-            let child = source.childNodes[i];
-            if (child.nodeType === Node.TEXT_NODE && !(child.textContent.trim())) {
-                source.removeChild(child);
-                i--;
-                continue;
-            }
-            if (child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE)
-                sourceNodes.push(child);
-        }
-        
-        let sourceElements = sourceNodes.filter(y => y.nodeType === Node.ELEMENT_NODE) as HTMLElement[];
-
-        let notExistsInTarget = targetNodes.filter(x => {
-            if (x.nodeType === Node.ELEMENT_NODE) {
-                return !sourceElements.some(y => y.tagName === (x as HTMLElement).tagName);
-            }
-            return false;
-        });
-
-        if(notExistsInTarget.length > 0) {
-            for(var i = 0; i < target.childNodes.length; i++){
-                let child = target.childNodes[i];
-                if (notExistsInTarget.some(x => x === child)) {
-                    target.removeChild(child);
-                    i--;
-                }
-            }
-            targetNodes = targetNodes.filter(x => !notExistsInTarget.some(y => y === x));
-        }
+        let notExistsInTarget = this.removeNodesNotExistsInTarget(target, targetNodes, sourceNodes);
+        targetNodes = targetNodes.filter(x => !notExistsInTarget.some(y => y === x));
 
         let length = Math.max(sourceNodes.length, targetNodes.length);
         for(var i = 0; i < length; i++) {
@@ -93,17 +54,57 @@ export class DiffDOM {
                         continue;
                     }
                 }
+
                 (targetChild as HTMLElement).parentElement.insertBefore(sourceChild, targetChild);
+                
                 if (i === (length - 1))
                     target.removeChild(targetChild);
             }
-            else if (sourceChild) {
+            else if (sourceChild)
                 target.append(sourceChild);
-            }
-            else {
+            else
                 target.removeChild(targetChild);
+        }
+    }
+
+    private getNodesCanBeDiffedOfParent(element: HTMLElement): ChildNode[] {
+        let nodes: ChildNode[] = [];
+        for(var i = 0; i < element.childNodes.length; i++){
+            let child = element.childNodes[i];
+            if (child.nodeType === Node.TEXT_NODE && !(child.textContent.trim())) {
+                element.removeChild(child);
+                i--;
+                continue;
+            }
+            if (child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE)
+                nodes.push(child);
+        }
+        return nodes;
+    }
+
+    private removeNodesNotExistsInTarget(targetParent: HTMLElement, targetNodes: ChildNode[], sourceNodes: ChildNode[]): ChildNode[] {
+
+        let notExistsInTarget = targetNodes.filter(x => {
+            if (x.nodeType === Node.ELEMENT_NODE) {
+                return !sourceNodes.filter(y => y.nodeType === Node.ELEMENT_NODE).some(y => (y as HTMLElement).tagName === (x as HTMLElement).tagName);
+            }
+            if (x.nodeType === Node.TEXT_NODE) {
+                return !sourceNodes.filter(y => y.nodeType === Node.TEXT_NODE).some(y => y.textContent === x.textContent);
+            }
+            return true;
+        });
+
+        if(notExistsInTarget.length > 0) {
+            for(var i = 0; i < targetParent.childNodes.length; i++){
+                let child = targetParent.childNodes[i];
+                if (notExistsInTarget.some(x => x === child)) {
+                    targetParent.removeChild(child);
+                    i--;
+                }
             }
         }
+
+        return notExistsInTarget;
     }
 
     private diffAttributes(target: HTMLElement, source: HTMLElement){

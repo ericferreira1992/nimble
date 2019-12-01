@@ -2,7 +2,7 @@ import { Injectable } from "../inject/injectable";
 import { ListenersCollector } from "../providers/listeners-collector";
 
 @Injectable()
-export class Renderer {
+export class Listener {
     constructor(
         private listenersCollector: ListenersCollector
     ) {}

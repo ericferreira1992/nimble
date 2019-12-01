@@ -101,7 +101,7 @@ export class ApplicationRender {
         if (oldTreeElments.outerHTML !== newTreeElements.outerHTML) {
             this.app.rootElement.real = this.diffDOM.diff(oldTreeElments, newTreeElements);
         }
-        this.attributesRender.processesPendingAttributes(true);
+        this.attributesRender.processesPendingAttributes();
     }
 
     public resolveAndRenderRoute(currentRoute: Route) {
