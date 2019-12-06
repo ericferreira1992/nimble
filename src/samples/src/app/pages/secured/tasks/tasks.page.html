@@ -3,6 +3,7 @@
         <form (submit)="addSubmit()">
             <input class="form-control"
                 [form-field]="form.get('name')"
+                (valueChange)=""
                 type="text"
                 autoComplete="off"
                 placeholder="Nome da tarefa"
@@ -13,10 +14,10 @@
         </form>
     </div>
     <div @if="tasks.length > 0" class="task-list-container animated fadeIn">
-        <div @for="let task of tasks" class="task-item animated fadeIn" [class]="{ 'done': !task.removing && task.done }">
+        <div @for="let task of tasks" class="task-item animated fadeIn" [class]="{ 'done': !task.removing && task.done }" (click)="editTask(task)">
             <section class="animated fadeIn">
                 <div class="check-cell">
-                    <button type="button" (click)="toggle(task)">
+                    <button type="button" (click)="toggle(task, $event)">
                         <i class="material-icons">
                             {{ task.done ? 'check_box' : 'check_box_outline_blank' }}
                         </i>
@@ -26,7 +27,7 @@
                     {{ task.name }}
                 </div>
                 <div class="options-cell">
-                    <button type="button" title="Remover" (click)="remove(task)">
+                    <button type="button" title="Remover" (click)="remove(task, $event)">
                         <i class="material-icons">delete</i>
                     </button>
                 </div>

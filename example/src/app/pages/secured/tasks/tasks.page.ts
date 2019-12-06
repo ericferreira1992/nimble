@@ -1,4 +1,6 @@
-import { Page, PreparePage, HttpClient } from '@nimble';
+import { Page, PreparePage, HttpClient, Form } from '@nimble';
+import { TasksService } from '../../../services/tasks-service';
+import { Helper } from '../../../services/helper-service';
 
 @PreparePage({
     template: require('./tasks.page.html'),
@@ -7,32 +9,49 @@ import { Page, PreparePage, HttpClient } from '@nimble';
 })
 export default class TasksPage extends Page {
 
+    public form: Form;
     public loadingRequest: boolean = false;
 
+    public get tasks() { return this.taskService.tasks; }
+
     constructor(
-        private httpClient: HttpClient
+        private httpClient: HttpClient,
+        private taskService: TasksService,
+        private helper: Helper,
     ) {
         super();
+
+        this.form = new Form({
+            name: { value: '' }
+        });
     }
 
-    onEnter() {
-        /* this.loadingRequest = true;
-        this.httpClient.get('https://sbbackoffice.getsandbox.com/users').then(
-            (response) => {
-                this.render(() => {
-                    console.log(response.data);
-                    this.loadingRequest = false;
+    public addSubmit() {
+        let name = this.form.get('name').value;
+        if (this.taskNameIsValid()) {
+            this.render(() => {
+                this.taskService.add({
+                    name,
+                    createDate: this.helper.dateFormat(new Date())
                 });
-            },
-            (error) => {
-                this.render(() => {
-                    console.log(error.error);
-                    this.loadingRequest = false;
-                });
-            }
-        ) */
+            });
+        }
     }
 
-    onExit() {
+    public toggle(task: any) {
+        this.render(() => {
+            task.done = task.done ? false : true;
+            this.taskService.update(task);
+        });
+    }
+
+    public remove(task: any) {
+        this.render(() => {
+            this.taskService.remove(task);
+        });
+    }
+
+    public taskNameIsValid() {
+        return this.form.get('name').value && this.form.get('name').value.length >= 4;
     }
 }

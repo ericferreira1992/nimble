@@ -1,9 +1,9 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { FormField } from '../../forms/form-field';
 import { Listener } from '../../render/listener';
 import { isNullOrUndefined } from 'util';
+import { FormField } from '../../core/forms/form-field';
 
 @PrepareDirective({
     selector: ['field-mask']

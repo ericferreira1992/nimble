@@ -1,5 +1,5 @@
-import { Page, PreparePage } from '@nimble';
-import { AuthService } from '../../services/auth.service';
+import { Page, PreparePage, Router } from '@nimble';
+import { AuthService } from '../../services/auth/auth.service';
 
 @PreparePage({
     template: require('./secured.page.html'),
@@ -12,7 +12,10 @@ export default class SecuredPage extends Page {
     }
 
     onInit() {
-        this.authService.validAuthCurrentRoute();
+    }
+
+    public logout() {
+        this.authService.logout();
     }
 
 }

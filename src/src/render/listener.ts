@@ -7,7 +7,7 @@ export class Listener {
         private listenersCollector: ListenersCollector
     ) {}
 
-    public listen(target: HTMLElement, eventName: string, callback: (e?: any) => void): () => void {
+    public listen(target: any, eventName: string, callback: (e?: any) => void): () => void {
         return this.listenersCollector.subscribe(target, eventName, callback);
     }
 }

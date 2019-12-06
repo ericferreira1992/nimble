@@ -1,0 +1,5 @@
+@import 'scss/dialog.scss';
+
+@mixin nimble-core() {
+    @include nimble-diloag();
+}

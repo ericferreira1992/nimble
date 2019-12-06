@@ -29,7 +29,7 @@ export class ListenersCollector {
         if (subscribed) {
             subscribed.target.removeEventListener(subscribed.eventName, subscribed.callback);
         }
-        this.listenersSubscribed = this.listenersSubscribed.filter(x => x === subscribed);
+        this.listenersSubscribed = this.listenersSubscribed.filter(x => x !== subscribed);
     }
 
     public unsubscribeAll(){

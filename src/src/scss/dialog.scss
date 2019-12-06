@@ -1,0 +1,101 @@
+@mixin nimble-diloag() {
+    .nimble-dialog {
+        z-index: 9999;
+        display: table;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        animation-fill-mode: both;
+        animation-duration: 300ms;
+
+        &:not(.out) {
+            animation-name: dialogIn;
+        }
+        &.out {
+            animation-delay: 100ms;
+            animation-name: dialogOut;
+        }
+    }
+
+    .nimble-dialog-backdrop {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: rgba(#000, 0.7);
+    }
+
+    .nimble-dialog-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .nimble-dialog-container {
+        width: 100%;
+        padding: 25px;
+        overflow: auto;
+        max-height: 100vh;
+        animation-fill-mode: both;
+        animation-duration: 300ms;
+
+        &:not(.out) {
+            animation-delay: 150ms;
+            animation-name: dialogAreaIn;
+        }
+        &.out {
+            animation-name: dialogAreaOut;
+        }
+    }
+
+    .nimble-dialog-area {
+        display: table;
+        width: auto;
+        height: auto;
+        margin: auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    @keyframes dialogIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes dialogOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    @keyframes dialogAreaIn {
+        from {
+            opacity: 0;
+            -webkit-transform: translate3d(0, -15px, 0);
+            transform: translate3d(0, -15px, 0);
+        }
+
+        to {
+            opacity: 1;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+    }
+    @keyframes dialogAreaOut {
+        from { opacity: 1; }
+
+        to {
+            opacity: 0;
+            -webkit-transform: translate3d(0, 15px, 0);
+            transform: translate3d(0, 15px, 0);
+        }
+    }
+}

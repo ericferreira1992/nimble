@@ -27,6 +27,11 @@ export class Container {
         this.providers.set(provider.provide, provider);
     }
 
+    removeProvider<T>(provide: Token<T>) {
+        if (this.providers.has(provide))
+            this.providers.delete(provide);
+    }
+
     inject<T>(type: Token<T>): T {
         let provider = this.providers.get(type);
         if (provider === undefined && !(type instanceof InjectionToken)) {

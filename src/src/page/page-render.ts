@@ -1,28 +1,24 @@
-import { Route } from "./../route/route";
-import { Router } from "./../route/router";
-import { HeaderRender } from "./header-render";
-import { AttributesRender } from "./attributes-render";
+import { Route } from "../route/route";
+import { Router } from "../route/router";
+import { Render } from "../render/render.abstract";
 import { Injectable } from "../inject/injectable";
-import { NimbleApp } from "./../app";
-import { DiffDOM } from "./diff-dom";
+import { HeaderRender } from "../render/header-render";
+import { AttributesRender } from "../render/attributes-render";
 
 @Injectable({ single: true })
-export class ApplicationRender {
-    private get app() { return NimbleApp.instance; }
-
-    private diffDOM: DiffDOM = new DiffDOM();
+export class PageRender extends Render {
 
     constructor(
-        private headerRender: HeaderRender,
-        private attributesRender: AttributesRender
+        headerRender: HeaderRender,
+        attributesRender: AttributesRender
     ) {
+        super(headerRender, attributesRender);
     }
 
     public virtualizeRoute(route: Route) {
         if (route.parent)
             this.virtualizeRouteInParent(route);
         else {
-            this.attributesRender.clearPendingAttributesToProcess();
             this.virtualizeRouteInRootElement(route);
         }
     }
@@ -54,29 +50,6 @@ export class ApplicationRender {
         this.app.rootElement.virtual.appendChild(route.element.virtual);
     }
 
-    private checkElementAlreadyRendered(element: HTMLElement, targetElement: HTMLElement) {
-        if (element) {
-            if (targetElement === this.app.rootElement.real) {
-                for (var i = 0; i < targetElement.children.length; i++) {
-                    let child = targetElement.children[i];
-                    if (child === element)
-                        return true;
-                }
-            }
-            else {
-                let routerElement = targetElement.querySelector('nimble-router');
-                if (routerElement) {
-                    for (var i = 0; i < routerElement.children.length; i++) {
-                        let child = routerElement.children[i];
-                        if (child === element)
-                            return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
     private createPageElementAndResolve(template: string, pageInstance: any) {
         let virtualElement = this.createVirtualElement(template);
         this.attributesRender.resolveChildren(virtualElement.children, pageInstance);
@@ -87,21 +60,6 @@ export class ApplicationRender {
         let element = document.createElement('nimble-page');
         element.innerHTML = html;
         return element
-    }
-
-    public removeAllChildren(element: Element) {
-        if (element && element.children.length) {
-            for (var i = 0; i < element.children.length; i++) {
-                element.removeChild(element.children[i]);
-            }
-        }
-    }
-
-    public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement) {
-        if (oldTreeElments.outerHTML !== newTreeElements.outerHTML) {
-            this.app.rootElement.real = this.diffDOM.diff(oldTreeElments, newTreeElements);
-        }
-        this.attributesRender.processesPendingAttributes();
     }
 
     public resolveAndRenderRoute(currentRoute: Route) {

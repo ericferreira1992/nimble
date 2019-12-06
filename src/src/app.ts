@@ -2,21 +2,24 @@ import '@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js';
 import { Route } from './route/route';
 import { StartConfig } from './start-config';
 import { Router } from './route/router';
-import { NimblePage } from './elements/nimble-page-element';
-import { NimbleRouter } from './elements/nimble-router-element';
+import { NimblePage } from './elements/nimble-page.element';
+import { NimbleRouter } from './elements/nimble-router.element';
+import { NimbleDialog } from './elements/nimble-dialog.element';
+import { NimbleDialogArea } from './elements/nimble-dialog-area.element';
 import { RouterEvent } from './route/router-event.enum';
 import { Directive } from './directives/abstracts/directive';
 import { INTERNAL_DIRECTIVES } from './directives/internal-directives';
 import { Type } from './inject/type.interface';
-import { IterationDirective } from './directives/abstracts/iteration-directive';
 import { Container } from './inject/container';
-import { ApplicationRender } from './render/application-render';
+import { Provider, Token } from './inject/provider';
+import { IterationDirective } from './directives/abstracts/iteration-directive';
+import { PageRender } from './page/page-render';
 import { INTERNAL_PROVIDERS } from './providers/internal-providers';
 
 export class NimbleApp {
     public static instance: NimbleApp;
 
-    private render: ApplicationRender;
+    private render: PageRender;
 
     private containerInjector: Container = new Container();
 
@@ -52,7 +55,7 @@ export class NimbleApp {
         Router.useHash = this.config.useHash;
         Router.registerRoutes(this.config.routes);
 
-        this.render = this.containerInjector.inject(ApplicationRender);
+        this.render = this.containerInjector.inject(PageRender);
     }
 
     private defineRootElement() {
@@ -117,6 +120,8 @@ export class NimbleApp {
     private registerElements() {
         window.customElements.define('nimble-page', NimblePage);
         window.customElements.define('nimble-router', NimbleRouter);
+        window.customElements.define('nimble-dialog', NimbleDialog);
+        window.customElements.define('nimble-dialog-area', NimbleDialogArea);
     }
 
     private onRouteStartChange(route: Route) {
@@ -162,7 +167,7 @@ export class NimbleApp {
         // console.log(`RERENDER FINISHED: (/${route.completePath()})`);
         // console.log(this.rootElement.real);
         // console.log(this.rootElement.virtual);
-        this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
+        this.rootElement.real = this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
         document.dispatchEvent(new Event('render-event'))
     }
 
@@ -176,6 +181,14 @@ export class NimbleApp {
 
     public static inject<T>(type: Type<T>): T {
         return this.instance.containerInjector.inject<T>(type);
+    }
+
+    public static registerProvider<T>(provider: Provider<T>) {
+        this.instance.containerInjector.addProvider(provider);
+    }
+
+    public static unregisterProvider<T>(provide: Token<T>) {
+        this.instance.containerInjector.removeProvider(provide);
     }
 }
 

@@ -31,7 +31,7 @@ export class AttributesRender {
 
     public processesPendingAttributes(){
         for(let attributeProc of this.attrProccessPending) {
-            let element = this.app.rootElement.real.querySelector(`[nimble-id="${attributeProc.procId}"]`) as HTMLElement;
+            let element = document.body.querySelector(`[nimble-id="${attributeProc.procId}"]`) as HTMLElement;
             
             if (element) {
                 this.listenersCollector.unsubscribeAllFromElement(element);

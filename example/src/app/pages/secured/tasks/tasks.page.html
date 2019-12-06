@@ -1,6 +1,37 @@
 <div class="tasks-page">
-    <h3>{{ title }} ({{authService.teste}})</h3>
-    <a [href]="'/subscribe'">Go Subscribe Page</a>
-
-    <div @if="loadingRequest">LOADING...</div>
+    <div class="add-msg-container">
+        <form (submit)="addSubmit()">
+            <input class="form-control"
+                [form-field]="form.get('name')"
+                name="task"
+                type="text"
+                autoComplete="off"
+                placeholder="Nome da tarefa"
+            />
+            <button type="submit">
+                <i class="material-icons">add</i>
+            </button>
+        </form>
+    </div>
+    <div class="task-list-container">
+        <div @for="let task of tasks" class="task-item animated fadeIn" [class]="{ 'done': !task.removing && task.done }">
+            <section class="animated fadeIn">
+                <div class="check-cell">
+                    <button type="button" (click)="toggle(task)">
+                        <i class="material-icons">
+                            {{ task.done ? 'check_box' : 'check_box_outline_blank' }}
+                        </i>
+                    </button>
+                </div>
+                <div class="content-cell">
+                    {{ task.name }}
+                </div>
+                <div class="options-cell">
+                    <button type="button" title="Remover" (click)="remove(task)">
+                        <i class="material-icons">delete</i>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
 </div>

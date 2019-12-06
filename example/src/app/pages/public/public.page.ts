@@ -1,5 +1,5 @@
 import { Page, PreparePage } from '@nimble';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/auth/auth.service';
 
 @PreparePage({
     template: require('./public.page.html'),
@@ -12,7 +12,6 @@ export default class PublicPage extends Page {
     }
 
     onInit() {
-        this.authService.validAuthCurrentRoute();
     }
 
 }

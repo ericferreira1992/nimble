@@ -39,10 +39,12 @@ export class Page implements IScope {
 
     }
 
+    /**
+     * Method to render and update current template
+     */
     public render(action?: () => void) {
         if (this.onNeedRerender) {
             if (action) action();
-            // his.route.pageInstance = this;
             this.onNeedRerender(this);
         }
     }

@@ -5,9 +5,6 @@ import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive
 import { isArray } from 'util';
 import { AttributesRender } from '../../render/attributes-render';
 import { Helper } from '../../providers/helper';
-import { NimbleApp } from '../../app';
-import { Page } from '../../page/page';
-import { GenericPage } from '../../page/generic-page';
 
 @PrepareIterateDirective({
     selector: 'for'
