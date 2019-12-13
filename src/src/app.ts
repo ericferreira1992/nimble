@@ -15,6 +15,7 @@ import { Provider, Token } from './inject/provider';
 import { IterationDirective } from './directives/abstracts/iteration-directive';
 import { PageRender } from './page/page-render';
 import { INTERNAL_PROVIDERS } from './providers/internal-providers';
+import { Listener } from './render/listener';
 
 export class NimbleApp {
     public static instance: NimbleApp;
@@ -125,49 +126,33 @@ export class NimbleApp {
     }
 
     private onRouteStartChange(route: Route) {
-        let prevRoute = Router.previous;
-        // console.log('');
-        // console.log(`ROUTE START (/${prevRoute && prevRoute.completePath()} -> /${route.completePath()})`);
     }
 
     private onRouteFinishedChange(route: Route) {
-        let prevRoute = Router.previous;
-        // console.log(`ROUTE FINISHED (/${prevRoute && prevRoute.completePath()} -> /${route.completePath()})`);
         this.render.resolveAndRenderRoute(route);
-        document.dispatchEvent(new Event('render-event'))
-        /* if (state !== RouterEvent.STARTED_RERENDER)
-            this.render.resolveAndRenderRoute(route);
-        else
-            setTimeout(() => this.render.resolveAndRenderRoute(route)); */
+        document.dispatchEvent(new Event('render-event'));
     }
 
     private onRouteChangeError(route: Route) {
-        // console.log(`ROUTE ERROR! (/${route.completePath()})`);
     }
 
     private onRouteStartedLoading(route: Route) {
-        // console.log('LOADING...');
     }
 
     private onRouteFinishedLoading(route: Route) {
-        // console.log('LOADED!');
         this.virtualizeRoute(route);
     }
 
     private onRouteErrorLoading(error, route: Route) {
-        // console.log(error);
     }
 
     private onRouteStartRerender(route: Route) {
-        // console.log('');
-        // console.log(`RERENDER START: (/${route.completePath()})`);
+        this.state = NimbleAppState.RERENDERING;
     }
 
     private onRouteFinishedRerender(route: Route) {
-        // console.log(`RERENDER FINISHED: (/${route.completePath()})`);
-        // console.log(this.rootElement.real);
-        // console.log(this.rootElement.virtual);
         this.rootElement.real = this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
+        this.state = NimbleAppState.INITIALIZED;
         document.dispatchEvent(new Event('render-event'))
     }
 
@@ -190,9 +175,13 @@ export class NimbleApp {
     public static unregisterProvider<T>(provide: Token<T>) {
         this.instance.containerInjector.removeProvider(provide);
     }
+
+    public static get listener() { return this.instance.containerInjector.inject(Listener); }
 }
 
 export enum NimbleAppState {
     INITIALIZING = 'INITIALIZING',
     INITIALIZED = 'INITIALIZED',
+
+    RERENDERING = 'RERENDERING'
 }

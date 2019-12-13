@@ -43,8 +43,8 @@ export class Page implements IScope {
      * Method to render and update current template
      */
     public render(action?: () => void) {
+        if (action) action();
         if (this.onNeedRerender) {
-            if (action) action();
             this.onNeedRerender(this);
         }
     }

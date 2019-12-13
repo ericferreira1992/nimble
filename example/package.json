@@ -12,7 +12,7 @@
     },
     "private": true,
     "dependencies": {
-        "nimble-ts": "^1.0.4"
+        "nimble-ts": "^1.0.6"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",
@@ -30,7 +30,7 @@
         "sass-loader": "^7.1.0",
         "style-loader": "^0.23.1",
         "ts-loader": "^5.4.5",
-        "typescript": "^3.4.5",
+        "typescript": "^3.7.3",
         "typescript-require": "^0.2.10",
         "webpack": "^4.28.1",
         "webpack-cli": "^3.2.1",

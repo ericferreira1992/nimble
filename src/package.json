@@ -1,6 +1,6 @@
 {
     "name": "nimble-ts",
-    "version": "1.0.4",
+    "version": "1.0.6",
     "scripts": {
         "build": "rm -r dist && tsc && node copy",
         "publish-version": "pushd dist && npm publish"

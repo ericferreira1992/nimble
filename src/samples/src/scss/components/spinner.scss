@@ -4,9 +4,15 @@
 
     > svg:first-child {
         fill: transparent;
-        stroke: #FFF;
+        stroke: $primaryColor;
         stroke-width: 5;
         animation: spinner-dash 1.7s ease infinite, spinner-rotate 1.7s linear infinite;
+    }
+
+    &.white {
+        > svg:first-child {
+            stroke: #FFF;
+        }
     }
 
     @keyframes spinner-dash {

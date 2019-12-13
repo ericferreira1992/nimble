@@ -9,7 +9,7 @@
     }
 }
 
-.form-control {
+.form-control:not([type="checkbox"],[type="radio"]) {
     color: #666;
     transition-duration: 300ms;
     width: 100%;

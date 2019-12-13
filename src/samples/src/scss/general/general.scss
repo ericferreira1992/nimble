@@ -1,2 +1,8 @@
-@import 'forms.scss';
+//@import 'forms.scss';
 @import 'dialog.scss';
+
+button { 
+    > i {
+        vertical-align: middle;
+    }
+}

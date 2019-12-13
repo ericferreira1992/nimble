@@ -1,4 +1,4 @@
-import { Page, PreparePage, Form, Router } from '@nimble';
+import { Page, PreparePage, Form, Router, Validators } from '@nimble';
 import { AuthService } from '../../../services/auth/auth.service';
 
 @PreparePage({
@@ -17,17 +17,17 @@ export default class LoginPage extends Page {
         super();
 
         this.form = new Form({
-            user: { value: '' },
-            password: { value: '' },
+            user: { value: '', validators: [ Validators.required ] },
+            password: { value: '', validators: [ Validators.required ] },
         });
     }
 
     public onSubmit() {
-        if (this.validate()) {
-            this.render(() => {
+        this.render(() => {
+            if (this.form.isValid) {
                 this.doLogin();
-            });
-        }
+            }
+        });
     }
 
     public doLogin() {

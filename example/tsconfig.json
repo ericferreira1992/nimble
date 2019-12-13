@@ -22,7 +22,7 @@
             "dom"
         ],
         "paths": {
-            "@nimble": ["node_modules/nimble-ts/index"]
+            "@nimble": ["node_modules/nimble-ts/"]
         }
     },
     "include": [

@@ -1,0 +1,21 @@
+<div class="task-edit-dialog">
+    <div class="dialog-header">
+        <h3 class="float-left">{{task.name}}</h3>
+        <button (click)="dialogRef.close()" class="float-right">
+            <i class="material-icons">close</i>
+        </button>
+    </div>
+
+    <div class="dialog-content">
+        <form (submit)="onSubmit()">
+            <div class="form-group">
+                <label>Nome</label>
+                <input [form-field]="form.get('name')" class="form-control"/>
+            </div>
+        </form>
+    </div>
+
+    <div class="dialog-footer">
+
+    </div>
+</div>

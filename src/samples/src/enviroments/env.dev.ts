@@ -1,4 +1,4 @@
 export const env = {
     production: false,
-    baseUrl: 'http://dev.example.com.br'
+    baseUrl: 'https://nimble.getsandbox.com'
 };

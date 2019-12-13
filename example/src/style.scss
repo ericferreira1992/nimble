@@ -1,0 +1,14 @@
+@import 'scss/variables.scss';
+@import 'scss/helper.scss';
+@import 'scss/base.scss';
+@import 'scss/font.scss';
+@import 'scss/general/general.scss';
+@import 'scss/components/components.scss';
+@import 'scss/mat-icons.scss';
+@import '@nimble/style.scss';
+
+@include nimble-core();
+
+.animated {
+    animation-duration: 300ms;
+}

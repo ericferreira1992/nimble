@@ -2,7 +2,7 @@ import { Injectable } from '../inject/injectable';
 import { InjectionToken } from '../inject/provider';
 import { Type } from '../inject/type.interface';
 import { DialogRef } from './classes/dialog-ref';
-import { NimbleApp } from '../app';
+import { NimbleApp, NimbleAppState } from '../app';
 import { Dialog } from './classes/dialog';
 import { DialogOpenConfig } from './classes/dialog-open-config';
 import { DialogRender } from './dialog-render';
@@ -76,7 +76,11 @@ export class DialogBuilder {
     }
 
     private rerender<T extends Dialog>(dilaog: T) {
+        this.app.state = NimbleAppState.RERENDERING;
+
         let dialogRenderRef = this.dialogCollector.getDialogRefByDialogInstance(dilaog);
         this.dialogRender.rerenderDialog(dialogRenderRef);
+        
+        this.app.state = NimbleAppState.INITIALIZED;
     }
 } 

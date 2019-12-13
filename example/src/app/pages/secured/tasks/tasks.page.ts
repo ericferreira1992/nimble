@@ -1,6 +1,7 @@
-import { Page, PreparePage, HttpClient, Form } from '@nimble';
+import { Page, PreparePage, HttpClient, Form, DialogBuilder } from '@nimble';
 import { TasksService } from '../../../services/tasks-service';
 import { Helper } from '../../../services/helper-service';
+import { TaskEditDialog } from './dialogs/task-edit/task-edit.dialog';
 
 @PreparePage({
     template: require('./tasks.page.html'),
@@ -17,6 +18,7 @@ export default class TasksPage extends Page {
     constructor(
         private httpClient: HttpClient,
         private taskService: TasksService,
+        private dialog: DialogBuilder,
         private helper: Helper,
     ) {
         super();
@@ -38,16 +40,32 @@ export default class TasksPage extends Page {
         }
     }
 
-    public toggle(task: any) {
+    public toggle(task: any, event: MouseEvent) {
+        event.stopImmediatePropagation();
         this.render(() => {
             task.done = task.done ? false : true;
             this.taskService.update(task);
         });
     }
 
-    public remove(task: any) {
+    public remove(task: any, event: MouseEvent) {
+        event.stopImmediatePropagation();
         this.render(() => {
             this.taskService.remove(task);
+        });
+    }
+
+    public editTask(task: any) {
+        // console.log(task);
+        this.dialog.open(TaskEditDialog, {
+            data: Object.assign({}, task),
+            width: '100%',
+            maxWidth: '500px'
+        }).onClose.then((editedTask: any) => {
+            if (editedTask)
+                this.render(() => {
+                    this.taskService.update(editedTask);
+                });
         });
     }
 

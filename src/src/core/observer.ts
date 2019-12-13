@@ -26,7 +26,7 @@ export class Observer<T> {
         return listener;
     }
 
-    public unsubcribe(listener: ObserverListener<T>) {
+    public unsubscribe(listener: ObserverListener<T>) {
         this.listeners = this.listeners.filter(x => x !== listener);
     }
 }
@@ -37,17 +37,14 @@ export class ObserverListener<T>{
 
     private observer: Observer<T>;
 
-    constructor(success: (value: T) => void, error: (error: any) => void, observer?: Observer<T>) {
+    constructor(success: (value: T) => void, error: (error: any) => void, observer: Observer<T>) {
         this.success = success;
         this.error = error;
+        this.observer = observer;
     }
 
-    public unsubcribe() {
+    public unsubscribe() {
         if (this.observer)
-            this.observer.unsubcribe(this);
+            this.observer.unsubscribe(this);
     }
 }
-
-/* export class ObserverListener{
-
-} */

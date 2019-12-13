@@ -4,9 +4,10 @@ import { Injectable } from "../inject/injectable";
 export class ListenersCollector {
     private listenersSubscribed: ListenerSubscribed[] = [];
 
-    public subscribe(target: HTMLElement, eventName: string, callback: (e?: any) => void): () => void {
+    public subscribe(target: HTMLElement, eventName: string, callback: (e?: any) => void, internal: boolean = false): () => void {
         if (target) {
             let subscribed = new ListenerSubscribed({
+                internal,
                 target,
                 eventName,
                 realCallback: callback
@@ -16,13 +17,21 @@ export class ListenersCollector {
                 callback(e);
                 if (subscribed.afterListen) subscribed.afterListen();
             }
-
-            subscribed.target.addEventListener(subscribed.eventName, subscribed.callback);
             this.listenersSubscribed.push(subscribed);
             
             return () => this.unsubscribe(subscribed);
         }
         return () => {};
+    }
+
+    public applyAllListeners() {
+        let subscribeds = this.listenersSubscribed.filter(x => !x.applied);
+        subscribeds.sort((a, b) => (a.internal === b.internal) ? 0 : (a.internal ? -1 : 1));
+
+        for(let subscribed of subscribeds) {
+            subscribed.applied = true;
+            subscribed.target.addEventListener(subscribed.eventName, subscribed.callback);
+        }
     }
 
     public unsubscribe(subscribed: ListenerSubscribed) {
@@ -68,10 +77,12 @@ export class ListenersCollector {
 }
 
 export class ListenerSubscribed {
+    public internal: boolean;
     public target: HTMLElement;
     public eventName: string;
     public callback: (e: any) => void;
     public realCallback: (e: any) => void;
+    public applied: boolean = false
 
     beforeListen: () => void;
     afterListen: () => void;

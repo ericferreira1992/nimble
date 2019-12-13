@@ -6,7 +6,7 @@ import { isObject, isArray } from 'util';
 
 @PrepareDirective({
     selector: [
-        'disabled',
+        '[disabled]',
         'class',
         'style',
         'title',
@@ -40,6 +40,8 @@ export class NativesAttrsDirective extends Directive {
             this.resolveClass(value, element, scope);
         else if (selector === 'style')
             this.resolveStyle(value, element, scope);
+        else if (selector === 'disabled')
+            this.resolveRequired(value, element, scope);
         else {
             if (!element.hasAttribute(selector))
                 element.setAttribute(selector, value);
@@ -152,6 +154,12 @@ export class NativesAttrsDirective extends Directive {
         }
     }
 
+    private resolveRequired(ok: boolean, element: HTMLElement, scope: IScope) {
+        if (ok)
+            element.setAttribute('disabled', '');
+        else
+            element.removeAttribute('disabled');
+    }
 
     public static checkSelectorMustHavePureValue(selector: string) {
         return this.selectorsMustHavePureValue.indexOf(selector.replace(/\[|\(|\]|\)/g, '')) >= 0;

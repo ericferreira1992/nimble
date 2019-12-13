@@ -8,9 +8,13 @@ export abstract class Directive {
         content: any
     }[] = [];
 
-    public others: Directive[] = [];
+    public all: Directive[] = [];
 
     public element: HTMLElement;
+
+    public get others() {
+        return this.all.filter(x => x !== this);
+    }
 
     constructor() {
     }
@@ -23,11 +27,19 @@ export abstract class Directive {
         return null;
     }
 
+    /** Change the value matched to the selector if it was entered */
+    public setValueOfSelector(selector: string, value: any) {
+        selector = this.pureSelector(selector);
+        let selectorApplied = this.selectorsApplied.find(x => this.pureSelector(x.selector) === selector);
+        if (selectorApplied)
+            selectorApplied.content = value;
+    }
+
     /** Anothers directives can be applies in the same element. 
      * This method returns a directive searching for its selector name */
     public getDirectiveBySelector(selector: string) {
         selector = this.pureSelector(selector);
-        return this.others.find(x => x.selectorsApplied.some(y => this.pureSelector(y.selector) === selector));
+        return this.all.find(x => x.selectorsApplied.some(y => this.pureSelector(y.selector) === selector));
     }
 
     /** Return the selector without parentheses and bracket */

@@ -7,11 +7,14 @@ import { Type } from '../inject/type.interface';
 import { Injectable } from '../inject/injectable';
 import { Helper } from '../providers/helper';
 import { ListenersCollector } from '../providers/listeners-collector';
+import { InternalObserversCollector } from '../providers/internal-observers-collector';
+import { BaseFormFieldDirective } from '../directives/abstracts/base-form-field-directive';
+import { FormDirective } from '../directives/forms/form.directive';
 
 @Injectable({ single: true })
 export class AttributesRender {
 
-    private attrProccessPending: AttributeToProcess[] = [];
+    private attrProcessPending: AttributeToProcess[] = [];
     
     private get app() { return NimbleApp.instance; }
 
@@ -25,20 +28,24 @@ export class AttributesRender {
 
     constructor(
         private helper: Helper,
-        private listenersCollector: ListenersCollector
+        private listenersCollector: ListenersCollector,
+        private internalObserversCollector: InternalObserversCollector
     ) {
     }
 
     public processesPendingAttributes(){
-        for(let attributeProc of this.attrProccessPending) {
-            let element = document.body.querySelector(`[nimble-id="${attributeProc.procId}"]`) as HTMLElement;
+        this.cancelObserversOfDifferentsScopes();
+        this.checkFormDirectivesBeforeProccessPendingAttrs();
+
+        for(let attributeProc of this.attrProcessPending) {
+            let element = attributeProc.element;// document.body.querySelector(`[nimble-id="${attributeProc.procId}"]`) as HTMLElement;
             
             if (element) {
                 this.listenersCollector.unsubscribeAllFromElement(element);
                     
                 for(let process of attributeProc.processes) {
                     if (process instanceof DirectiveExecute) {
-                        process.directiveInstance.others = attributeProc.processes.filter(x => {
+                        process.directiveInstance.all = attributeProc.processes.filter(x => {
                             return x instanceof DirectiveExecute && x.directiveType !== (process as DirectiveExecute).directiveType;
                         }).map(x => (x as DirectiveExecute).directiveInstance);
                         process.directiveInstance.element = element;
@@ -62,10 +69,11 @@ export class AttributesRender {
             }
         }
         this.clearPendingAttributesToProcess();
+        this.listenersCollector.applyAllListeners();
     }
 
     private addAttributeToProcess(currentElement: HTMLElement, process: AttrProcExecute | DirectiveExecute) {
-        let attributeProcess = this.attrProccessPending.find(x => x.originalElement === currentElement);
+        let attributeProcess = this.attrProcessPending.find(x => x.originalElement === currentElement);
 
         if (!attributeProcess) {
             attributeProcess = new AttributeToProcess();
@@ -87,7 +95,7 @@ export class AttributesRender {
 
             attributeProcess.processes.push(process);
 
-            this.attrProccessPending = [attributeProcess, ...this.attrProccessPending];
+            this.attrProcessPending = [attributeProcess, ...this.attrProcessPending];
         }
         else {
             let sameProcess: DirectiveExecute = null;
@@ -120,8 +128,42 @@ export class AttributesRender {
         }
     }
 
+    private checkFormDirectivesBeforeProccessPendingAttrs() {
+        let formsProcesses = this.attrProcessPending.filter(x => x.element instanceof HTMLFormElement && x.processes.some(p => p instanceof DirectiveExecute && p.directiveInstance instanceof FormDirective));
+        for(let formProcess of formsProcesses) {
+            let formElement = formProcess.element as HTMLFormElement;
+            let formDirectiveExecute = formProcess.processes.find(p => p instanceof DirectiveExecute && p.directiveInstance instanceof FormDirective) as DirectiveExecute;
+
+            if (formDirectiveExecute)
+                for(var i = 0; i < formElement.elements.length; i++) {
+                    let elementInput = formElement.elements[i];
+                    let directiveInput = this.attrProcessPending.find(x => x.element === elementInput);
+                    if (directiveInput) {
+                        for(let process of directiveInput.processes) {
+                            if (process instanceof DirectiveExecute && process.directiveInstance instanceof BaseFormFieldDirective) {
+                                process.directiveInstance.form = (formDirectiveExecute.directiveInstance as FormDirective).form;
+                            }
+                        }
+                    }
+                }
+
+        }
+    }
+
+    private cancelObserversOfDifferentsScopes() {
+        let differentsScopes: IScope[] = [];
+        for(let attributeProc of this.attrProcessPending) {
+            for(let proc of attributeProc.processes) {
+                if (!differentsScopes.some(x => x === proc.scope)){
+                    differentsScopes.push(proc.scope);
+                    this.internalObserversCollector.cancelByScope(proc.scope);
+                }
+            }
+        }
+    }
+
     public clearPendingAttributesToProcess(){
-        this.attrProccessPending = [];
+        this.attrProcessPending = [];
     }
 
     public resolveChildren(elements: HTMLCollection, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void) {
@@ -228,7 +270,7 @@ export class AttributesRender {
                     let selector = selectors.find(selector => {
                         if (selector) {
                             selector = selector.toLowerCase();
-                            if (/^\[([^)]+)\]$/g.test(name) && /^(?!\(\/).*(?<!\))$/g.test(selector))
+                            if (/^\[([^)]+)\]$/g.test(name) && /^(?!\(\/).*(?!\))$/g.test(selector))
                                 return name === `[${selector.replace(/\[|\]/g, '')}]`;
                             else
                                 return name === selector;
@@ -334,9 +376,16 @@ export class AfterIterateElement {
 }
 
 export class AttributeToProcess {
-    procId: string;
-    originalElement: HTMLElement;
-    processes?: (AttrProcExecute | DirectiveExecute)[] = [];
+    public procId: string;
+    public originalElement: HTMLElement;
+    public processes?: (AttrProcExecute | DirectiveExecute)[] = [];
+
+    private _element: HTMLElement;
+    public get element() {
+        if (!this._element)
+            this._element = document.body.querySelector(`[nimble-id="${this.procId}"]`) as HTMLElement;
+        return this._element;
+    }
 
     constructor(obj?: Partial<AttributeToProcess>) {
         if (obj) Object.assign(this, obj);

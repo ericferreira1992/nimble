@@ -1,7 +1,7 @@
 import { Injectable } from '../../inject/injectable';
 import { HttpOptions } from './http-options';
 import { HttpResponse } from './http-response';
-import { isArray } from 'util';
+import { isArray, isObject } from 'util';
 import { HttpError } from './http-error';
 
 @Injectable()
@@ -61,7 +61,7 @@ export class HttpClient {
 
     public del<T>(url: string, options?: HttpOptions): Promise<HttpResponse<T>> {
         return new Promise<HttpResponse<T>>((resolve, reject) => {
-            this.prepreAndGetXHR('DEL', url, null, options).then(
+            this.prepreAndGetXHR('DELETE', url, null, options).then(
                 (response: HttpResponse<T>) => {
                     resolve(response);
                 },
@@ -81,10 +81,13 @@ export class HttpClient {
             if (!options) options = new HttpOptions();
 
             client.withCredentials = options.withCredentials;
-            if (options.responseType) client.responseType = options.responseType;
-            this.setHeaders(client, options.headers);
+            client.responseType = (options.responseType) ? options.responseType : 'json';
 
             client.open(method, urlWithParams, true);
+            
+            if (this.setHeaders(client, options.headers).isJson && isObject(body))
+                body = JSON.stringify(body);
+
             client.onreadystatechange = function () {
                 if (client.readyState == 4) {
                     let response = {
@@ -114,17 +117,29 @@ export class HttpClient {
         });
     }
 
-    private setHeaders(client: XMLHttpRequest, headers: { [key: string]: string; } | string[]) {
+    private setHeaders(client: XMLHttpRequest, headers: { [key: string]: string; } | string[]): { isJson: boolean } {
+        let response = { isJson: false };
         if (headers) {
             if (isArray(headers)) {
                 for(let key of headers)
                     client.setRequestHeader(key, '');
             }
             else {
-                for(let key in headers)
-                    client.setRequestHeader(key, (headers as {[header: string]: string})[key]);
+                for(let key in headers){
+                    let value = (headers as {[header: string]: string})[key];
+                    if (key.toLowerCase() === 'content-type' && value.includes('application/json'))
+                        response.isJson = true;
+                    client.setRequestHeader(key, value);
+                }
             }
         }
+
+        if (!headers || !isArray(headers) || !(Object.keys(headers).some(key => key.toLowerCase() === 'content-type'))) {
+            client.setRequestHeader('Content-Type', 'application/json');
+            response.isJson = true;
+        }
+
+        return response;
     }
 
     private getUrlWithParams(url: string, params: { [key: string]: string; }) {

@@ -37,113 +37,130 @@
             }
         }
     }
-    
-    .task-list-container {
-        margin: 20px -20px 0 -20px;
-        width: calc(100% + 40px);
+}
 
-        > .task-item {
-            &:not(:first-child) {
-                border-top: 1px solid #DDD;
-            }
+.task-list-container {
+    margin: 20px -20px 0 -20px;
+    width: calc(100% + 40px);
+
+    > .task-item {
+        &:not(:first-child) {
+            border-top: 1px solid #DDD;
         }
     }
+}
 
-    .task-item {
-        color: #666;
-        transition-duration: 300ms;
+.task-item {
+    cursor: pointer;
+    color: #666;
+    transition-duration: 300ms;
 
-        > section {
-            display: table;
-            width: 100%;
-            height: 50px;
-            padding: 10px 20px;
+    > section {
+        display: table;
+        width: 100%;
+        height: 50px;
+        padding: 10px 20px;
 
-            > div {
-                display: table-cell;
-                vertical-align: middle;
-        
-                > button {
-                    outline: 0;
-                    cursor: pointer;
-                    border: none;
-                    background-color: transparent;
-                    padding: 5px 6px;
-                    border-radius: 50%;
+        > div {
+            display: table-cell;
+            vertical-align: middle;
+    
+            > button {
+                outline: 0;
+                cursor: pointer;
+                border: none;
+                background-color: transparent;
+                padding: 5px 6px;
+                border-radius: 50%;
+                transition-duration: 300ms;
+    
+                > i {
+                    display: block;
                     transition-duration: 300ms;
-        
-                    > i {
-                        display: block;
-                        transition-duration: 300ms;
-                        font-size: 30px;
-                        width: 30px;
-                    }
-        
-                    &:hover {
-                        background-color: rgba(#000, .03);
-                    }
+                    font-size: 30px;
+                    width: 30px;
                 }
-        
-                &.check-cell {
-                    width: 35px;
-        
-                    > button {
-                        color: #999;
-        
-                        &.checked {
-                            color: $primaryColor;
-                        }
-                    }
-                }
-        
-                &.content-cell {
-                    padding: 0 10px;
-                    font-weight: 300;
-                }
-        
-                &.options-cell {
-                    width: 35px;
-        
-                    > button {
-                        color: $dangerColor;
-                        padding: 5px 3px;
-        
-                        > i {
-                            font-size: 25px;
-                        }
-                    }
+    
+                &:hover {
+                    background-color: rgba(#000, .03);
                 }
             }
-        }
-
-        &.done {
-            background-color: #FAFAFA;
-            opacity: .7;
-
-            > section {
-                .content-cell {
-                    text-decoration: line-through;
-                }
-        
-                .check-cell {
-                    > button {
+    
+            &.check-cell {
+                width: 35px;
+    
+                > button {
+                    color: #999;
+    
+                    &.checked {
                         color: $primaryColor;
                     }
                 }
             }
-        }
-
-        &:hover {
-            position: relative;
-            z-index: 1;
-            background-color: #FFF;
-            box-shadow: 0 0 5px rgba(#000, .05), 0 0 15px rgba(#000, .1);
-            border-top-color: transparent !important;
-            opacity: 1;
-
-            & + .task-item {
-                border-top-color: transparent !important;
+    
+            &.content-cell {
+                padding: 0 10px;
+                font-weight: 300;
+            }
+    
+            &.options-cell {
+                width: 35px;
+    
+                > button {
+                    color: $dangerColor;
+                    padding: 5px 3px;
+    
+                    > i {
+                        font-size: 25px;
+                    }
+                }
             }
         }
+    }
+
+    &.done {
+        background-color: #FAFAFA;
+        opacity: .7;
+
+        > section {
+            .content-cell {
+                text-decoration: line-through;
+            }
+    
+            .check-cell {
+                > button {
+                    color: $primaryColor;
+                }
+            }
+        }
+    }
+
+    &:hover {
+        position: relative;
+        z-index: 1;
+        background-color: #FFF;
+        box-shadow: 0 0 5px rgba(#000, .05), 0 0 15px rgba(#000, .1);
+        border-top-color: transparent !important;
+        opacity: 1;
+
+        & + .task-item {
+            border-top-color: transparent !important;
+        }
+    }
+}
+
+.tasks-empty {
+    color: #BBB;
+    text-align: center;
+    padding-top: 40px;
+    font-size: 23px;
+    font-weight: 300;
+    line-height: 1;
+
+    > i {
+        opacity: .6;
+        display: block;
+        font-size: 100px;
+        padding-bottom: 15px;
     }
 }

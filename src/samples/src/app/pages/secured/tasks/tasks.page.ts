@@ -1,7 +1,8 @@
-import { Page, PreparePage, HttpClient, Form, DialogBuilder } from '@nimble';
+import { Page, PreparePage, Form, DialogBuilder, HttpResponse, Validators } from '@nimble';
 import { TasksService } from '../../../services/tasks-service';
 import { Helper } from '../../../services/helper-service';
 import { TaskEditDialog } from './dialogs/task-edit/task-edit.dialog';
+import { Task } from '../../../models/task.model';
 
 @PreparePage({
     template: require('./tasks.page.html'),
@@ -10,13 +11,11 @@ import { TaskEditDialog } from './dialogs/task-edit/task-edit.dialog';
 })
 export default class TasksPage extends Page {
 
+    public loadingTasks: boolean = true;
     public form: Form;
-    public loadingRequest: boolean = false;
-
-    public get tasks() { return this.taskService.tasks; }
+    public tasks: Task[] = [];
 
     constructor(
-        private httpClient: HttpClient,
         private taskService: TasksService,
         private dialog: DialogBuilder,
         private helper: Helper,
@@ -24,52 +23,103 @@ export default class TasksPage extends Page {
         super();
 
         this.form = new Form({
-            name: { value: '' }
+            name: { value: '', validators: [ Validators.required ] }
+        });
+        
+        this.getTasks();
+    }
+
+    public getTasks() {
+        this.render(() => {
+            this.loadingTasks = true;
+            this.taskService.getTasks().then(
+                (response: HttpResponse<Task[]>) => {
+                    this.tasks = response.data;
+                    this.loadingTasks = false;
+                    this.render();
+                },
+                (error) => {
+                    this.loadingTasks = false;
+                    this.render();
+                }
+            );
         });
     }
 
-    public addSubmit() {
-        let name = this.form.get('name').value;
-        if (this.taskNameIsValid()) {
-            this.render(() => {
-                this.taskService.add({
-                    name,
-                    createDate: this.helper.dateFormat(new Date())
-                });
-            });
-        }
+    public onSubmit() {
+        this.render(() => {
+            if (this.form.isValid) {
+                this.loadingTasks = true;
+                this.taskService.createTask(this.form.value).then(
+                    (response: HttpResponse<Task>) => {
+                        this.tasks.push(response.data);
+                        this.form.reset();
+                        this.loadingTasks = false;
+                        this.render();
+                    },
+                    (error) => {
+                        this.loadingTasks = false;
+                        this.render();
+                    }
+                );
+            }
+        });
     }
 
-    public toggle(task: any, event: MouseEvent) {
+    public toggle(task: Task, event: MouseEvent) {
         event.stopImmediatePropagation();
         this.render(() => {
+            this.loadingTasks = true;
             task.done = task.done ? false : true;
-            this.taskService.update(task);
+            this.taskService.updateTask(task).then(
+                (response: HttpResponse<Task>) => {
+                    this.loadingTasks = false;
+                    this.render();
+                },
+                (error) => {
+                    task.done = !task.done;
+                    this.loadingTasks = false;
+                    this.render();
+                }
+            );
         });
     }
 
-    public remove(task: any, event: MouseEvent) {
+    public remove(task: Task, event: MouseEvent) {
         event.stopImmediatePropagation();
         this.render(() => {
-            this.taskService.remove(task);
+            this.loadingTasks = true;
+            this.taskService.removeTask(task.id).then(
+                () => {
+                    this.loadingTasks = false;
+                    this.tasks = this.tasks.filter(x => x !== task);
+                    this.render();
+                },
+                (error) => {
+                    this.loadingTasks = false;
+                    this.render();
+                }
+            );
         });
     }
 
-    public editTask(task: any) {
-        // console.log(task);
+    public editTask(task: Task) {
         this.dialog.open(TaskEditDialog, {
-            data: Object.assign({}, task),
+            data: { task },
             width: '100%',
             maxWidth: '500px'
-        }).onClose.then((editedTask: any) => {
+        }).onClose.then((editedTask: Task) => {
             if (editedTask)
                 this.render(() => {
-                    this.taskService.update(editedTask);
+                    this.loadingTasks = true;
+                    this.taskService.updateTask(editedTask).then(
+                        () => this.getTasks(),
+                        (error) => {
+                            this.loadingTasks = false;
+                            this.render();
+                        }
+                    );
                 });
         });
-    }
-
-    public taskNameIsValid() {
-        return this.form.get('name').value && this.form.get('name').value.length >= 4;
     }
 }

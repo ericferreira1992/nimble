@@ -1,14 +1,13 @@
 import { IScope } from '../../page/interfaces/scope.interface';
-import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Listener } from '../../render/listener';
 import { isNullOrUndefined } from 'util';
-import { FormField } from '../../core/forms/form-field';
+import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
 
 @PrepareDirective({
     selector: ['field-mask']
 })
-export class FieldMaskDirective extends Directive {
+export class FieldMaskDirective extends BaseFormFieldDirective {
 
     private RULES = {
         CHARS: {
@@ -21,15 +20,6 @@ export class FieldMaskDirective extends Directive {
         }
     };
 
-    private get formField(): FormField {
-        let directive = this.getDirectiveBySelector('[form-field]');
-        if (directive) {
-            let selectorApplied = directive.selectorsApplied.find(x => x.selector === '[form-field]');
-            if (selectorApplied) return selectorApplied.content;
-        }
-        return null;
-    }
-
     private get mask(): string { return this.getValueOfSelector('field-mask') as string; }
 
     constructor(
@@ -39,12 +29,14 @@ export class FieldMaskDirective extends Directive {
     }
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
-        if (this.elementIsValid(selector, value)) {
-            try {
-                this.listener.listen(element, 'keypress', this.onKeypress.bind(this));
-                this.listener.listen(element, 'input', this.onInput.bind(this));
+        if (this.checkForm()) {
+            if (this.elementIsValid(selector, value)) {
+                try {
+                    this.listener.listen(element, 'keypress', this.onKeypress.bind(this));
+                    this.listener.listen(element, 'input', this.onInput.bind(this));
+                }
+                catch (e) { console.error(e.message); }
             }
-            catch (e) { console.error(e.message); }
         }
     }
 
@@ -186,7 +178,7 @@ export class FieldMaskDirective extends Directive {
             element.value = value;
             
         if (this.formField && value !== this.formField.value)
-            this.formField.setValue((element as HTMLInputElement).value);
+            this.formField.setValue((element as HTMLInputElement).value, { noUpdateElement: true });
     }
 
     private isSpecialCharacter(char: string) {

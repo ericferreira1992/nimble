@@ -6,7 +6,6 @@ export class DirectiveHelper {
     public static getAllPureSelectors() {
         return [
             ...NativesAttrsDirective.selectorsMustHavePureValue,
-            ...FormFieldDirective.selectorsMustHavePureValue,
         ].map(x => x.replace(/\[|\(|\]|\)/g, ''));
     }
 

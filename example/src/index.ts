@@ -1,6 +1,6 @@
 import { NimbleApp } from '@nimble';
 import { ROUTES } from './app/routes';
-import './scss/style.scss';
+import './style.scss';
 
 import { TasksService } from './app/services/tasks-service';
 import { AuthService } from './app/services/auth/auth.service';

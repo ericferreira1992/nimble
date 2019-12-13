@@ -1,16 +1,83 @@
 <div class="task-edit-dialog">
     <div class="dialog-header">
-        <h3 class="float-left">{{task.name}}</h3>
+        <h5 class="float-left">{{task.name}}</h3>
         <button (click)="dialogRef.close()" class="float-right">
             <i class="material-icons">close</i>
         </button>
     </div>
 
     <div class="dialog-content">
-        <form (submit)="onSubmit()">
-            <div class="form-group">
-                <label>Nome</label>
-                <input [form-field]="form.get('name')" class="form-control"/>
+        <form [form]="form" (submit)="onSubmit()">
+            <div class="row">
+                <div class="col-9">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input [form-field]="form.get('name')" (valueChange)="onNameChanged($event)" class="form-control"/>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select [form-field]="form.get('type')" class="form-control">
+                            <option value="" disabled>Selecione</option>
+                            <option @for="let option of types" [value]="option.value">{{option.text}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-check">
+                        <input [form-field]="form.get('done')" type="checkbox" class="form-check-input"/>
+                        <label class="form-check-label">Feita</label>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-check-inline">
+                        <label class="form-check-label">
+                            <input [form-field]="form.get('teste')" value="teste01" type="radio" class="form-check-input"/> Teste 01
+                        </label>
+                    </div>
+                    <div class="form-check-inline">
+                        <label class="form-check-label">
+                            <input [form-field]="form.get('teste')" value="teste02" type="radio" class="form-check-input"/> Teste 02
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12 pt-3">
+                    <div class="form-check-inline">
+                        <input [form-field]="form.get('checklist')" type="checkbox" value="check01" class="form-check-input"/>
+                        <label class="form-check-label">Check 01</label>
+                    </div>
+                    <div class="form-check-inline">
+                        <input [form-field]="form.get('checklist')" type="checkbox" value="check02" class="form-check-input"/>
+                        <label class="form-check-label">Check 02</label>
+                    </div>
+                </div>
+                <div class="col-6 pt-3">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input [form-field]="form.get('date')" field-date-mask="dd/MM/yyyy" placeholder="DD/MM/AAAA" class="form-control"/>
+                    </div>
+                </div>
+                <div class="col-6 pt-3">
+                    <div class="form-group">
+                        <label>Ordem</label>
+                        <input [form-field]="form.get('order')" type="number" class="form-control"/>
+                    </div>
+                </div>
+                <div class="col-12 pt-3">
+                    <div class="form-group">
+                        <label>Email contato:</label>
+                        <input [form-field]="form.get('email')" type="text" class="form-control"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 text-right">
+                    <button class="btn btn-light" type="submit">
+                        SALVAR
+                    </button>
+                </div>
             </div>
         </form>
     </div>

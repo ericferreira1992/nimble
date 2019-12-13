@@ -14,6 +14,10 @@ export default class SecuredPage extends Page {
     onInit() {
     }
 
+    public update(){
+        this.render();
+    }
+
     public logout() {
         this.authService.logout();
     }
