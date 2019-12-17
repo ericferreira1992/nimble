@@ -20,11 +20,11 @@
                 <section>
                     <div class="form-group">
                         <label>Usuário</label>
-                        <input [form-field]="form.get('user')" class="form-control" placeholder="Informe seu usuário" type="text" />
+                        <input [form-field]="form.get('user')" class="form-control" [class]="{ 'is-invalid': form.get('user').hasErrors() }" placeholder="Informe seu usuário" type="text" />
                     </div>
                     <div class="form-group">
                         <label>Senha</label>
-                        <input [form-field]="form.get('password')" class="form-control" placeholder="Informe sua senha" type="password" />
+                        <input [form-field]="form.get('password')" class="form-control" [class]="{ 'is-invalid': form.get('password').hasErrors() }" placeholder="Informe sua senha" type="password" />
                     </div>
     
                     <button type="submit" class="login-button">

@@ -7,7 +7,7 @@ export class Listener {
         private listenersCollector: ListenersCollector
     ) {}
 
-    public listen(target: any, eventName: string, callback: (e?: any) => void): () => void {
-        return this.listenersCollector.subscribe(target, eventName, callback);
+    public listen(target: any, eventName: string, callback: (e?: any) => void, options?: AddEventListenerOptions): () => void {
+        return this.listenersCollector.subscribe(target, eventName, callback, false, options);
     }
 }

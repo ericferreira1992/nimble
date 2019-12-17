@@ -5,6 +5,7 @@ import { isNullOrUndefined, isObject, isFunction } from 'util';
 import { TemplatedPage } from '../page/templated-page';
 import { Type } from '../inject/type.interface';
 import { NimbleApp } from '../app';
+import { DirectiveExecute } from '../render/attributes-render';
 
 export class Route extends RouteBase {
     public parent?: Route;
@@ -23,6 +24,8 @@ export class Route extends RouteBase {
     public get hasParent() { return !isNullOrUndefined(this.parent); }
     public get isAbstract() { return this.children && this.children.length > 0; }
     public get childIndex() { return this.parent ? (this.parent.children.indexOf(this)) : 0; }
+    
+    public executedDirectives: DirectiveExecute[] = [];
 
     constructor(route?: Partial<RouteBase>) {
         super(route);
@@ -38,6 +41,7 @@ export class Route extends RouteBase {
                     try {
                         if (makeNewInstancePage || !this.pageInstance) {
                             this.pageType = TemplatedPage;
+                            this.executedDirectives = [];
                             this.pageInstance = new TemplatedPage(this.page);
                         }
                         this.pageInstance.route = this;
@@ -59,6 +63,7 @@ export class Route extends RouteBase {
                                             this.prevPageInstance = this.pageInstance;
                                             if (makeNewInstancePage || !this.pageInstance) {
                                                 this.pageType = pageType.default;
+                                                this.executedDirectives = [];
                                                 this.pageInstance = NimbleApp.inject<Page>(pageType.default);
                                             }
 
@@ -83,6 +88,7 @@ export class Route extends RouteBase {
                         try {
                             if (makeNewInstancePage || !this.pageInstance) {
                                 this.pageType = this.page as Type<Page>;
+                                this.executedDirectives = [];
                                 this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
                             }
                             this.pageInstance.route = this;
@@ -153,5 +159,13 @@ export class Route extends RouteBase {
             return this.getAllParents().pop();
         else
             return this;
+    }
+
+    public notifyDestructionExecutedsDirectives() {
+        for(let proc of this.executedDirectives) {
+            for(let applicable of proc.applicables)
+                proc.directiveInstance.onDestroy(applicable.selector, proc.scope);
+        }
+        this.executedDirectives = [];
     }
 }

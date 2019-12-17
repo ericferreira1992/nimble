@@ -1,6 +1,6 @@
 <div class="task-edit-dialog">
     <div class="dialog-header">
-        <h5 class="float-left">{{task.name}}</h3>
+        <h5 class="float-left">{{form.get('name').value}}</h3>
         <button (click)="dialogRef.close()" class="float-right">
             <i class="material-icons">close</i>
         </button>
@@ -12,7 +12,7 @@
                 <div class="col-9">
                     <div class="form-group">
                         <label>Nome</label>
-                        <input [form-field]="form.get('name')" (valueChange)="onNameChanged($event)" class="form-control"/>
+                        <input [form-field]="form.get('name')" class="form-control"/>
                     </div>
                 </div>
                 <div class="col-3">
@@ -22,6 +22,7 @@
                             <option value="" disabled>Selecione</option>
                             <option @for="let option of types" [value]="option.value">{{option.text}}</option>
                         </select>
+                        <span @if="form.get('type').hasError('required')" class="form-control-error">Campo obrigatório</span>
                     </div>
                 </div>
                 <div class="col-6">
@@ -29,6 +30,7 @@
                         <input [form-field]="form.get('done')" type="checkbox" class="form-check-input"/>
                         <label class="form-check-label">Feita</label>
                     </div>
+                    <span @if="form.get('done').hasError('required')" class="form-control-error">Campo obrigatório</span>
                 </div>
                 <div class="col-6">
                     <div class="form-check-inline">
@@ -41,6 +43,7 @@
                             <input [form-field]="form.get('teste')" value="teste02" type="radio" class="form-check-input"/> Teste 02
                         </label>
                     </div>
+                    <span @if="form.get('teste').hasError('required')" class="form-control-error">Campo obrigatório</span>
                 </div>
                 <div class="col-12 pt-3">
                     <div class="form-check-inline">
@@ -51,23 +54,34 @@
                         <input [form-field]="form.get('checklist')" type="checkbox" value="check02" class="form-check-input"/>
                         <label class="form-check-label">Check 02</label>
                     </div>
+                    <span @if="form.get('checklist').hasError('required')" class="form-control-error">Campo obrigatório</span>
                 </div>
                 <div class="col-6 pt-3">
                     <div class="form-group">
                         <label>Data</label>
                         <input [form-field]="form.get('date')" field-date-mask="dd/MM/yyyy" placeholder="DD/MM/AAAA" class="form-control"/>
+                        <span @if="form.get('date').hasError('required')" class="form-control-error">Campo obrigatório</span>
                     </div>
                 </div>
                 <div class="col-6 pt-3">
                     <div class="form-group">
                         <label>Ordem</label>
                         <input [form-field]="form.get('order')" type="number" class="form-control"/>
+                        <span @if="form.get('order').hasError('required')" class="form-control-error">Campo obrigatório</span>
                     </div>
                 </div>
-                <div class="col-12 pt-3">
+                <div class="col-6 pt-3">
                     <div class="form-group">
-                        <label>Email contato:</label>
-                        <input [form-field]="form.get('email')" type="text" class="form-control"/>
+                        <label>Email contato</label>
+                        <input [form-field]="form.get('email')" type="text" class="form-control" placeholder="seu@email.com.br"/>
+                        <span @if="form.get('email').hasError('required')" class="form-control-error">Campo obrigatório</span>
+                    </div>
+                </div>
+                <div class="col-6 pt-3">
+                    <div class="form-group">
+                        <label>Celular</label>
+                        <input [form-field]="form.get('phone')" type="text" field-mask="(00) 90000-0000" placeholder="(XX) 90000-0000" class="form-control"/>
+                        <span @if="form.get('phone').hasError('required')" class="form-control-error">Campo obrigatório</span>
                     </div>
                 </div>
             </div>

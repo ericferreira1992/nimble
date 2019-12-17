@@ -1,11 +1,10 @@
 import { IScope } from '../../page/interfaces/scope.interface';
-import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { FormField } from '../../core/forms/form-field';
-import { Listener } from '../../render/listener';
 import { InternalObserversCollector } from '../../providers/internal-observers-collector';
-import { isArray, isBoolean, isNumber, isNullOrUndefined, isUndefined } from 'util';
+import { isArray, isBoolean, isUndefined } from 'util';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
+import { ListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: [
@@ -16,7 +15,7 @@ import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
 export class FormFieldDirective extends BaseFormFieldDirective {
 
     constructor(
-        private listener: Listener,
+        private listenerCollector: ListenersCollector,
         private intervalEventsCollector: InternalObserversCollector
 
     ) {
@@ -27,8 +26,8 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         if (this.checkForm()) {
             if (selector === '[form-field]') {
                 if (this.elementIsValid() && value instanceof FormField) {
+                    value.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                     if (this.canApplyFormField()) {
-                        value.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                         this.resolveFormFieldSelector(value);
                     }
                 }
@@ -38,14 +37,17 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         }
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
     private resolveFormFieldSelector(field: FormField) {
         let input = this.element as HTMLInputElement;
-        
+
         if (input.type === 'radio') {
             if (input.value === field.value || (!input.value && !field.value))
                 input.checked = true;
 
-            this.listener.listen(this.element, 'click', (e) => {
+            this.listenerCollector.subscribe(this.element, 'click', (e) => {
                 if (!input.disabled) {
                     field.elements.forEach((el: HTMLInputElement) => {
                         if (el !== input)
@@ -54,7 +56,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                     input.checked = true;
                     field.setValue(input.value);
                 }
-            });
+            }, true);
         }
         else if (input.type === 'checkbox') {
             let value: any = input.hasAttribute('value') ? input.value : '';
@@ -64,7 +66,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
             else
                 input.checked = field.value;
 
-            this.listener.listen(this.element, 'click', (e) => {
+            this.listenerCollector.subscribe(this.element, 'click', (e) => {
                 if (!input.disabled) {
                     if (field.elements.length === 1) {
                         if (!isBoolean(field.value))
@@ -79,7 +81,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                                 values.push(value);
                             else
                                 values = values.filter(x => x !== value);
-    
+
                             field.setValue(values.length > 0 ? value : null);
                         }
                         else {
@@ -87,18 +89,18 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                         }
                     }
                 }
-            });
+            }, true);
         }
         else {
             input.value = !isUndefined(field.value) ? field.value : null;
-            this.listener.listen(input, 'input', (e) => {
+            this.listenerCollector.subscribe(input, 'input', (e) => {
                 let value: any = input.value;
 
                 if (input.type === 'number')
                     value = !isNaN(parseInt(value)) ? parseInt(value) : null;
 
                 field.setValue(value, { noUpdateElement: true });
-            });
+            }, true);
         }
     }
 
@@ -109,7 +111,6 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                 scope.eval(expression);
                 delete scope['$event'];
             }));
-
         }
         else {
             console.error('The directive (valueChanges) cannot be appplied, because the [form-field] directive must exist before it.');

@@ -21,12 +21,15 @@ export default class TasksPage extends Page {
         private helper: Helper,
     ) {
         super();
+        this.makeForm();
+        this.getTasks();
+    }
 
+    private makeForm() {
         this.form = new Form({
             name: { value: '', validators: [ Validators.required ] }
         });
-        
-        this.getTasks();
+        this.form.validate();
     }
 
     public getTasks() {
@@ -47,23 +50,24 @@ export default class TasksPage extends Page {
     }
 
     public onSubmit() {
-        this.render(() => {
-            if (this.form.isValid) {
-                this.loadingTasks = true;
-                this.taskService.createTask(this.form.value).then(
-                    (response: HttpResponse<Task>) => {
+        if (this.form.isValid) {
+            this.loadingTasks = true;
+            this.taskService.createTask(this.form.value).then(
+                (response: HttpResponse<Task>) => {
+                    this.render(() => {
                         this.tasks.push(response.data);
                         this.form.reset();
+                        this.form.validate();
                         this.loadingTasks = false;
-                        this.render();
-                    },
-                    (error) => {
+                    });
+                },
+                (error) => {
+                    this.render(() => {
                         this.loadingTasks = false;
-                        this.render();
-                    }
-                );
-            }
-        });
+                    });
+                }
+            );
+        }
     }
 
     public toggle(task: Task, event: MouseEvent) {

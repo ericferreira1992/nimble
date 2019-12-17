@@ -1,10 +1,13 @@
 import { Dialog } from "./dialog";
 import { DialogRef } from "./dialog-ref";
+import { DirectiveExecute } from "../../render/attributes-render";
 
 export class DialogRenderRef<T extends Dialog> {
     public rootElement: HTMLElement;
     public dialogRef: DialogRef<T>;
     public listenerCancelFunctions: (() => void)[] = [];
+    
+    public executedDirectives: DirectiveExecute[] = [];
 
     public set containerElement(element: HTMLElement) {
         let dialogContainerElement = this.rootElement.querySelector('.nimble-dialog-container');
@@ -61,5 +64,13 @@ export class DialogRenderRef<T extends Dialog> {
             if (this.dialogRef.config.minWidth)
                 areaElement.style.minWidth = this.dialogRef.config.minWidth;
         }
+    }
+
+    public notifyDestructionExecutedsDirectives() {
+        for(let proc of this.executedDirectives) {
+            for(let applicable of proc.applicables)
+                proc.directiveInstance.onDestroy(applicable.selector, proc.scope);
+        }
+        this.executedDirectives = [];
     }
 }

@@ -23,11 +23,9 @@ export default class LoginPage extends Page {
     }
 
     public onSubmit() {
-        this.render(() => {
-            if (this.form.isValid) {
-                this.doLogin();
-            }
-        });
+        if (this.form.isValid) {
+            this.doLogin();
+        }
     }
 
     public doLogin() {
@@ -41,14 +39,5 @@ export default class LoginPage extends Page {
                 this.render();
             }
         );
-    }
-
-    private validate() {
-        if (!this.form.get('user').value)
-            return false;
-        if (!this.form.get('password').value)
-            return false;
-
-        return true;
     }
 }

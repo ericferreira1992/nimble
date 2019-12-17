@@ -8,7 +8,7 @@
                 autoComplete="off"
                 placeholder="Nome da tarefa"
             />
-            <button type="submit" [disabled]="loadingTasks">
+            <button type="submit" [disabled]="loadingTasks || form.hasErrors()">
                 <i class="material-icons">add</i>
             </button>
         </form>

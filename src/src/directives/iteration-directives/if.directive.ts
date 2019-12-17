@@ -16,4 +16,7 @@ export class IfDirective extends IterationDirective {
 
         return new AfterIterateElement({ removed: !success });
     }
+
+    public onDestroy(selector: string, scope: IScope) {
+    }
 }

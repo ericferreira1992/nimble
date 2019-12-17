@@ -31,4 +31,7 @@ export class DragEventsDirective extends Directive {
         });
     }
 
+
+    public onDestroy(selector: string, scope: IScope) {
+    }
 }

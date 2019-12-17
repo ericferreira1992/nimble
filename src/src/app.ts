@@ -146,18 +146,21 @@ export class NimbleApp {
     private onRouteErrorLoading(error, route: Route) {
     }
 
-    private onRouteStartRerender(route: Route) {
+    private onRouteStartRerender(current: Route) {
         this.state = NimbleAppState.RERENDERING;
+
+        current.notifyDestructionExecutedsDirectives();
+        let routesToRerender = [current, ...current.getAllParents()].reverse();
+        for(let route of routesToRerender)
+            this.virtualizeRoute(route);
     }
 
     private onRouteFinishedRerender(route: Route) {
-        this.rootElement.real = this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
+        let { element, executedsDirectives } = this.render.diffTreeElementsAndUpdateOld(this.rootElement.real, this.rootElement.virtual);
+        this.rootElement.real = element;
+        route.executedDirectives = executedsDirectives;
         this.state = NimbleAppState.INITIALIZED;
         document.dispatchEvent(new Event('render-event'))
-    }
-
-    public virtualizeSequenceRoutes(routes: Route[]) {
-        this.render.virtualizeSequenceRoutes(routes);
     }
 
     public virtualizeRoute(route: Route) {

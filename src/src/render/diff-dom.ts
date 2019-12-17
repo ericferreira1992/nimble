@@ -97,9 +97,14 @@ export class DiffDOM {
         if(notExistsInTarget.length > 0) {
             for(var i = 0; i < targetParent.childNodes.length; i++){
                 let child = targetParent.childNodes[i];
-                if (notExistsInTarget.some(x => x === child)) {
-                    targetParent.removeChild(child);
-                    i--;
+                if (notExistsInTarget.some(x => x === child) && child.parentNode === targetParent) {
+                    try {
+                        targetParent.removeChild(child);
+                        i--;
+                    }
+                    catch(e) {
+                        // console.error(e);
+                    }
                 }
             }
         }

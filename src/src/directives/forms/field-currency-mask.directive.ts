@@ -1,9 +1,9 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { Listener } from '../../render/listener';
 import { isNullOrUndefined, isObject } from 'util';
 import { Helper } from '../../providers/helper';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
+import { ListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: ['field-currency-mask']
@@ -24,7 +24,7 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
 
     constructor(
         private helper: Helper,
-        private listener: Listener
+        private listenerCollector: ListenersCollector,
     ) {
         super();
     }
@@ -35,12 +35,15 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
                 try {
                     this.defineOptions(value);
                     this.checkValueOnInitialize();
-                    this.listener.listen(element, 'keypress', this.onKeypress.bind(this));
-                    this.listener.listen(element, 'input', this.onInput.bind(this));
+                    this.listenerCollector.subscribe(element, 'keypress', this.onKeypress.bind(this), true);
+                    this.listenerCollector.subscribe(element, 'input', this.onInput.bind(this), true);
                 }
                 catch (e) { console.error(e.message); }
             }
         }
+    }
+
+    public onDestroy(selector: string, scope: IScope) {
     }
 
     private defineOptions(value: any) {
@@ -60,7 +63,7 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
         let floatValue = this.parseFloat(value);
 
         if (this.formField && floatValue !== this.formField.value)
-            this.formField.setValue(floatValue, { noNotify: true, noUpdateElement: true });
+            this.formField.setValue(floatValue, { noNotify: true, noUpdateElement: true, noValidate: true });
     }
 
     private elementIsValid(selector: string, value: any) {
@@ -87,7 +90,6 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
     }
 
     private onInput(event: KeyboardEvent) {
-        event.stopImmediatePropagation();
         let element = (this.element as HTMLInputElement);
         let value = element.value;
 

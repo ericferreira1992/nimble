@@ -1,8 +1,8 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { Listener } from '../../render/listener';
 import { isNullOrUndefined } from 'util';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
+import { ListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: ['field-mask']
@@ -23,7 +23,7 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
     private get mask(): string { return this.getValueOfSelector('field-mask') as string; }
 
     constructor(
-        private listener: Listener
+        private listenerCollector: ListenersCollector,
     ) {
         super();
     }
@@ -32,12 +32,16 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         if (this.checkForm()) {
             if (this.elementIsValid(selector, value)) {
                 try {
-                    this.listener.listen(element, 'keypress', this.onKeypress.bind(this));
-                    this.listener.listen(element, 'input', this.onInput.bind(this));
+                    this.checkValueOnInitialize();
+                    this.listenerCollector.subscribe(element, 'keypress', this.onKeypress.bind(this), true);
+                    this.listenerCollector.subscribe(element, 'input', this.onInput.bind(this), true);
                 }
                 catch (e) { console.error(e.message); }
             }
         }
+    }
+
+    public onDestroy(selector: string, scope: IScope) {
     }
 
     private elementIsValid(selector: string, value: any) {
@@ -79,6 +83,17 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         return false;
     }
 
+    private checkValueOnInitialize() {
+        let element = this.element as HTMLInputElement;
+        let value = (this.formField) ? this.formField.value : element.value;
+        value = this.applyMask(isNullOrUndefined(value) ? '': value);
+        
+        element.value = value;
+            
+        if (this.formField && value !== this.formField.value)
+            this.formField.setValue(value, { noNotify: true, noUpdateElement: true, noValidate: true });
+    }
+
     private onKeypress(event: KeyboardEvent) {
         let element = this.element as HTMLInputElement;
 
@@ -104,20 +119,26 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
             return;
         }
 
-        element.value += this.applyMaskInCharacter(nextCharacter, maskCharacter, valueLength);
+        let nextsSequencialMaskChars = this.applyMaskInCharacter(nextCharacter, maskCharacter, valueLength);
+        if (nextsSequencialMaskChars.includes(nextCharacter))
+            event.preventDefault();
+        element.value += nextsSequencialMaskChars;
     }
 
     private onInput(event: KeyboardEvent) {
-        event.stopImmediatePropagation();
-        this.applyMask();
+        let element = this.element as HTMLInputElement;
+        let value = this.applyMask(element.value);
+        
+        element.value = value;
+            
+        if (this.formField && value !== this.formField.value)
+            this.formField.setValue((element as HTMLInputElement).value, { noUpdateElement: true });
     }
 
     private applyMaskInCharacter(nextChar: string, maskChar: string, position: number): string {
-        let element = this.element as HTMLInputElement;
-
         if (
-            (maskChar.toString() === this.RULES.CHARS.NUMBER.toString() && this.RULES.REGEX.NUMBER.test(nextChar.toString())) ||
-            (maskChar.toString() === this.RULES.CHARS.LETTER.toString() && this.RULES.REGEX.LETTER.test(nextChar.toString()))
+            (maskChar.toString() === this.RULES.CHARS.NUMBER && this.RULES.REGEX.NUMBER.test(nextChar.toString())) ||
+            (maskChar.toString() === this.RULES.CHARS.LETTER && this.RULES.REGEX.LETTER.test(nextChar.toString()))
         ) {
             return '';
         }
@@ -140,10 +161,7 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         return sequencialChars;
     }
 
-    private applyMask() {
-        let element = this.element as HTMLInputElement;
-        let value = element.value;
-
+    private applyMask(value: string) {
         for(var i = 0; i < value.length; i++) {
             let valueChar = value[i].toString();
             let maskChar = this.mask[i];
@@ -172,13 +190,9 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
                 value = value.substr(0, i) + value.substr(i + 1);
                 i--;
             }
-        } 
-        
-        if (value !== element.value)
-            element.value = value;
-            
-        if (this.formField && value !== this.formField.value)
-            this.formField.setValue((element as HTMLInputElement).value, { noUpdateElement: true });
+        }
+
+        return value;
     }
 
     private isSpecialCharacter(char: string) {

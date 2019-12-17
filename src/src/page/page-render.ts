@@ -23,11 +23,6 @@ export class PageRender extends Render {
         }
     }
 
-    public virtualizeSequenceRoutes(routes: Route[]) {
-        for(let route of routes)
-            this.virtualizeRoute(route);
-    }
-
     private virtualizeRouteInParent(route: Route) {
         let parent = route.parent;
         route.element.virtual = this.createPageElementAndResolve(route.pageInstance.template, route.pageInstance);
@@ -79,7 +74,7 @@ export class PageRender extends Render {
         this.notifyOldRoutesElementDestroyed(commonParentRoute, previousRoute);
         this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, currentRoute);
 
-        this.attributesRender.processesPendingAttributes();
+        currentRoute.executedDirectives = this.attributesRender.processesPendingAttributes();
     }
 
     private notifyOldRoutesElementDestroyed(commonParentRoute: Route, previousRoute: Route) {

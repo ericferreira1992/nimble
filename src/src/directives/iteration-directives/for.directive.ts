@@ -78,4 +78,7 @@ export class ForDirective extends IterationDirective {
 
         return resolved;
     }
+
+    public onDestroy(selector: string, scope: IScope) {
+    }
 }

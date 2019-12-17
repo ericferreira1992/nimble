@@ -39,10 +39,8 @@ export class DialogBuilder {
 
         NimbleApp.registerProvider({ provide: DIALOG_REF, useValue: dialogRef });
 
-        let dialogInstance: T; 
-        dialogInstance = NimbleApp.inject(dialog);
-        dialogInstance.onNeedRerender = this.rerender.bind(this);
-        dialogRef.instance = dialogInstance
+        dialogRef.instance = NimbleApp.inject(dialog);
+        dialogRef.instance.onNeedRerender = this.rerender.bind(this);
 
         let dialogRenderRef = this.dialogRender.renderDialog(dialogRef);
         this.dialogCollector.add(dialogRenderRef);

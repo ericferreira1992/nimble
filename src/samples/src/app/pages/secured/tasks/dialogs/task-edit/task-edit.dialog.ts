@@ -33,27 +33,23 @@ export class TaskEditDialog extends Dialog {
             order: { value: this.task.order, validators: [ Validators.required ] },
             teste: { value: this.task.teste, validators: [ Validators.required ] },
             email: { value: this.task.email, validators: [ Validators.required, Validators.email ] },
+            phone: { value: this.task.phone, validators: [ Validators.required ] },
         });
     }
 
     public onNameChanged(value) {
-        this.render(() => this.task.name = value);
+        this.task.name = value;
     }
 
     public onSubmit() {
-        this.render(() => {
-            for(let field in this.form.fields) {
+        for(let field in this.form.fields) {
+            if (this.form.fields[field].errors)
                 console.log(field, this.form.fields[field].errors);
-            }
+        }
 
-            if (this.form.isValid) {
-                this.save();
-            }
-        });
-    }
-
-    public isFormValid() {
-        return this.form.get('name').value !== '';
+        if (this.form.isValid) {
+            this.save();
+        }
     }
 
     public save() {

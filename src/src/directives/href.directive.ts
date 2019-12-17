@@ -40,4 +40,7 @@ export class HrefDirective extends Directive {
             element.attributes[selector].value = value;
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
 }

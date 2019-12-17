@@ -26,4 +26,7 @@ export class KeyboardEventsDirective extends Directive {
         });
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
 }

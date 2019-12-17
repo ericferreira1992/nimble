@@ -48,6 +48,7 @@ export abstract class Directive {
     }
 
     abstract resolve(selector: string, value: any, element: HTMLElement, scope: IScope): any;
+    abstract onDestroy(selector: string, scope: IScope);
 }
 
 export class ResolverData {

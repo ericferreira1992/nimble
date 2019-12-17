@@ -32,4 +32,7 @@ export class MouseEventsDirective extends Directive {
         });
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
 }

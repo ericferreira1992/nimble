@@ -26,4 +26,7 @@ export class ClipboardEventsDirective extends Directive {
             });
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
 }

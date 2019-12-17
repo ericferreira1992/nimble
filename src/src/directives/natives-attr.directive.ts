@@ -50,6 +50,9 @@ export class NativesAttrsDirective extends Directive {
         }
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
     private resolveClass(value: string, element: HTMLElement, scope: IScope) {
         if (value) {
             value = value.trim();

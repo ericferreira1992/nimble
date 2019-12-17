@@ -7,15 +7,9 @@ import { Form } from '../../core/forms/form';
 @PrepareDirective({
     selector: [
         '(blur)',
-        '(change)',
-        '(contextmenu)',
         '(focus)',
         '(input)',
-        '(invalid)',
-        '(reset)',
-        '(search)',
         '(select)',
-        '(submit)',
     ]
 })
 export class FormEventsDirective extends Directive {
@@ -37,27 +31,14 @@ export class FormEventsDirective extends Directive {
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
         selector = this.pureSelector(selector);
-        if (selector === 'submit') {
-            this.resolveSubmitSelector(value, element, scope);
-        }
-        else
-            this.listener.listen(element, selector, (e) => {
-                Object.assign(scope, { $event: e });
-                scope.eval(value);
-                delete scope['$event'];
-            });
+        this.listener.listen(element, selector, (e) => {
+            Object.assign(scope, { $event: e });
+            scope.eval(value);
+            delete scope['$event'];
+        });
     }
 
-    private resolveSubmitSelector(value: any, element: HTMLElement, scope: IScope) {
-        if (this.checkForm('submit'))
-            this.listener.listen(element, 'submit', (e) => {
-                Object.assign(scope, { $event: e });
-                scope.eval(value);
-                delete scope['$event'];
-
-                e.preventDefault();
-                return false;
-            });
+    public onDestroy(selector: string, scope: IScope) {
     }
     
     private checkForm(selector: string) {

@@ -4,13 +4,14 @@ import { Injectable } from "../inject/injectable";
 export class ListenersCollector {
     private listenersSubscribed: ListenerSubscribed[] = [];
 
-    public subscribe(target: HTMLElement, eventName: string, callback: (e?: any) => void, internal: boolean = false): () => void {
+    public subscribe(target: HTMLElement, eventName: string, callback: (e?: any) => void, internal: boolean = false, options?: AddEventListenerOptions): () => void {
         if (target) {
             let subscribed = new ListenerSubscribed({
                 internal,
                 target,
                 eventName,
-                realCallback: callback
+                realCallback: callback,
+                options
             });
             subscribed.callback = (e) => {
                 if (subscribed.beforeListen) subscribed.beforeListen();
@@ -24,18 +25,26 @@ export class ListenersCollector {
         return () => {};
     }
 
+    public getSubscribedsByTarget(target: HTMLElement) {
+        return this.listenersSubscribed.filter(x => x.target === target);
+    }
+
+    public getSubscribedsByTargetAndEventName(target: HTMLElement, eventName: string) {
+        return this.listenersSubscribed.filter(x => x.target === target && x.eventName === eventName);
+    }
+
     public applyAllListeners() {
         let subscribeds = this.listenersSubscribed.filter(x => !x.applied);
         subscribeds.sort((a, b) => (a.internal === b.internal) ? 0 : (a.internal ? -1 : 1));
 
         for(let subscribed of subscribeds) {
             subscribed.applied = true;
-            subscribed.target.addEventListener(subscribed.eventName, subscribed.callback);
+            subscribed.target.addEventListener(subscribed.eventName, subscribed.callback, subscribed.options);
         }
     }
 
     public unsubscribe(subscribed: ListenerSubscribed) {
-        if (subscribed) {
+        if (subscribed && subscribed.applied) {
             subscribed.target.removeEventListener(subscribed.eventName, subscribed.callback);
         }
         this.listenersSubscribed = this.listenersSubscribed.filter(x => x !== subscribed);
@@ -44,7 +53,7 @@ export class ListenersCollector {
     public unsubscribeAll(){
         let toUnsubscribe = this.listenersSubscribed.pop();
         while(toUnsubscribe){
-            if (toUnsubscribe.target)
+            if (toUnsubscribe.target && toUnsubscribe.applied)
                 toUnsubscribe.target.removeEventListener(toUnsubscribe.eventName, toUnsubscribe.callback);
             
             toUnsubscribe = this.listenersSubscribed.pop();
@@ -56,7 +65,7 @@ export class ListenersCollector {
             let listToUnsubscribe  = this.listenersSubscribed.filter(x => x.target === target);
             if (listToUnsubscribe.length) {
                 for(let toUnsubscribe of listToUnsubscribe) {
-                    if (toUnsubscribe.target){
+                    if (toUnsubscribe.target && toUnsubscribe.applied){
                         toUnsubscribe.target.removeEventListener(toUnsubscribe.eventName, toUnsubscribe.callback);
                     }
                 }
@@ -82,6 +91,7 @@ export class ListenerSubscribed {
     public eventName: string;
     public callback: (e: any) => void;
     public realCallback: (e: any) => void;
+    public options: AddEventListenerOptions;
     public applied: boolean = false
 
     beforeListen: () => void;

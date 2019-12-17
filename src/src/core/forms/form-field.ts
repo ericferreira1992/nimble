@@ -16,7 +16,7 @@ export class FormField {
     private _valueChanges: Observer<any> = new Observer<any>();
     public get valueChanges() { return this._valueChanges; }
 
-    private _errors: { [name: string]: any } = null;
+    private _errors: { [name: string]: any } | null = null;
     public get errors() { return this._errors; }
 
     private _validators: ((formField: FormField) => any)[] = [];
@@ -30,6 +30,7 @@ export class FormField {
     /** Indicates that you have already entered the field. */
     public get touched() { return this._touched; }
 
+    /**Check if all validators is valid and returns a boolean */
     public get isValid() { return !this.errors || Object.keys(this.errors).filter(x => !(this.errors[x] === false)).length === 0; }
 
     private get listenerCollector() { return NimbleApp.inject(ListenersCollector); }
@@ -39,6 +40,7 @@ export class FormField {
     }
 
     public setValue(value: any, options: { noNotify?: boolean, noUpdateElement?: boolean, noValidate?: boolean } = {} as any) {
+        let interacted = false;
         this._value = value;
         if ((!options || !options.noUpdateElement) && this.elements.length === 1) {
             let element = this.elements[0];
@@ -51,11 +53,18 @@ export class FormField {
             }
         }
         
-        if (!options || !options.noNotify)
+        if (!options || !options.noNotify) {
             this.valueChanges.notify(value);
+            interacted = true;
+        }
         
-        if (!options || !options.noValidate && (!this.parent || this.parent.submitted))
+        if (!options || !options.noValidate) {
             this.validate();
+            interacted = true;
+        }
+
+        if (interacted && (!this.parent || !this.parent.isReseting))
+            this.renderIfNeed();
     }
 
     public validate(): boolean {
@@ -78,11 +87,15 @@ export class FormField {
         return this.errors && this.errors[name];
     }
 
+    public hasErrors() {
+        return this.errors && Object.keys(this.errors).length > 0;
+    }
+
     public setElement(element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) {
         if (this._elements.indexOf(element) < 0) {
             this._elements.push(element);
-            this.setFieldElementListeners(element);
         }
+        this.setFieldElementListeners(element);
     }
 
     public setErrors(errors: { [name: string]: boolean }) {
@@ -97,22 +110,53 @@ export class FormField {
             };
     }
 
+    public setTouched() {
+        this._touched = true;
+    }
+    public setUntouched() {
+        this._touched = false;
+    }
+
+    public setBlurred() {
+        this._blurred = true;
+    }
+    public setUnblurred() {
+        this._blurred = false;
+    }
+
     public removeValidators(validators: ((formField: FormField) => any)[]) {
         if (validators)
             this._validators = this._validators.filter(x => !validators.some(y => x === y));
     }
 
-    public reset(options?: { noNotify?: boolean, noUpdateElement?: boolean }) {
+    /**Reset value and clear touched and blurred properties. */
+    public reset(options?: { noNotify?: boolean, noUpdateElement?: boolean, noValidate?: boolean }) {
+        this.setUntouched();
+        this.setUnblurred();
         this.setValue(null, options);
         this._errors = null;
     }
 
     private setFieldElementListeners(element: HTMLElement) {
         this.listenerCollector.subscribe(element, 'focus', () => {
+            setTimeout(() => this.renderIfNeed());
+
             this._touched = true;
-        }, true);
+
+            if (this.blurred) this.validate();
+        }, true, { once: true });
+        
         this.listenerCollector.subscribe(element, 'blur', () => {
+            setTimeout(() => this.renderIfNeed());
+
             this._blurred = true;
-        }, true);
+            this.validate();
+        }, true, { once: true });
+    }
+
+    private renderIfNeed() {
+        if (this.parent.renderOnInteract && this.parent.scope) {
+            this.parent.scope.onNeedRerender && this.parent.scope.onNeedRerender(this.parent.scope);
+        }
     }
 }

@@ -1,9 +1,9 @@
+import { isNullOrUndefined } from 'util';
 import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { Listener } from '../../render/listener';
-import { isNullOrUndefined } from 'util';
 import { Helper } from '../../providers/helper';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
+import { ListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: ['field-date-mask']
@@ -20,7 +20,7 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
 
     constructor(
         private helper: Helper,
-        private listener: Listener
+        private listenerCollector: ListenersCollector,
     ) {
         super();
     }
@@ -31,18 +31,22 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
                 try {
                     this.prepareRegex();
                     this.checkValueOnInitialize();
-                    this.listener.listen(element, 'keypress', this.onKeypress.bind(this));
-                    this.listener.listen(element, 'keydown', this.onKeydown.bind(this));
-                    this.listener.listen(element, 'input', this.onInput.bind(this));
+                    this.listenerCollector.subscribe(element, 'keypress', this.onKeypress.bind(this), true);
+                    this.listenerCollector.subscribe(element, 'keydown', this.onKeydown.bind(this), true);
+                    this.listenerCollector.subscribe(element, 'input', this.onInput.bind(this), true);
                 }
                 catch (e) { console.error(e.message); }
             }
         }
     }
 
+    public onDestroy(selector: string, scope: IScope) {
+    }
+
     private checkValueOnInitialize() {
         let element = this.element as HTMLInputElement;
-        let value = element.value.replace(/[^\d]/g, '');
+        let value = (this.formField ? this.formField.value : element.value) as string;
+        value = typeof value === 'string'? value.replace(/[^\d]/g, '') : '';
         if (!value.match(this.regex)) {
             value = value.replace(/[^\d]/g, '');
             value = this.applyMask(value);
@@ -53,7 +57,7 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
 
         element.value = value;
         if (this.formField && value !== this.formField.value)
-            this.formField.setValue(element.value, { noNotify: true, noUpdateElement: true });
+            this.formField.setValue(element.value, { noNotify: true, noUpdateElement: true, noValidate: true });
     }
 
     private elementIsValid(selector: string, value: any) {
@@ -145,7 +149,6 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
 
     private onInput(event: KeyboardEvent) {
         try {
-            event.stopImmediatePropagation();
             let element = (this.element as HTMLInputElement);
             let value = element.value;
 
@@ -220,8 +223,8 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
                 newValue += valueChar;
             }
 
-            if (newValue.length < this.format.length && this.format[newValue.length] === this.separator)
-                newValue += this.separator;
+            //if (newValue.length < this.format.length && this.format[newValue.length] === this.separator)
+                // newValue += this.separator;
 
             newValue = newValue.substr(0, this.format.length);
 

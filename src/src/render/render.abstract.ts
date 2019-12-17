@@ -1,5 +1,3 @@
-import { Route } from "./../route/route";
-import { Router } from "./../route/router";
 import { HeaderRender } from "./header-render";
 import { AttributesRender } from "./attributes-render";
 import { NimbleApp } from "./../app";
@@ -47,13 +45,13 @@ export abstract class Render {
         }
     }
 
-    public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement): HTMLElement {
+    public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement) {
+
         let currentElement: HTMLElement;
         if (oldTreeElments.outerHTML !== newTreeElements.outerHTML) {
             currentElement = this.diffDOM.diff(oldTreeElments, newTreeElements);
         }
-        this.attributesRender.processesPendingAttributes();
 
-        return currentElement;
+        return { element: currentElement, executedsDirectives: this.attributesRender.processesPendingAttributes() };
     }
 }

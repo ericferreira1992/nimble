@@ -356,16 +356,10 @@ export class Router {
         let changingRouteInProgress = this.state === RouterEvent.START_CHANGE;
         let routeChangeFinished = this.state === RouterEvent.FINISHED_CHANGE;
         
-        this.setState(RouterEvent.STARTED_RERENDER, page.route);
+        this.setState(RouterEvent.STARTED_RERENDER, changingRouteInProgress ? this.previous : this.current);
 
-        let currentRoute = changingRouteInProgress ? this.previous : this.current;
-        let routesToRerender = [currentRoute, ...currentRoute.getAllParents()];
-
-        this.app.virtualizeSequenceRoutes(routesToRerender.reverse());
-
-        
         if (!routeChangeFinished || this.state === RouterEvent.STARTED_RERENDER)
-            this.setState(RouterEvent.FINISHED_RERENDER, page.route);
+            this.setState(RouterEvent.FINISHED_RERENDER, this.current);
 
         if (changingRouteInProgress)
             this._state = RouterEvent.START_CHANGE;
