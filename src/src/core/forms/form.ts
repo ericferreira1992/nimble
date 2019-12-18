@@ -30,6 +30,9 @@ export class Form {
     private _submitted: boolean = false;
     public get submitted(){ return this._submitted; }
 
+    private _isSubmitting: boolean = false;
+    public get isSubmitting(){ return this._isSubmitting; }
+
     /** Indicates that you have already entered at least one field and left. */
     public get blurred() { return Object.keys(this._fields).some(x => this._fields[x].blurred); }
 
@@ -75,11 +78,11 @@ export class Form {
     }
 
     /**Returns form-field by name */
-    public get(field: string): FormField {
-        if (field in this.fields)
-            return this.fields[field];
+    public get(fieldName: string): FormField {
+        if (fieldName in this.fields)
+            return this.fields[fieldName];
         else {
-            console.error(`The field "${field}" not found.`);
+            console.error(`The field "${fieldName}" not found.`);
             return new FormField({});
         }
     }
@@ -90,6 +93,10 @@ export class Form {
             value[field] = this.get(field).value;
         }
         return value;
+    }
+
+    public has(fieldName: string): boolean {
+        return this.fields && Object.keys(this.fields).some(name => name === fieldName);
     }
 
     public hasErrors() {
@@ -109,6 +116,7 @@ export class Form {
         finally {
             this._isReseting = false;
             this.renderIfNeed();
+            return this;
         }
     }
 
@@ -144,12 +152,14 @@ export class Form {
 
     private setFormListeners() {
         this.listenerCollector.subscribe(this.formElement, 'submit', (e: Event) => {
+            this._isSubmitting = true;
             this._submitted = true;
             this.validate();
 
             this.onSubmit.notify(e);
             
             this.renderIfNeed();
+            this._isSubmitting = false;
         }, true);
     }
 

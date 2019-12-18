@@ -1,18 +1,23 @@
 import { Directive } from "./directive";
 import { FormField } from "../../core/forms/form-field";
 import { Form } from "../../core/forms/form";
-import { FormFieldDirective } from "../forms/form-field.directive";
 
 export abstract class BaseFormFieldDirective extends Directive {
 
     public form: Form;
 
     protected get formField(): FormField {
-        let directive = this.getDirectiveBySelector('[form-field]') || this;
+        let directive = this.getDirectiveBySelector('[form-field]') || this.getDirectiveBySelector('form-field-name') || this;
         if (directive) {
-            let applied = directive.selectorsApplied.find(x => x.selector === '[form-field]');
-            if (applied) return applied.content;
-        }
+            let applied = directive.selectorsApplied.find(x => x.selector === '[form-field]') ||
+                          directive.selectorsApplied.find(x => x.selector === 'form-field-name');
+            if (applied && (applied.content instanceof FormField || typeof applied.content === 'string')) {
+                if (applied.content instanceof FormField)
+                    return applied.content;
+                else
+                    return this.form && this.form.get(applied.content);
+            }
+        }   
         return null;
     }
 

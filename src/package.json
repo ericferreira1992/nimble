@@ -1,8 +1,8 @@
 {
     "name": "nimble-ts",
-    "version": "1.0.6",
+    "version": "1.1.0",
     "scripts": {
-        "build": "rm -r dist && tsc && node copy",
+        "build": "rm -rf dist && tsc && node copy",
         "publish-version": "pushd dist && npm publish"
     },
     "main": "index.js",
@@ -17,7 +17,11 @@
         "framework",
         "webdesigner",
         "web",
-        "hotsite"
+        "hotsite",
+        "javascript",
+        "js",
+        "typscript",
+        "ts"
     ],
     "author": "Eric Ferreira <ericferreira1992@gmail.com>",
     "license": "MIT",

@@ -9,6 +9,7 @@ import { ListenersCollector } from '../../providers/listeners-collector';
 @PrepareDirective({
     selector: [
         '[form-field]',
+        'form-field-name',
         '(valueChange)'
     ]
 })
@@ -26,9 +27,17 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         if (this.checkForm()) {
             if (selector === '[form-field]') {
                 if (this.elementIsValid() && value instanceof FormField) {
-                    value.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
+                    this.formField.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                     if (this.canApplyFormField()) {
-                        this.resolveFormFieldSelector(value);
+                        this.resolveFormFieldSelector();
+                    }
+                }
+            }
+            else if (selector === 'form-field-name') {
+                if (this.elementIsValid() && this.formFieldNameSelectorIsValid(value)) {
+                    this.formField.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
+                    if (this.canApplyFormField()) {
+                        this.resolveFormFieldSelector();
                     }
                 }
             }
@@ -40,7 +49,21 @@ export class FormFieldDirective extends BaseFormFieldDirective {
     public onDestroy(selector: string, scope: IScope) {
     }
 
-    private resolveFormFieldSelector(field: FormField) {
+    private formFieldNameSelectorIsValid(value: any) {
+        if(typeof value !== 'string') {
+            console.error('Some form-field-name directive cannot be appplied, because the it value must be a string.');
+            return false;
+        }
+        if(!this.form.has(value)) {
+            console.error(`The form-field-name directive cannot be appplied, because the "${value}" field not exists in the form.`);
+            return false;
+        }
+
+        return true;
+    }
+
+    private resolveFormFieldSelector() {
+        let field = this.formField;
         let input = this.element as HTMLInputElement;
 
         if (input.type === 'radio') {
@@ -85,7 +108,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                             field.setValue(values.length > 0 ? value : null);
                         }
                         else {
-                            console.error('The form-field input of type "checkbox" must contain the attribute "value"');
+                            console.error('The [form-field] input of type "checkbox" must contain the attribute "value"');
                         }
                     }
                 }

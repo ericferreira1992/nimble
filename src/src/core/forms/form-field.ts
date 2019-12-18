@@ -110,19 +110,11 @@ export class FormField {
             };
     }
 
-    public setTouched() {
-        this._touched = true;
-    }
-    public setUntouched() {
-        this._touched = false;
-    }
+    public setTouched() { this._touched = true; }
+    public setUntouched() { this._touched = false; }
 
-    public setBlurred() {
-        this._blurred = true;
-    }
-    public setUnblurred() {
-        this._blurred = false;
-    }
+    public setBlurred() { this._blurred = true; }
+    public setUnblurred() { this._blurred = false; }
 
     public removeValidators(validators: ((formField: FormField) => any)[]) {
         if (validators)
@@ -139,23 +131,25 @@ export class FormField {
 
     private setFieldElementListeners(element: HTMLElement) {
         this.listenerCollector.subscribe(element, 'focus', () => {
-            setTimeout(() => this.renderIfNeed());
-
             this._touched = true;
+            
+            if (this.blurred)
+                this.validate();
 
-            if (this.blurred) this.validate();
+            this.renderIfNeed()
         }, true, { once: true });
         
         this.listenerCollector.subscribe(element, 'blur', () => {
-            setTimeout(() => this.renderIfNeed());
 
             this._blurred = true;
             this.validate();
+
+            this.renderIfNeed();
         }, true, { once: true });
     }
 
     private renderIfNeed() {
-        if (this.parent.renderOnInteract && this.parent.scope) {
+        if (this.parent && this.parent.renderOnInteract && this.parent.scope && !this.parent.isSubmitting) {
             this.parent.scope.onNeedRerender && this.parent.scope.onNeedRerender(this.parent.scope);
         }
     }
