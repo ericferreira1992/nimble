@@ -30,7 +30,7 @@ export class Helper {
 
 	public splitStringJSONtoKeyValue(jsonString: string): { key: string, value: string }[] {
 		let list = [];
-		let matchGroup = jsonString.replace(/\"/g, '\'').matchAll((/(?:\"|\')([^("|'|)]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[0-9a-zA-Z\(\)\@\:\/\!\+\-\.\$\&\%\ \\\']*|[-0-9]+[\.]*[\d]*(?=,))(?:\")?/gm));
+		let matchGroup = jsonString.replace(/\"/g, '\'').matchAll((/(?:\"|\')([^("|'|)]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[0-9a-zA-Z\(\)\@\:\/\!\+\-\.\$\&\%\=\ \\\']*|[-0-9]+[\.]*[\d]*(?=,))(?:\")?/gm));
 		let grouped = matchGroup.next();
 		while(grouped && isArray(grouped.value) && grouped.value.length > 2) {
 			let key = grouped.value[1].trim();

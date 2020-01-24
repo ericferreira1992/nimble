@@ -1,0 +1,11 @@
+{
+    "pre-render": {
+        "enabled": true,
+        "routes": [
+        ]
+    },
+    "vendors": {
+        "js": [],
+        "css": []
+    }
+}

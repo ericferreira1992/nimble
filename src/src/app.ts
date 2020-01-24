@@ -128,8 +128,13 @@ export class NimbleApp {
     private onRouteStartChange(route: Route) {
     }
 
-    private onRouteFinishedChange(route: Route) {
-        this.render.resolveAndRenderRoute(route);
+    private onRouteFinishedChange(current: Route) {
+        if (Router.rerenderedBeforeFinishedRouteChange) {
+            let routesToRerender = [current, ...current.getAllParents()].reverse();
+            for(let route of routesToRerender)
+                this.virtualizeRoute(route);
+        }
+        this.render.resolveAndRenderRoute(current);
         document.dispatchEvent(new Event('render-event'));
     }
 
@@ -160,7 +165,7 @@ export class NimbleApp {
         this.rootElement.real = element;
         route.executedDirectives = executedsDirectives;
         this.state = NimbleAppState.INITIALIZED;
-        document.dispatchEvent(new Event('render-event'))
+        document.dispatchEvent(new Event('render-event'));
     }
 
     public virtualizeRoute(route: Route) {

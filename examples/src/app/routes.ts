@@ -1,5 +1,6 @@
+import { RouteBase } from '@nimble-ts/core';
 import { AuthRouteActivate } from './services/auth/auth.route-activate';
-import { RouteBase } from '@nimble';
+import TestePage from './pages/teste/teste.page';
 
 export const ROUTES: RouteBase[] = [
     /* {

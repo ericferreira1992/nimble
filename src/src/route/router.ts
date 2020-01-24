@@ -1,5 +1,5 @@
 import { Route } from './route';
-import { isNullOrUndefined } from 'util';
+import { isNullOrUndefined, isArray } from 'util';
 import { RouteBase } from './route-base';
 import { NimbleApp, NimbleAppState } from '../app';
 import { Page } from '../page/page';
@@ -16,6 +16,9 @@ export class Router {
 
     private static _state: RouterEvent;
     public static get state() { return this._state; };
+
+    private static _previousState: RouterEvent;
+    public static get previousState() { return this._previousState; };
 
     private static lastLocationPath: string;
     private static stopListening: boolean = false;
@@ -40,6 +43,7 @@ export class Router {
 
     public static get onRoute() { return !isNullOrUndefined(this._current); }
 
+    public static get rerenderedBeforeFinishedRouteChange() { return this.previousState === RouterEvent.FINISHED_RERENDER || this.previousState === RouterEvent.STARTED_RERENDER; }
 
     public static registerRoutes(routes: RouteBase[]) {
         if (this.app.state === NimbleAppState.INITIALIZING) {
@@ -48,6 +52,7 @@ export class Router {
     }
 
     private static setState(state: RouterEvent, senderNotify?: any, silentMode: boolean = false) {
+        this._previousState = this._state;
         this._state = state;
         if (!silentMode) this.notifyListeners(state, senderNotify);
     }
@@ -61,13 +66,20 @@ export class Router {
     /**
      * Adds a listener for when the routing state changes.
      * Also it returns a void function to cancel listen when want. 
-     * @param type 
+     * @param types 
      * @param callback 
      */
-    public static addListener(type: RouterEvent, callback: () => void) {
-        let listener = { type, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
-        this.listeners.push(listener);
-        return () => this.listeners = this.listeners.filter(x => x !== listener);
+    public static addListener(types: RouterEvent | RouterEvent[], callback: () => void) {
+        types = !isArray(types) ? [types] : types;
+        let listeners = [];
+        for(let type of types) {
+            let listener = { type: type, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
+            listeners.push(listener);
+            this.listeners.push(listener);
+        }
+        return () => {
+            this.listeners = this.listeners.filter(x => !listeners.some(y => x === y));
+        };
     }
 
     private static startListening() {
@@ -181,7 +193,7 @@ export class Router {
             }
         }
         else if (!this.next) {
-            console.error(`No pages matched with this path: "/${this.currentPath}". If it path is abstract (has childrens), set one child as 'isPriority: true' in "routes.ts".`);
+            console.error(`No pages matched with this path: "/${this.currentPath}". If it path is abstract (has children), set one child as 'isPriority: true' in "routes.ts".`);
             this._next = null;
             this.stopListening = true;
         }
@@ -206,7 +218,7 @@ export class Router {
     }
 
     private static loadRoutesPageFromAllParents() {
-        let commonParentRoute = this.previous ? Router.getCommonParentOfTwoRoutes(this.next, this.previous) : null;
+        let commonParentRoute = this.current ? Router.getCommonParentOfTwoRoutes(this.next, this.current) : null;
         let parents = this.next.getAllParents().map((parentRoute) => ({
             route: parentRoute,
             makeNewInstance: true
@@ -278,6 +290,10 @@ export class Router {
             this.updateURLPath(currentPath);
             this.lastLocationPath = this.currentPath;
         }
+        else if(this.nextRejectedAndRedirectAfter && this.current) {
+            console.log(this._state);
+            this.whenRerenderIsRequested(this.current.pageInstance);
+        }
     }
 
     private static updateURLPath(path: string) {
@@ -299,8 +315,9 @@ export class Router {
                         route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
                         resolve(route);
-                    } {
-                        this.setState(RouterEvent.REJECTED, route, silentMode);
+                    }
+                    else{
+                        this.setState(RouterEvent.CHANGE_REJECTED, route, silentMode);
                         reject(null);
                     }
                 },
@@ -356,7 +373,7 @@ export class Router {
         let changingRouteInProgress = this.state === RouterEvent.START_CHANGE;
         let routeChangeFinished = this.state === RouterEvent.FINISHED_CHANGE;
         
-        this.setState(RouterEvent.STARTED_RERENDER, changingRouteInProgress ? this.previous : this.current);
+        this.setState(RouterEvent.STARTED_RERENDER, (changingRouteInProgress && this.previous) ? this.previous : this.current);
 
         if (!routeChangeFinished || this.state === RouterEvent.STARTED_RERENDER)
             this.setState(RouterEvent.FINISHED_RERENDER, this.current);

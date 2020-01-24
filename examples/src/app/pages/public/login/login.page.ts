@@ -1,5 +1,5 @@
-import { Page, PreparePage, Form, Router, Validators } from '@nimble';
-import { AuthService } from '../../../services/auth/auth.service';
+import { Page, PreparePage, Form, Router, Validators } from '@nimble-ts/core';
+import { AuthService } from 'src/app/services/auth/auth.service';
 
 @PreparePage({
     template: require('./login.page.html'),
@@ -12,7 +12,7 @@ export default class LoginPage extends Page {
     public loading: boolean = false;
 
     constructor(
-        private authService: AuthService,
+        private authService: AuthService
     ) {
         super();
 

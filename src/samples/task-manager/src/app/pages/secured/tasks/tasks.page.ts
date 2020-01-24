@@ -1,4 +1,4 @@
-import { Page, PreparePage, Form, DialogBuilder, HttpResponse, Validators } from '@nimble';
+import { Page, PreparePage, Form, DialogBuilder, HttpResponse, Validators } from '@nimble-ts/core';
 import { TasksService } from 'src/app/services/tasks-service';
 import { Helper } from 'src/app/services/helper-service';
 import { TaskEditDialog } from './dialogs/task-edit/task-edit.dialog';

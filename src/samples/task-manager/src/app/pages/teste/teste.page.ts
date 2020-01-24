@@ -1,4 +1,4 @@
-import { Page, PreparePage } from '@nimble';
+import { Page, PreparePage } from '@nimble-ts/core';
 
 @PreparePage({
     template: require('./teste.page.html'),

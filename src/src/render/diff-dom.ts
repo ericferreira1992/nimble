@@ -103,7 +103,6 @@ export class DiffDOM {
                         i--;
                     }
                     catch(e) {
-                        // console.error(e);
                     }
                 }
             }

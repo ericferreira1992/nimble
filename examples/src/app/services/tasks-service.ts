@@ -1,5 +1,5 @@
-import { Provider, HttpClient, enviroment } from '@nimble';
-import { Task } from '../models/task.model';
+import { Provider, HttpClient, enviroment } from '@nimble-ts/core';
+import { Task } from 'src/app/models/task.model';
 
 @Provider({ single: true })
 export class TasksService {

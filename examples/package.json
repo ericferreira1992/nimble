@@ -8,11 +8,11 @@
         "serve:dev": "webpack-dev-server --env=dev --devtool source-map",
         "build:prod": "webpack --env=prod",
         "build:dev": "webpack --env=dev",
-        "initialize": "npm i webpack webpack-cli webpack-dev-server -g && npm i --sadev-dev"
+        "initialize": "npm i webpack webpack-cli webpack-dev-server -g && npm i --save-dev && npm rebuild node-sass"
     },
     "private": true,
     "dependencies": {
-        "nimble-ts": "^1.1.0"
+        "@nimble-ts/core": "^1.0.2"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",

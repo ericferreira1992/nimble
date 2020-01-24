@@ -1,4 +1,4 @@
-import { Injectable } from "@nimble";
+import { Injectable } from '@nimble-ts/core';
 
 @Injectable()
 export class Helper {

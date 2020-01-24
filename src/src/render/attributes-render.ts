@@ -363,7 +363,7 @@ export class AttributesRender {
 
     private resolveInterpolationIfHave(value: any, scope: IScope) {
         if (value) {
-            value = value.toString().trim();
+            value = value.toString();
             let regex = /{{(.|\n)*?}}/g;
             if (regex.test(value)) {
                 value = value.replace(regex, (expression) => {

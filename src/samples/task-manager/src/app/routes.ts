@@ -1,4 +1,4 @@
-import { RouteBase } from '@nimble';
+import { RouteBase } from '@nimble-ts/core';
 import { AuthRouteActivate } from './services/auth/auth.route-activate';
 import TestePage from './pages/teste/teste.page';
 

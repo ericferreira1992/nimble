@@ -1,4 +1,4 @@
-import { NimbleApp } from '@nimble';
+import { NimbleApp } from '@nimble-ts/core';
 import { ROUTES } from './app/routes';
 import './style.scss';
 

@@ -5,7 +5,7 @@
 @import 'scss/general/general.scss';
 @import 'scss/components/components.scss';
 @import 'scss/mat-icons.scss';
-@import '@nimble/style.scss';
+@import '@nimble-ts/core/style.scss';
 
 @include nimble-core();
 

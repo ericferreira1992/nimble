@@ -2,6 +2,7 @@
     "pre-render": {
         "enabled": true,
         "routes": [
+            "/login"
         ]
     },
     "vendors": {

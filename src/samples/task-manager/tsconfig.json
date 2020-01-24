@@ -23,7 +23,7 @@
         ],
         "paths": {
             "src/*": ["./src/*"],
-            "@nimble": ["../../src/"]
+            "@nimble-ts/core": ["../../src/index"]
         }
     },
     "include": [

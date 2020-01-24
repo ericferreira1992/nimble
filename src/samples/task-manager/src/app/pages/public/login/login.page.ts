@@ -1,4 +1,4 @@
-import { Page, PreparePage, Form, Router, Validators } from '@nimble';
+import { Page, PreparePage, Form, Router, Validators } from '@nimble-ts/core';
 import { AuthService } from 'src/app/services/auth/auth.service';
 
 @PreparePage({

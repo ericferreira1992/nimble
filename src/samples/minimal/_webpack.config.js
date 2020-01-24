@@ -158,7 +158,7 @@ function getRules(enviroment) {
 
 function loadEnvFile(env) {
     if (env) {
-        var enviroment = readTsFile('./src/enviroments/env.' + env);
+        var enviroment = require(`./src/enviroments/env.${env}.js`);
         if (enviroment) {
             return enviroment;
         }
@@ -166,16 +166,4 @@ function loadEnvFile(env) {
     return {
         production: true
     };
-}
-
-function readTsFile(filePath) {
-    if (filePath) {
-        if (!filePath.endsWith('.ts'))
-            filePath += '.ts';
-        const content = ts.transpileModule(fs.readFileSync(filePath, 'utf8'), {
-            compilerOptions: { module: ts.ModuleKind.CommonJS }
-        }).outputText;
-        return eval(content);
-    }
-    return  {};
 }

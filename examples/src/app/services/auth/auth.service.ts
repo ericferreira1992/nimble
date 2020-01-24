@@ -1,4 +1,4 @@
-import { Provider, Router, HttpClient } from '@nimble';
+import { Provider, Router, HttpClient } from '@nimble-ts/core';
 
 @Provider({
     single: true
