@@ -44,7 +44,6 @@ export class Route extends RouteBase {
                             this.executedDirectives = [];
                             this.pageInstance = new TemplatedPage(this.page);
                         }
-                        this.pageInstance.route = this;
                         success(this);
                         complete();
                     }
@@ -66,8 +65,6 @@ export class Route extends RouteBase {
                                                 this.executedDirectives = [];
                                                 this.pageInstance = NimbleApp.inject<Page>(pageType.default);
                                             }
-
-                                            this.pageInstance.route = this;
                                             success(this);
                                         }
                                         catch (e) {
@@ -91,7 +88,6 @@ export class Route extends RouteBase {
                                 this.executedDirectives = [];
                                 this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
                             }
-                            this.pageInstance.route = this;
                             success(this);
                             complete();
                         }

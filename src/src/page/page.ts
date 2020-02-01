@@ -7,7 +7,7 @@ export class Page implements IScope {
     public title?: string;
     public meta?: MetaConfig;
 
-    public route: Route;
+    public pageParent: any;
     public isInitialized: boolean = false;
     public isDestroyed: boolean = false;
 

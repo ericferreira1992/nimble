@@ -6,5 +6,8 @@ import { Page, PreparePage } from '@nimble-ts/core';
     title: 'Nimble - First Page'
 })
 export default class FirstPage extends Page {
-    
+
+    constructor() {
+        super();
+    }
 }

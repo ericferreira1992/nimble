@@ -290,10 +290,10 @@ export class Router {
             this.updateURLPath(currentPath);
             this.lastLocationPath = this.currentPath;
         }
-        else if(this.nextRejectedAndRedirectAfter && this.current) {
+        /* else if(this.nextRejectedAndRedirectAfter && this.current) {
             console.log(this._state);
             this.whenRerenderIsRequested(this.current.pageInstance);
-        }
+        } */
     }
 
     private static updateURLPath(path: string) {
@@ -311,8 +311,9 @@ export class Router {
             route.loadPage(
                 (route: Route) => {
                     if (this.routeCanActivate(route)) {
-                        route.pageInstance.onEnter();
                         route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
+                        route.pageInstance.pageParent = route.parent ? route.parent.pageInstance : null;
+                        route.pageInstance.onEnter();
                         this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
                         resolve(route);
                     }
