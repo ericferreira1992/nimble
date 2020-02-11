@@ -3,6 +3,11 @@ import { AuthRouteActivate } from './routes-activies/auth.route-activate';
 
 export const ROUTES: RouteBase[] = [
     {
+        path: 'login',
+        routeActivate: [AuthRouteActivate],
+        page: () => import('./pages/login/login.page')
+    },
+    {
         path: '',
         routeActivate: [AuthRouteActivate],
         page: () => import('./pages/root/root.page'),

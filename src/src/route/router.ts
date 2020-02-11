@@ -31,6 +31,7 @@ export class Router {
 
     private static nextRejectedAndRedirectAfter: boolean = false;
 
+    private static get realCurrentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
     public static get currentPath() { return (!isNullOrUndefined(this.nextPath) ? this.nextPath : (this.useHash ? location.hash : location.pathname)).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
     public static get nextPath() { return this._nextPath; }
 
@@ -290,6 +291,11 @@ export class Router {
             this.updateURLPath(currentPath);
             this.lastLocationPath = this.currentPath;
         }
+        else if (isNullOrUndefined(this.nextPath) && !this.nextRejectedAndRedirectAfter) {
+            console.error(`Page of path "/${this.currentPath}" was rejected. In this case, there is no previous route for us can to return to, we suggest that you do some "Router.redirect('/you-secured-path')" in your ActivatedRoute class for these cases.`);
+            this._next = null;
+            this.stopListening = true;
+        }
         /* else if(this.nextRejectedAndRedirectAfter && this.current) {
             console.log(this._state);
             this.whenRerenderIsRequested(this.current.pageInstance);
@@ -335,11 +341,13 @@ export class Router {
     }
 
     private static routeCanActivate(route: Route) {
-        let routePath = (this.currentPath.startsWith('/') ? '' : '/') + this.currentPath;
+        let currentPath = (this.realCurrentPath.startsWith('/') ? '' : '/') + this.realCurrentPath;
+        let nextPath = this.nextPath ? ((this.nextPath.startsWith('/') ? '' : '/') + this.nextPath) : currentPath;
+
         if (route.routeActivate && route.routeActivate.length > 0) {
             for(let routeActivate of route.routeActivate) {
                 let instance = NimbleApp.inject(routeActivate);
-                if (instance && !instance.doActivate(routePath, route))
+                if (instance && !instance.doActivate(currentPath, nextPath, route))
                     return false;
             }
         }
@@ -348,6 +356,9 @@ export class Router {
 
     public static redirect(route: string) {
         this.nextRejectedAndRedirectAfter = isNullOrUndefined(this.nextPath) ? false : true;
+        if (this.nextRejectedAndRedirectAfter && isNullOrUndefined(this.current)) {
+            this.updateURLPath(route);
+        }
         this._nextPath = route;
     }
 

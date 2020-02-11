@@ -11,7 +11,9 @@
         "initialize": "npm install webpack webpack-cli webpack-dev-server -g"
     },
     "private": true,
-    "dependencies": {},
+    "dependencies": {
+        "@nimble-ts/core": "1.0.4"
+    },
     "devDependencies": {
         "@types/node": "^12.12.7",
         "@types/webpack-env": "^1.14.1",

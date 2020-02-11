@@ -19,7 +19,7 @@ export class AuthRouteActivate extends ActivateRoute {
         }
         else if (this.authService.isLogged && currentPath === '/login'){
             console.log('LOGGED');
-            Router.redirect('/tasks');
+            Router.redirect('/first');
             return false;
         }
 

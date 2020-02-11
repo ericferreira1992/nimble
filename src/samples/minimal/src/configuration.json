@@ -2,6 +2,8 @@
     "pre-render": {
         "enabled": true,
         "routes": [
+            "/first",
+            "/second"
         ]
     },
     "vendors": {

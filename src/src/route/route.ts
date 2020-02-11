@@ -6,6 +6,7 @@ import { TemplatedPage } from '../page/templated-page';
 import { Type } from '../inject/type.interface';
 import { NimbleApp } from '../app';
 import { DirectiveExecute } from '../render/attributes-render';
+import { ActivateRoute } from './activate-route';
 
 export class Route extends RouteBase {
     public parent?: Route;

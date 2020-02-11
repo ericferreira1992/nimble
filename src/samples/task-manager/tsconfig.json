@@ -23,6 +23,7 @@
         ],
         "paths": {
             "src/*": ["./src/*"],
+            "@nimble-ts/core/style.scss": ["../../src/style.scss"],
             "@nimble-ts/core": ["../../src/index"]
         }
     },
