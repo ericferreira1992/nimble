@@ -4,7 +4,7 @@ import { Page, PreparePage, Router, RouterEvent } from '@nimble-ts/core';
     template: require('./root.page.html'),
     style: require('./root.page.scss')
 })
-export default class RootPage extends Page {
+export class RootPage extends Page {
     public get routePath() { return Router.currentPath; }
 
     public loading = false;

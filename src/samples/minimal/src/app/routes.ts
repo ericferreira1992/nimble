@@ -5,25 +5,25 @@ export const ROUTES: RouteBase[] = [
     {
         path: 'login',
         routeActivate: [AuthRouteActivate],
-        page: () => import('./pages/login/login.page')
+        page: () => import('./pages/login/login.page').then(x => x.LoginPage)
     },
     {
         path: '',
         routeActivate: [AuthRouteActivate],
-        page: () => import('./pages/root/root.page'),
+        page: () => import('./pages/root/root.page').then(x => x.RootPage),
         children: [
             {
                 isPriority: true,
                 path: 'first',
-                page: () => import('./pages/first/first.page')
+                page: () => import('./pages/first/first.page').then(x => x.FirstPage)
             },
             {
                 path: 'second',
-                page: () => import('./pages/second/second.page')
+                page: () => import('./pages/second/second.page').then(x => x.SecondPage)
             },
             {
                 path: 'third',
-                page: () => import('./pages/third/third.page')
+                page: () => import('./pages/third/third.page').then(x => x.ThirdPage)
             }   
         ]
     }

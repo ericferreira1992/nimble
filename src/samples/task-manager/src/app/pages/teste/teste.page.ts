@@ -4,7 +4,7 @@ import { Page, PreparePage } from '@nimble-ts/core';
     template: require('./teste.page.html'),
     style: require('./teste.page.scss')
 })
-export default class TestePage extends Page {
+export class TestePage extends Page {
 
     public option1: boolean = true;
 

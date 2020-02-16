@@ -57,24 +57,25 @@ export class Route extends RouteBase {
                     if (this.page.name === 'page') {
                         try {
                             (this.page as () => Promise<any>)()
-                                .then(
-                                    (pageType) => {
-                                        try {
+                                .then((pageType) => {
+                                    try {
+                                        if (makeNewInstancePage || !this.pageInstance) {
+                                            this.pageType = pageType;
+                                            this.executedDirectives = [];
                                             this.prevPageInstance = this.pageInstance;
-                                            if (makeNewInstancePage || !this.pageInstance) {
-                                                this.pageType = pageType.default;
-                                                this.executedDirectives = [];
-                                                this.pageInstance = NimbleApp.inject<Page>(pageType.default);
+                                            this.pageInstance = NimbleApp.inject<Page>(this.pageType);
+                                            if (!this.pageInstance) {
+                                                throw new Error(`Cannot be load page of path: '${this.completePath()}'`);
                                             }
-                                            success(this);
                                         }
-                                        catch (e) {
-                                            error(e);
-                                            throw e;
-                                        }
-                                    },
-                                    error
-                                )
+                                        success(this);
+                                    }
+                                    catch (e) {
+                                        error(e);
+                                        throw e;
+                                    }
+                                })
+                                .catch(error)
                                 .finally(complete);
                         }
                         catch (e) {

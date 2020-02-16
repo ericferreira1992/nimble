@@ -5,7 +5,7 @@ import { AuthService } from '../../services/auth/auth.service';
     template: require('./secured.page.html'),
     style: require('./secured.page.scss'),
 })
-export default class SecuredPage extends Page {
+export class SecuredPage extends Page {
 
     constructor(private authService: AuthService) {
         super();

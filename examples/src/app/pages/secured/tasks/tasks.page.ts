@@ -9,7 +9,7 @@ import { Task } from 'src/app/models/task.model';
     style: require('./tasks.page.scss'),
     title: 'Tasks'
 })
-export default class TasksPage extends Page {
+export class TasksPage extends Page {
 
     public loadingTasks: boolean = true;
     public form: Form;

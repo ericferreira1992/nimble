@@ -11,7 +11,7 @@
     },
     "private": true,
     "dependencies": {
-        "@nimble-ts/core": "^1.0.3"
+        "@nimble-ts/core": "^1.1.0"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",

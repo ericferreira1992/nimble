@@ -5,7 +5,7 @@ import { Page, PreparePage } from '@nimble-ts/core';
     style: require('./first.page.scss'),
     title: 'Nimble - First Page'
 })
-export default class FirstPage extends Page {
+export class FirstPage extends Page {
 
     constructor() {
         super();

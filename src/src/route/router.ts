@@ -36,7 +36,7 @@ export class Router {
     public static get nextPath() { return this._nextPath; }
 
     public static get routes() { return this._routes; }
-    public static get abstactRoutes() { return this._routes.filter(x => x.isAbstract); }
+    public static get abstractRoutes() { return this._routes.filter(x => x.isAbstract); }
     public static get singleRoutes() { return this._routes.filter(x => !x.isAbstract); }
     public static get current() { return this._current; }
     public static get next() { return this._next; }
@@ -150,30 +150,34 @@ export class Router {
     private static defineCurrentPage(): boolean {
         let newRoute = null;
 
-        for (let route of this.singleRoutes) {
-            newRoute = route.getMatchedPageWithLocation();
-            if (newRoute)
-                break;
-        }
-
-        if (!newRoute)
-            for (let i = 0; i < this.abstactRoutes.length; i++) {
-                let route = this.abstactRoutes[i];
+        // Find the matched route path or get priority route path
+        if (!newRoute) {
+            for (let i = 0; i < this.routes.length; i++) {
+                let route = this.routes[i];
                 newRoute = route.getMatchedPageWithLocation();
 
-                if (newRoute) break;
+                if (newRoute) {
+                    break;
+                }
+                // Check if there is another route ahead with the same path as the current one.
                 else if(i < ((this.routes.length - 1)) && !this.routes.slice(i + 1).some(x => x.path === route.path)) {
                     newRoute = route.getMatchedPageWithLocation(true);
-                    if (newRoute) break;
+                    if (newRoute)
+                        break;
                 }
             }
-        if (!newRoute)
-            for (let i = 0; i < this.abstactRoutes.length; i++) {
-                let route = this.abstactRoutes[i];
+        }
+
+        // If cannot get some route above, take the first one setted as priority
+        if (!newRoute) {
+            for (let i = 0; i < this.routes.length; i++) {
+                let route = this.routes[i];
                 newRoute = route.getMatchedPageWithLocation(true);
 
-                if (newRoute) break;
+                if (newRoute)
+                    break;
             }
+        }
 
         if (newRoute !== this.current) {
             this._next = newRoute;
@@ -329,6 +333,7 @@ export class Router {
                     }
                 },
                 (error) => {
+                    console.error(error);
                     this.setState(RouterEvent.ERROR_LOADING, error, silentMode);
                     reject(error);
                 },

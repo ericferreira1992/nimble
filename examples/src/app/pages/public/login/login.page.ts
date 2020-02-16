@@ -6,7 +6,7 @@ import { AuthService } from 'src/app/services/auth/auth.service';
     style: require('./login.page.scss'),
     title: 'Login'
 })
-export default class LoginPage extends Page {
+export class LoginPage extends Page {
 
     public form: Form;
     public loading: boolean = false;

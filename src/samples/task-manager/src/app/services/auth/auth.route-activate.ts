@@ -10,7 +10,7 @@ export class AuthRouteActivate extends ActivateRoute {
         super();
     }
 
-    public doActivate(currentPath: string, route: Route): boolean {
+    public doActivate(currentPath: string, nextPath: string): boolean {
     
         if (!this.authService.isLogged && currentPath !== '/login') {
             console.log('UNLOGGED');
