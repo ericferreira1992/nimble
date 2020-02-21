@@ -204,7 +204,7 @@ export class AttributesRender {
                 if (beforeResolves) beforeResolves();
 
                 if (element.children.length > 0) {
-                    this.resolveChildren(element.children, scope, beforeResolves, afterResolves);
+                    this.resolveChildren(element.children, scope);
                 }
 
                 this.resolveInsideText(element, scope);
