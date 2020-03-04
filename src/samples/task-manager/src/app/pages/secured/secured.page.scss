@@ -1,0 +1,61 @@
+@import 'src/scss/variables';
+
+.secured-header {
+    width: 100%;
+    height: 55px;
+    background: $primaryColor;
+    box-shadow: 0px 2px 5px rgba(0,0,0,.2);
+    display: table;
+    padding: 10px 15px;
+
+    > section {
+        display: table-cell;
+        vertical-align: middle;
+
+        > * {
+            color: #FFF;
+            font-weight: 300
+        }
+
+        &.secured-header-logo {
+            width: 150px;
+
+            > * {
+                display: inline-block;
+                vertical-align: middle;
+            }
+
+            > i {
+                margin-right: 6px;
+            }
+        }
+
+        &.secured-header-opts{
+            text-align: right;
+
+            > a > button {
+                cursor: pointer;
+                border-radius: 50%;
+                padding: 5px;
+                display: inline-flex;
+                outline: 0;
+                border: none;
+                font-size: 20;
+                color: #FFF;
+                background: transparent;
+                transition-duration: 300ms;
+    
+                &:hover {
+                    background: rgba(#FFF, .1);
+                }
+            }
+        }
+    }
+}
+
+.secured-content {
+    width: 100%;
+    height: calc(100vh - 55px);
+    overflow: auto;
+    background-color: #FAFAFA;
+}

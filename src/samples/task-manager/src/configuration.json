@@ -1,0 +1,12 @@
+{
+    "pre-render": {
+        "enabled": true,
+        "routes": [
+            "/login"
+        ]
+    },
+    "vendors": {
+        "js": [],
+        "css": []
+    }
+}

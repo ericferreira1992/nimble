@@ -300,10 +300,6 @@ export class Router {
             this._next = null;
             this.stopListening = true;
         }
-        /* else if(this.nextRejectedAndRedirectAfter && this.current) {
-            console.log(this._state);
-            this.whenRerenderIsRequested(this.current.pageInstance);
-        } */
     }
 
     private static updateURLPath(path: string) {

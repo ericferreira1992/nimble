@@ -5,6 +5,7 @@ import { ActivateRoute } from './activate-route';
 export class RouteBase {
     public path: string = '';
     public routeActivate?: Type<ActivateRoute>[];
+    public data?: { [key: string]: any } = null;
     public isPriority?: boolean = false;
     public page: (() => Promise<any>) | Type<Page> | string;
     public children?: RouteBase[];

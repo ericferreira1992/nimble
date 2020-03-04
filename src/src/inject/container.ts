@@ -32,25 +32,29 @@ export class Container {
             this.providers.delete(provide);
     }
 
-    inject<T>(type: Token<T>): T {
+    inject<T>(type: Token<T>, onInstaciate?: (instance: any) => void): T {
         let provider = this.providers.get(type);
         if (provider === undefined && !(type instanceof InjectionToken)) {
             provider = { provide: type, useClass: type };
             this.assertInjectableIfClassProvider(provider);
         }
-        return this.injectWithProvider(type, provider);
+        return this.injectWithProvider(type, provider, onInstaciate);
     }
 
-    private injectWithProvider<T>(type: Token<T>, provider?: Provider<T>): T {
+    private injectWithProvider<T>(type: Token<T>, provider?: Provider<T>, onInstaciate?: (instance: any) => void): T {
         if (provider === undefined) {
             throw new Error(`No provider for type ${this.getTokenName(type)}`);
         }
 
         if (isClassProvider(provider)) {
-            return this.injectClass(provider as ClassProvider<T>);
+            let instance = this.injectClass(provider as ClassProvider<T>, onInstaciate);
+            if (onInstaciate) onInstaciate(instance);
+            return instance;
         }
         else if (isClassSingletonProvider(provider)) {
-            return this.injectSingleton(provider as ClassSingletonProvider<T>);
+            let instance = this.injectSingleton(provider as ClassSingletonProvider<T>, onInstaciate);
+            if (onInstaciate) onInstaciate(instance);
+            return instance;
         }
         else if (isValueProvider(provider)) {
             return this.injectValue(provider as ValueProvider<T>);
@@ -73,16 +77,16 @@ export class Container {
         }
     }
 
-    private injectClass<T>(classProvider: ClassProvider<T>): T {
+    private injectClass<T>(classProvider: ClassProvider<T>, onInstaciate?: (instance: any) => void): T {
         const target = classProvider.useClass;
-        const params = this.getInjectedParams(target);
+        const params = this.getInjectedParams(target, onInstaciate);
         return Reflect.construct(target, params);
     }
 
-    private injectSingleton<T>(classProvider: ClassSingletonProvider<T>): T {
+    private injectSingleton<T>(classProvider: ClassSingletonProvider<T>, onInstaciate?: (instance: any) => void): T {
         if (!classProvider.instance) {
             const target = classProvider.useSingleton;
-            const params = this.getInjectedParams(target);
+            const params = this.getInjectedParams(target, onInstaciate);
             classProvider.instance = Reflect.construct(target, params);
         }
         return classProvider.instance;
@@ -96,7 +100,7 @@ export class Container {
         return valueProvider.useFactory();
     }
 
-    private getInjectedParams<T>(target: Type<T>) {
+    private getInjectedParams<T>(target: Type<T>, onInstaciate?: (instance: any) => void) {
         const argTypes = Reflect.getMetadata(REFLECT_PARAMS, target) as (
             | InjectableParam
             | undefined)[];
@@ -116,7 +120,7 @@ export class Container {
             const overrideToken = getInjectionToken(target, index);
             const actualToken = overrideToken === undefined ? argType : overrideToken;
             let provider = this.providers.get(actualToken);
-            return this.injectWithProvider(actualToken, provider);
+            return this.injectWithProvider(actualToken, provider, onInstaciate);
         });
     }
 

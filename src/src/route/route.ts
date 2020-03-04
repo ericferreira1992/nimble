@@ -1,12 +1,12 @@
 import { Router } from './router';
 import { RouteBase } from './route-base';
 import { Page } from './../page/page';
-import { isNullOrUndefined, isObject, isFunction } from 'util';
+import { isNullOrUndefined } from 'util';
 import { TemplatedPage } from '../page/templated-page';
 import { Type } from '../inject/type.interface';
 import { NimbleApp } from '../app';
 import { DirectiveExecute } from '../render/attributes-render';
-import { ActivateRoute } from './activate-route';
+import { RouteParams } from '../providers/route-params/route-params';
 
 export class Route extends RouteBase {
     public parent?: Route;
@@ -21,6 +21,8 @@ export class Route extends RouteBase {
 
     public pageInstance?: Page;
     public prevPageInstance?: Page;
+
+    public routeParams: RouteParams = new RouteParams();
 
     public get hasParent() { return !isNullOrUndefined(this.parent); }
     public get isAbstract() { return this.children && this.children.length > 0; }
@@ -60,13 +62,7 @@ export class Route extends RouteBase {
                                 .then((pageType) => {
                                     try {
                                         if (makeNewInstancePage || !this.pageInstance) {
-                                            this.pageType = pageType;
-                                            this.executedDirectives = [];
-                                            this.prevPageInstance = this.pageInstance;
-                                            this.pageInstance = NimbleApp.inject<Page>(this.pageType);
-                                            if (!this.pageInstance) {
-                                                throw new Error(`Cannot be load page of path: '${this.completePath()}'`);
-                                            }
+                                            this.instancePage(pageType)
                                         }
                                         success(this);
                                     }
@@ -86,9 +82,7 @@ export class Route extends RouteBase {
                     else {
                         try {
                             if (makeNewInstancePage || !this.pageInstance) {
-                                this.pageType = this.page as Type<Page>;
-                                this.executedDirectives = [];
-                                this.pageInstance = NimbleApp.inject<Page>(this.page as Type<Page>);
+                                this.instancePage(this.page as Type<Page>);
                             }
                             success(this);
                             complete();
@@ -103,7 +97,56 @@ export class Route extends RouteBase {
         }
     }
 
-    private checkChildren() {
+    private instancePage(pageType: Type<Page>) {
+        this.pageType = pageType;
+        this.executedDirectives = [];
+        this.prevPageInstance = this.pageInstance;
+        this.routeParams = new RouteParams();
+        this.pageInstance = NimbleApp.inject<Page>(this.pageType, (instance) => {
+            if (instance instanceof RouteParams) {
+                instance.data = this.data;
+                instance.params = this.getParams();
+                instance.parent = this.parent && this.parent.routeParams;
+                this.routeParams = instance;
+            }
+        });
+
+        if (!this.pageInstance) {
+            throw new Error(`Cannot be load page of path: '${this.completePath()}'`);
+        }
+    }
+
+    private getParams(): { [key: string]: any } {
+        let params = {} as any;
+
+        if (/{(.|\n)*?}/g.test(this.path)) {
+            let pieceOfCurrentPath = this.getPieceRelativeOfTheCurrentPath();
+            let piecesSplited = pieceOfCurrentPath.split('/');
+            this.path.split('/').forEach((paramNamePiece, index) => {
+                if (/(^{)|(}$)/g.test(paramNamePiece) && index < piecesSplited.length) {
+                    let paramName = paramNamePiece.replace(/(^{)|(}$)/g, '');
+                    let paramValue = piecesSplited[index];
+                    params[paramName] = paramValue;
+                }
+            });
+        }
+
+        return params;
+    }
+
+    private getPieceRelativeOfTheCurrentPath() {
+        let begin = this.parent ? (this.parent.completePath().split('/').length) : 0;
+        let end = begin + this.path.split('/').length;
+        
+        let currentPathSplitted = Router.currentPath.split('/');
+        currentPathSplitted = currentPathSplitted.slice(begin, end);
+        
+        let pieceCurrentPath = currentPathSplitted.join('/');
+
+        return pieceCurrentPath;
+    }
+
+    private checkChildren(){
         if (this.isAbstract)
             this.children = this.children.map(route => new Route(route));
     }
@@ -114,7 +157,7 @@ export class Route extends RouteBase {
     }
 
     public checkIfMatchCurrentLocation(alsoCheckPriority: boolean = false) {
-        if (this.isAbstract) {
+        if (this.isAbstract && this.currentPathStartsRoutePath()) {
             if (this.children.some((route: Route) => route.checkIfMatchCurrentLocation()))
                 return true;
             else if (alsoCheckPriority && this.children.some((route: Route) => route.checkIfMatchCurrentLocation(true)))
@@ -122,20 +165,44 @@ export class Route extends RouteBase {
             return false;
         }
         else
-            return Router.currentPath === this.completePath() || (alsoCheckPriority && this.isPriority);
+            return this.currentPathIsMatch() || (alsoCheckPriority && this.isPriority);
     }
 
     public getMatchedPageWithLocation(alsoCheckPriority: boolean = false) {
-        if (this.isAbstract && Router.currentPath.startsWith(this.completePath())) {
+        if (this.isAbstract && this.currentPathStartsRoutePath()) {
             for (let route of this.children as Route[]) {
                 if (route.checkIfMatchCurrentLocation(alsoCheckPriority))
                     return route.getMatchedPageWithLocation(alsoCheckPriority);
             }
         }
-        else if (Router.currentPath === this.completePath() || (alsoCheckPriority && this.isPriority))
+        else if (this.currentPathIsMatch() || (alsoCheckPriority && this.isPriority))
             return this;
 
         return null;
+    }
+
+    private currentPathIsMatch() {
+        let completePath = this.completePath();
+        if (/{(.|\n)*?}/g.test(completePath)) {
+            let regex = completePath.replace(/{(.|\n)*?}/g, (param) => {
+                return '(.|\n)*';
+            });
+            return RegExp(regex, 'g').test(Router.currentPath);
+        }
+        else
+            return Router.currentPath === this.completePath();
+    }
+
+    private currentPathStartsRoutePath() {
+        let completePath = this.completePath();
+        if (/{(.|\n)*?}/g.test(completePath)) {
+            let regex = completePath.replace(/{(.|\n)*?}/g, (param) => {
+                return '(.*)';
+            });
+            return RegExp(regex, 'g').test(Router.currentPath);
+        }
+        else
+            return Router.currentPath.startsWith(this.completePath());
     }
 
     public completePath(): string {

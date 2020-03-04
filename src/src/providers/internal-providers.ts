@@ -10,6 +10,7 @@ import { DialogBuilder } from '../dialog/dialog-builder';
 import { DialogRender } from '../dialog/dialog-render';
 import { DialogRefCollector } from '../dialog/dialog-ref-collector';
 import { InternalObserversCollector } from './internal-observers-collector';
+import { RouteParams } from './route-params/route-params';
 
 export const INTERNAL_PROVIDERS: Type<{}>[] = [
     Helper,
@@ -22,5 +23,6 @@ export const INTERNAL_PROVIDERS: Type<{}>[] = [
     HttpClient,
     Listener,
     ListenersCollector,
-    InternalObserversCollector
+    InternalObserversCollector,
+    RouteParams
 ];

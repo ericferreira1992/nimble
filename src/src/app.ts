@@ -172,8 +172,8 @@ export class NimbleApp {
         this.render.virtualizeRoute(route);
     }
 
-    public static inject<T>(type: Type<T>): T {
-        return this.instance.containerInjector.inject<T>(type);
+    public static inject<T>(type: Type<T>, onInstaciate?: (instance: any) => void): T {
+        return this.instance.containerInjector.inject<T>(type, onInstaciate);
     }
 
     public static registerProvider<T>(provider: Provider<T>) {

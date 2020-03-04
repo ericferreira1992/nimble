@@ -33,3 +33,4 @@ export { Inject } from './inject/inject';
 
 // PROVIDERS
 export * from './providers/http-client';
+export * from './providers/route-params';

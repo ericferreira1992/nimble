@@ -1,0 +1,14 @@
+@import 'src/scss/variables.scss';
+
+.task-edit-dialog {
+    .dialog-header {
+        > button {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #777;
+            margin: -5px -11px;
+            outline: 0;
+        }
+    }
+}
