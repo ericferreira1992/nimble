@@ -15,6 +15,9 @@ export class Route extends RouteBase {
         real: null
     };
 
+    public get isNotFoundPath() { return this.path === '**'; }
+    public get pathWithParams() { return /{(.|\n)*?}/g.test(this.path); }
+
     public pageType: Type<Page>;
 
     public loadPage?: (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean) => void;
@@ -32,9 +35,16 @@ export class Route extends RouteBase {
 
     constructor(route?: Partial<RouteBase>) {
         super(route);
+        this.trimRoutePath();
         this.checkRoutePage();
         this.checkChildren();
         this.checkRoutesParent();
+    }
+
+    private trimRoutePath() {
+        this.path = (this.path ? this.path : '').trim();
+        this.path = this.path.replace(/(^\/)|(\/$)/g, '');
+        console.log(this.path);
     }
 
     private checkRoutePage() {
@@ -135,7 +145,9 @@ export class Route extends RouteBase {
     }
 
     private getPieceRelativeOfTheCurrentPath() {
-        let begin = this.parent ? (this.parent.completePath().split('/').length) : 0;
+        let begin = (this.parent && this.parent.completePath().includes('/'))
+            ? (this.parent.completePath().split('/').length)
+            : 0;
         let end = begin + this.path.split('/').length;
         
         let currentPathSplitted = Router.currentPath.split('/');
@@ -156,7 +168,30 @@ export class Route extends RouteBase {
             this.children.forEach((route: Route) => route.parent = this);
     }
 
-    public checkIfMatchCurrentLocation(alsoCheckPriority: boolean = false) {
+    public checkIfMatchCurrentLocation() {
+        if (this.isAbstract && this.currentPathStartsRoutePath()) {
+            if (this.children.some((route: Route) => route.checkIfMatchCurrentLocation()))
+                return true;
+            return false;
+        }
+        else
+            return this.currentPathIsMatch();
+    }
+
+    public getMatchedPageWithLocation() {
+        if (this.isAbstract && this.currentPathStartsRoutePath()) {
+            for (let route of this.children as Route[]) {
+                if (route.checkIfMatchCurrentLocation())
+                    return route.getMatchedPageWithLocation();
+            }
+        }
+        else if (this.currentPathIsMatch())
+            return this;
+
+        return null;
+    }
+
+    /* public checkIfMatchCurrentLocation(alsoCheckPriority: boolean = false) {
         if (this.isAbstract && this.currentPathStartsRoutePath()) {
             if (this.children.some((route: Route) => route.checkIfMatchCurrentLocation()))
                 return true;
@@ -179,7 +214,7 @@ export class Route extends RouteBase {
             return this;
 
         return null;
-    }
+    } */
 
     private currentPathIsMatch() {
         let completePath = this.completePath();

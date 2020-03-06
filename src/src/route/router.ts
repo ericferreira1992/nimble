@@ -48,7 +48,14 @@ export class Router {
 
     public static registerRoutes(routes: RouteBase[]) {
         if (this.app.state === NimbleAppState.INITIALIZING) {
-            this._routes = routes.map(routeBase => new Route(routeBase));
+            let route = routes.find(x => !isNullOrUndefined(x.redirect) && !isNullOrUndefined(x.page));
+
+            if (!route) {
+                this._routes = routes.map(routeBase => new Route(routeBase));
+            }
+            else {
+                throw new Error(`Occured an error with the route with path "${route.path}". Routes cannot have "page" and "redirect" properties together. Choose one of them.`);
+            }
         }
     }
 
@@ -118,6 +125,12 @@ export class Router {
                     let changed = false;
                     if (this.checkPageCanBeCurrent()) {
                         changed = this.defineCurrentPage();
+                        if (changed && !isNullOrUndefined(this.next.redirect)) {
+                            let redirectPath = this.next.redirect;
+                            this._next = null;
+                            this.redirect(redirectPath);
+                            return;
+                        }
                     }
                     this.onRouterChange(changed);
                 }
@@ -132,50 +145,51 @@ export class Router {
         let found = this.routes.some((route, index) => {
             if (route.checkIfMatchCurrentLocation())
                 return true;
-            else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
-                return route.checkIfMatchCurrentLocation(true);
+            // else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
+                // return route.checkIfMatchCurrentLocation();
             return false;
         });
 
         if (!found) {
-            return this.routes.some((route, index) => {
-                if (route.checkIfMatchCurrentLocation(true))
+            found = this.routes.some((route, index) => {
+                if (route.path === '**')
                     return true;
+                // else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
+                    // return route.path === '**';
                 return false;
             });
         }
-        return true;
+
+        return found;
     }
 
     private static defineCurrentPage(): boolean {
         let newRoute = null;
 
-        // Find the matched route path or get priority route path
-        if (!newRoute) {
-            for (let i = 0; i < this.routes.length; i++) {
-                let route = this.routes[i];
-                newRoute = route.getMatchedPageWithLocation();
+        // Find the matched route path
+        for (let i = 0; i < this.routes.length; i++) {
+            let route = this.routes[i];
+            newRoute = route.getMatchedPageWithLocation();
 
-                if (newRoute) {
-                    break;
-                }
-                // Check if there is another route ahead with the same path as the current one.
-                else if(i < ((this.routes.length - 1)) && !this.routes.slice(i + 1).some(x => x.path === route.path)) {
-                    newRoute = route.getMatchedPageWithLocation(true);
-                    if (newRoute)
-                        break;
-                }
+            if (newRoute) {
+                break;
             }
-        }
-
-        // If cannot get some route above, take the first one setted as priority
-        if (!newRoute) {
-            for (let i = 0; i < this.routes.length; i++) {
-                let route = this.routes[i];
-                newRoute = route.getMatchedPageWithLocation(true);
-
+            // Check if there is another route ahead with the same path as the current one.
+            /* else if(i < ((this.routes.length - 1)) && !this.routes.slice(i + 1).some(x => x.path === route.path)) {
+                newRoute = route.getMatchedPageWithLocation();
                 if (newRoute)
                     break;
+            } */
+        }
+
+        if (!newRoute) {
+            for (let i = 0; i < this.routes.length; i++) {
+                let route = this.routes[i];
+    
+                if (route.isNotFoundPath) {
+                    newRoute = route;
+                    break;
+                }
             }
         }
 
@@ -189,7 +203,8 @@ export class Router {
 
     private static onRouterChange(changedPage: boolean) {
         if (changedPage && this.next) {
-            if (!this.next.isPriority || this.next.completePath() === this.currentPath) {
+            // if (!this.next.isPriority || this.next.completePath() === this.currentPath) {
+            if (this.next.pathWithParams || this.next.isNotFoundPath || this.next.completePath() === this.currentPath) {
                 this.loadCurrentRoutePage();
             }
             else {

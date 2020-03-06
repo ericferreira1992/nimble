@@ -6,8 +6,8 @@ export class RouteBase {
     public path: string = '';
     public routeActivate?: Type<ActivateRoute>[];
     public data?: { [key: string]: any } = null;
-    public isPriority?: boolean = false;
-    public page: (() => Promise<any>) | Type<Page> | string;
+    public redirect?: string;
+    public page?: (() => Promise<any>) | Type<Page> | string;
     public children?: RouteBase[];
 
     constructor(route?: Partial<RouteBase>) {

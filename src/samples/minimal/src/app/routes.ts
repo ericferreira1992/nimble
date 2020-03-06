@@ -13,7 +13,10 @@ export const ROUTES: RouteBase[] = [
         page: () => import('./pages/root/root.page').then(x => x.RootPage),
         children: [
             {
-                isPriority: true,
+                path: '',
+                redirect: 'first',
+            },
+            {
                 path: 'first',
                 page: () => import('./pages/first/first.page').then(x => x.FirstPage)
             },

@@ -48,15 +48,20 @@ export class NimbleApp {
     }
 
     private afterInstanciate() {
-        this.defineRootElement();
-        this.registerDirectives();
-        this.registerProvidersInContainerInjector();
+        try{
+            this.defineRootElement();
+            this.registerDirectives();
+            this.registerProvidersInContainerInjector();
 
-        // Router
-        Router.useHash = this.config.useHash;
-        Router.registerRoutes(this.config.routes);
+            // Router
+            Router.useHash = this.config.useHash;
+            Router.registerRoutes(this.config.routes);
 
-        this.render = this.containerInjector.inject(PageRender);
+            this.render = this.containerInjector.inject(PageRender);
+        }
+        catch(e) {
+            console.error(e);
+        }
     }
 
     private defineRootElement() {
