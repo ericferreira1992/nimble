@@ -17,7 +17,7 @@ export class HrefDirective extends Directive {
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
         selector = this.pureSelector(selector);
-        if (!value.startsWith('http:') && !value.startsWith('https:')) {
+        if (value && !value.startsWith('http:') && !value.startsWith('https:')) {
 
             if (Router.useHash && !value.startsWith('#') && !value.startsWith('/#'))
                 value = '#/' + value.replace(/^(\/)/g, '');

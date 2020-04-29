@@ -13,6 +13,7 @@ export class Router {
     private static _current: Route;
     private static _next: Route;
     private static _previous: Route;
+    private static _redirecting: boolean = false;
 
     private static _state: RouterEvent;
     public static get state() { return this._state; };
@@ -127,11 +128,23 @@ export class Router {
                         changed = this.defineCurrentPage();
                         if (changed && !isNullOrUndefined(this.next.redirect)) {
                             let redirectPath = this.next.redirect;
+                            this._redirecting = true;
                             this._next = null;
                             this.redirect(redirectPath);
                             return;
                         }
+                        else if(!changed && this._redirecting) {
+                            if (this.current && this.current.completePath() !== this.realCurrentPath) {
+                                this._redirecting = false;
+                                let redirectPath = this.current.completePath();
+                                this._next = null;
+                                this.updateURLPath(redirectPath);
+                                this.lastLocationPath = redirectPath;                             
+                                return;
+                            }
+                        }
                     }
+                    this._redirecting = false;
                     this.onRouterChange(changed);
                 }
             }
@@ -193,7 +206,7 @@ export class Router {
             }
         }
 
-        if (newRoute !== this.current) {
+        if (!isNullOrUndefined(newRoute) && newRoute !== this.current) {
             this._next = newRoute;
             return true;
         }
@@ -203,7 +216,6 @@ export class Router {
 
     private static onRouterChange(changedPage: boolean) {
         if (changedPage && this.next) {
-            // if (!this.next.isPriority || this.next.completePath() === this.currentPath) {
             if (this.next.pathWithParams || this.next.isNotFoundPath || this.next.completePath() === this.currentPath) {
                 this.loadCurrentRoutePage();
             }
@@ -213,7 +225,7 @@ export class Router {
             }
         }
         else if (!this.next) {
-            console.error(`No pages matched with this path: "/${this.currentPath}". If it path is abstract (has children), set one child as 'isPriority: true' in "routes.ts".`);
+            console.error(`No pages matched with this path: "/${this.currentPath}". If it path is abstract (has children), define a new route path with redirect in "routes.ts", example: { path: '', redirect: '/some-path' }.`);
             this._next = null;
             this.stopListening = true;
         }
@@ -247,8 +259,10 @@ export class Router {
         if (commonParentRoute) {
             for(let parent of parents.reverse()) {
                 parent.makeNewInstance = false;
-                if (parent.route === commonParentRoute)
+                if (parent.route === commonParentRoute) {
+                    parents.reverse();
                     break;
+                }
             }
         }
 

@@ -44,7 +44,6 @@ export class Route extends RouteBase {
     private trimRoutePath() {
         this.path = (this.path ? this.path : '').trim();
         this.path = this.path.replace(/(^\/)|(\/$)/g, '');
-        console.log(this.path);
     }
 
     private checkRoutePage() {
@@ -241,7 +240,8 @@ export class Route extends RouteBase {
     }
 
     public completePath(): string {
-        return ((this.parent && this.parent.path) ? (this.parent.completePath().concat('/')) : '') + this.path;
+        let path = ((this.parent && this.parent.path) ? (this.parent.completePath().concat('/')) : '') + this.path;
+        return path.endsWith('/') ? path.substr(0, path.length - 1) : path;
     }
 
     public getAllParents(): Route[] {
