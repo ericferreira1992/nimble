@@ -29,7 +29,7 @@ export class ForDirective extends IterationDirective {
             forExpression = forExpression.substr(1, forExpression.length - 2);
         }
 
-        if (!forExpression.startsWith('let ')) {
+        if (!forExpression.startsWith('let ') && !forExpression.startsWith('var ')) {
             element.remove();
             console.error(`SyntaxError: Invalid expression: ${forExpression}: the expression should look similar to this: let item of items`);
             resolved.removed = true;
@@ -58,18 +58,23 @@ export class ForDirective extends IterationDirective {
             let item = iterationArray.value[i];
             let index = i;
             
+            let beforeActivate =  () => {
+                scope[iterationVarName] = item;
+                scope['$index'] = index;
+            };
+            let afterActivate = () => {
+                delete scope[iterationVarName];
+                delete scope['$index'];
+            };
+
+            beforeActivate();
             this.attrRender.resolveElement(
                 iterateElement,
                 scope,
-                () => {
-                    scope[iterationVarName] = item;
-                    scope['$index'] = index;
-                },
-                () => {
-                    delete scope[iterationVarName];
-                    delete scope['$index'];
-                }
+                beforeActivate,
+                afterActivate
             );
+            afterActivate();
         }
 
         element.remove();

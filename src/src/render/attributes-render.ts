@@ -55,14 +55,14 @@ export class AttributesRender {
                             process.directiveInstance.element = element;
     
                             process.applicables.forEach((applicable) => {
-                                if (applicable.beforeResolves) applicable.beforeResolves();
+                                if (applicable.beforeActivate) applicable.beforeActivate();
                                 
                                 (process as DirectiveExecute).directiveInstance
                                     .resolve(applicable.selector, applicable.content, element, process.scope);
     
-                                this.listenersCollector.addActionsInElementsListeners(element, applicable.beforeResolves, applicable.afterResolves)
+                                this.listenersCollector.addActionsInElementsListeners(element, applicable.beforeActivate, applicable.afterActivate)
                                 
-                                if (applicable.afterResolves) applicable.afterResolves();
+                                if (applicable.afterActivate) applicable.afterActivate();
                             });
                         }
                         else
@@ -181,10 +181,10 @@ export class AttributesRender {
         }
     }
 
-    public resolveChildren(elements: HTMLCollection, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void) {
+    public resolveChildren(elements: HTMLCollection, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void) {
         for (var i = 0; i < elements.length; i++) {
             let child = elements[i] as HTMLElement;
-            let childAfterResolved = this.resolveElement(child, scope, beforeResolves, afterResolves);
+            let childAfterResolved = this.resolveElement(child, scope, beforeActivate, afterActivate);
 
             if (childAfterResolved.removed)
                 i--;
@@ -196,21 +196,18 @@ export class AttributesRender {
         }
     }
 
-    public resolveElement(element: HTMLElement, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void): AfterIterateElement {
+    public resolveElement(element: HTMLElement, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void): AfterIterateElement {
         let afterIterate = this.resolveIterateDirective(element, scope);
 
         if (!afterIterate.removed) {
             if (!afterIterate.resolvedAllElements) {
-                if (beforeResolves) beforeResolves();
 
                 if (element.children.length > 0) {
-                    this.resolveChildren(element.children, scope);
+                    this.resolveChildren(element.children, scope, beforeActivate, afterActivate);
                 }
 
                 this.resolveInsideText(element, scope);
-                this.resolveNormalDirectives(element, scope, beforeResolves, afterResolves);
-
-                if (afterResolves) afterResolves();
+                this.resolveNormalDirectives(element, scope, beforeActivate, afterActivate);
             }
         }
 
@@ -270,7 +267,7 @@ export class AttributesRender {
         });
     }
 
-    private resolveNormalDirectives(element: HTMLElement, scope: IScope, beforeResolves?: () => void, afterResolves?: () => void) {
+    private resolveNormalDirectives(element: HTMLElement, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void) {
         if (element.attributes.length > 0) {
             let attributes = [];
             for (let i = 0; i < element.attributes.length; i++)
@@ -320,8 +317,8 @@ export class AttributesRender {
                         applicables: [{
                             selector: directive.selector,
                             content: value,
-                            beforeResolves,
-                            afterResolves
+                            beforeActivate,
+                            afterActivate
                         }],
                         scope: scope,
 
@@ -385,8 +382,8 @@ export class AfterIterateElement {
     removed: boolean = false;
     quantityNewChild: number = 0;
 
-    beforeResolves: () => void;
-    afterResolves: () => void;
+    beforeActivate: () => void;
+    afterActivate: () => void;
 
     constructor(obj?: Partial<AfterIterateElement>) {
         if (obj) Object.assign(this, obj);
@@ -428,8 +425,8 @@ export class DirectiveExecute {
     applicables: {
         selector: string,
         content: any,
-        beforeResolves: () => void,
-        afterResolves: () => void
+        beforeActivate: () => void,
+        afterActivate: () => void
     }[];
     afterExecute?: (element: HTMLElement) => void;
 
