@@ -47,10 +47,11 @@ export abstract class Render {
 
     public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement) {
 
-        let currentElement: HTMLElement;
-        if (oldTreeElments.outerHTML !== newTreeElements.outerHTML) {
-            currentElement = this.diffDOM.diff(oldTreeElments, newTreeElements);
-        }
+        let currentElement = this.diffDOM.diff(
+            oldTreeElments,
+            newTreeElements,
+            (oldElement, newElement) => this.attributesRender.changeElementInTheAttrProccessPending(oldElement, newElement)
+        );
 
         return { element: currentElement, executedsDirectives: this.attributesRender.processesPendingAttributes() };
     }

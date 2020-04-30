@@ -1,12 +1,12 @@
 export class DiffDOM {
     constructor(){}
 
-    public diff(target: HTMLElement, source: HTMLElement): HTMLElement {
+    public diff(target: HTMLElement, source: HTMLElement, changedFn: (oldElement: HTMLElement, newElement: HTMLElement) => void): HTMLElement {
         if (source && target) {
             if (target.tagName === source.tagName) {
                 this.diffAttributes(target, source);
                 if (target.childNodes.length || source.childNodes.length) {
-                    this.diffChildren(target, source);
+                    this.diffChildren(target, source, changedFn);
                 }
                 return target;
             }
@@ -18,18 +18,7 @@ export class DiffDOM {
         }
     }
 
-    private diffElement(target: HTMLElement, source: HTMLElement){
-        if (target.tagName === source.tagName) {
-            this.diffAttributes(target, source);
-            if (target.childNodes.length || source.childNodes.length) {
-                this.diffChildren(target, source);
-            }
-        }
-        else
-            console.warn(target, source, 'Differents!');
-    }
-
-    private diffChildren(target: HTMLElement, source: HTMLElement){
+    private diffChildren(target: HTMLElement, source: HTMLElement, changedFn: (oldElement: HTMLElement, newElement: HTMLElement) => void){
         let targetNodes = this.getNodesCanBeDiffedOfParent(target);
         let sourceNodes = this.getNodesCanBeDiffedOfParent(source);
 
@@ -45,12 +34,14 @@ export class DiffDOM {
                 if (sourceChild.nodeType === targetChild.nodeType) {
                     if (sourceChild.nodeType === Node.ELEMENT_NODE && targetChild.nodeType === Node.ELEMENT_NODE) {
                         if ((sourceChild as HTMLElement).tagName === (targetChild as HTMLElement).tagName){
-                            this.diffElement((targetChild as HTMLElement), (sourceChild as HTMLElement));
+                            this.diffElement((targetChild as HTMLElement), (sourceChild as HTMLElement), changedFn);
                             continue;
                         }
                     }
                     else if (sourceChild.nodeType === Node.TEXT_NODE && targetChild.nodeType === Node.TEXT_NODE) {
-                        targetChild.textContent = sourceChild.textContent;
+                        if (targetChild.textContent !== sourceChild.textContent) {
+                            targetChild.textContent = sourceChild.textContent;
+                        }
                         continue;
                     }
                 }
@@ -65,6 +56,18 @@ export class DiffDOM {
             else
                 target.removeChild(targetChild);
         }
+    }
+
+    private diffElement(target: HTMLElement, source: HTMLElement, changedFn: (oldElement: HTMLElement, newElement: HTMLElement) => void){
+        if (target.tagName === source.tagName) {
+            this.diffAttributes(target, source);
+            if (target.childNodes.length || source.childNodes.length) {
+                this.diffChildren(target, source, changedFn);
+            }
+            changedFn(source, target);
+        }
+        else
+            console.warn(target, source, 'Differents!');
     }
 
     private getNodesCanBeDiffedOfParent(element: HTMLElement): ChildNode[] {

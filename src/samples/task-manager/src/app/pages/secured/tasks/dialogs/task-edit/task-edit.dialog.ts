@@ -8,6 +8,7 @@ export class TaskEditDialog extends Dialog {
 
     public task: any;
     public form: Form;
+    public moreDetailsVisible: boolean = true;
 
     public types = [
         { text: 'Teste 01', value: 'T1' },
@@ -55,5 +56,12 @@ export class TaskEditDialog extends Dialog {
     public save() {
         Object.assign(this.task, this.form.value);
         this.dialogRef.close(this.task);
+    }
+
+    public toggleMoreDetails() {
+        console.log('AAAAAA');
+        this.render(() => {
+            this.moreDetailsVisible = !this.moreDetailsVisible;
+        });
     }
 }

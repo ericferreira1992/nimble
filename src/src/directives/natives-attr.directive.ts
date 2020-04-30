@@ -4,21 +4,23 @@ import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Helper } from '../providers/helper';
 import { isObject, isArray } from 'util';
 
+export const NATIVE_SELECTORS = [
+    '[disabled]',
+    'class',
+    'style',
+    'title',
+    'alt',
+    'type',
+    'target',
+    'src',
+    'width',
+    'height',
+    'maxlength',
+    'minlength',
+];
+
 @PrepareDirective({
-    selector: [
-        '[disabled]',
-        'class',
-        'style',
-        'title',
-        'alt',
-        'type',
-        'target',
-        'src',
-        'width',
-        'height',
-        'maxlength',
-        'minlength',
-    ]
+    selector: NATIVE_SELECTORS
 })
 export class NativesAttrsDirective extends Directive {
 

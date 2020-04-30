@@ -1,5 +1,4 @@
-import { NativesAttrsDirective } from './natives-attr.directive';
-import { FormFieldDirective } from './forms/form-field.directive';
+import { NativesAttrsDirective, NATIVE_SELECTORS } from './natives-attr.directive';
 
 export class DirectiveHelper {
 
@@ -12,5 +11,10 @@ export class DirectiveHelper {
     public static checkSelectorMustHavePureValue(selector: string) {
         selector = selector.replace(/\[|\(|\]|\)/g, '');
         return this.getAllPureSelectors().indexOf(selector) >= 0;
+    }
+
+    public static isNativeSelector(selector: string) {
+        selector = selector.replace(/\[|\(|\]|\)/g, '');
+        return NATIVE_SELECTORS.some(x => x.replace(/\[|\(|\]|\)/g, '') === selector);
     }
 }

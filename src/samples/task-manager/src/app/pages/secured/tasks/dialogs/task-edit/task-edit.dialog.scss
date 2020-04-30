@@ -11,4 +11,18 @@
             outline: 0;
         }
     }
+
+    .task-details {
+        margin: 0;
+        width: 100%;
+        cursor: pointer;
+        background: #F5F5F5;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        border-radius: 3px;
+
+        i {
+            margin-top: 2px;
+        }
+    }
 }
