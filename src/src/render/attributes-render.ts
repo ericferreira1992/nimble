@@ -80,8 +80,6 @@ export class AttributesRender {
                         else
                             process.action(element, element.attributes[process.attr], process.content, process.scope);
                     }
-    
-                    // element.removeAttribute('nimble-id');
                 }
             }
             this.listenersCollector.applyAllListeners();
@@ -109,12 +107,6 @@ export class AttributesRender {
         if (!attributeProcess) {
             attributeProcess = new AttributeToProcess();
             attributeProcess.element = currentElement;
-            // attributeProcess.procId = this.helper.uid();
-
-            // if (!currentElement.hasAttribute('nimble-id'))
-            //     currentElement.setAttribute('nimble-id', attributeProcess.procId);
-            // else
-            //     (currentElement.attributes['nimble-id'] as Attr).value = attributeProcess.procId;
 
             if (process instanceof DirectiveExecute){
                 process.directiveInstance = NimbleApp.inject(process.directiveType) as Directive;
