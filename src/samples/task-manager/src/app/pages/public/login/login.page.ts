@@ -18,8 +18,8 @@ export class LoginPage extends Page {
         super();
 
         this.form = new Form({
-            user: { value: '', validators: [ Validators.required ] },
-            password: { value: '', validators: [ Validators.required ] },
+            user: { value: 'teste', validators: [ Validators.required ] },
+            password: { value: 'teste', validators: [ Validators.required ] },
         });
 
         console.log(this.routeParams);

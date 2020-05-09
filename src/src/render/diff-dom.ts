@@ -1,7 +1,7 @@
 export class DiffDOM {
     constructor(){}
 
-    public diff(target: HTMLElement, source: HTMLElement, changedFn: (oldElement: HTMLElement, newElement: HTMLElement) => void): HTMLElement {
+    public diff(target: HTMLElement, source: HTMLElement, changedFn: (oldElement: HTMLElement, newElement: HTMLElement) => void, elementFromIterate: (element: HTMLElement) => boolean): HTMLElement {
         if (source && target) {
             if (target.tagName === source.tagName) {
                 this.diffAttributes(target, source);
@@ -25,12 +25,21 @@ export class DiffDOM {
         let notExistsInTarget = this.removeNodesNotExistsInTarget(target, targetNodes, sourceNodes);
         targetNodes = targetNodes.filter(x => !notExistsInTarget.some(y => y === x));
 
+        // if (target.className.includes('animated slideInDown')) {
+        //     debugger;
+        // }
+
         let length = Math.max(sourceNodes.length, targetNodes.length);
         for(var i = 0; i < length; i++) {
-            let sourceChild = i < sourceNodes.length ? sourceNodes[i] : null;
-            let targetChild = i < targetNodes.length ? targetNodes[i] : null;
+            let sourceChild: ChildNode = i < sourceNodes.length ? sourceNodes[i] : null;
+            let targetChild: ChildNode = i < targetNodes.length ? targetNodes[i] : null;
+
+            // if (targetChild && targetChild.nodeType === Node.ELEMENT_NODE && (targetChild as HTMLElement).className.includes('loading-spinner')) {
+            //     debugger;
+            // }
             
             if (targetChild && sourceChild) {
+
                 if (sourceChild.nodeType === targetChild.nodeType) {
                     if (sourceChild.nodeType === Node.ELEMENT_NODE && targetChild.nodeType === Node.ELEMENT_NODE) {
                         if ((sourceChild as HTMLElement).tagName === (targetChild as HTMLElement).tagName){
@@ -39,21 +48,24 @@ export class DiffDOM {
                         }
                     }
                     else if (sourceChild.nodeType === Node.TEXT_NODE && targetChild.nodeType === Node.TEXT_NODE) {
-                        if (targetChild.textContent !== sourceChild.textContent) {
+                        if (targetChild.textContent.trim() !== sourceChild.textContent.trim()) {
                             targetChild.textContent = sourceChild.textContent;
                         }
                         continue;
                     }
                 }
 
-                (targetChild as HTMLElement).parentElement.insertBefore(sourceChild, targetChild);
+                // if (sourceChild.nodeType === Node.ELEMENT_NODE || sourceChild.textContent) {
+                    (targetChild as HTMLElement).parentElement.insertBefore(sourceChild, targetChild);
+                    targetNodes.splice(i, 0, sourceChild);
+                // }
                 
                 if (i === (length - 1))
                     target.removeChild(targetChild);
             }
             else if (sourceChild)
                 target.append(sourceChild);
-            else
+            else if (targetChild.nodeType !== Node.TEXT_NODE && targetChild.textContent.trim() !== '')
                 target.removeChild(targetChild);
         }
     }
@@ -74,7 +86,7 @@ export class DiffDOM {
         let nodes: ChildNode[] = [];
         for(var i = 0; i < element.childNodes.length; i++){
             let child = element.childNodes[i];
-            if (child.nodeType === Node.TEXT_NODE && !(child.textContent.trim())) {
+            if (child.nodeType === Node.TEXT_NODE && !(child.textContent)) {
                 element.removeChild(child);
                 i--;
                 continue;
@@ -92,7 +104,7 @@ export class DiffDOM {
                 return !sourceNodes.filter(y => y.nodeType === Node.ELEMENT_NODE).some(y => (y as HTMLElement).tagName === (x as HTMLElement).tagName);
             }
             if (x.nodeType === Node.TEXT_NODE) {
-                return !sourceNodes.filter(y => y.nodeType === Node.TEXT_NODE).some(y => y.textContent === x.textContent);
+                return !sourceNodes.filter(y => y.nodeType === Node.TEXT_NODE).some(y => y.textContent.trim() === x.textContent.trim());//.some(y => y.textContent === x.textContent);
             }
             return true;
         });

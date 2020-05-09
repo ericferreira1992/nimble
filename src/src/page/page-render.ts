@@ -47,8 +47,43 @@ export class PageRender extends Render {
 
     private createPageElementAndResolve(template: string, pageInstance: any) {
         let virtualElement = this.createVirtualElement(template);
-        this.attributesRender.resolveChildren(virtualElement.children, pageInstance);
+        this.attributesRender.resolveChildren(
+            virtualElement.children,
+            pageInstance,
+            null,
+            null,
+            (element, directiveType) => {
+                if (directiveType.prototype.type === 'IterationDirective') {
+                    let interationElement = this.app.iterationElementsApplied.virtual.find(x => x.element === element);
+                    if (interationElement) {
+                        if (!interationElement.directives.some(x => x === directiveType))
+                            interationElement.directives.push(directiveType);
+                    }
+                    else {
+                        interationElement = {
+                            element,
+                            directives: [directiveType],
+                            anyChildrenApplied: false
+                        }
+                        this.app.iterationElementsApplied.virtual.push(interationElement);
+                    }
+
+                    if (!interationElement.anyChildrenApplied)
+                        interationElement.anyChildrenApplied = this.app.iterationElementsApplied.virtual.some(x => x.element !== element && this.isChildOfElement(x.element, element));
+                }
+            }
+        );
         return virtualElement;
+    }
+
+    private isChildOfElement(child: HTMLElement, parent: HTMLElement){
+        while (child && child.tagName !== 'BODY'){
+            if (child === parent){
+                return true;
+            }
+            child = child.parentNode as HTMLElement;
+        }
+        return false;
     }
 
     private createVirtualElement(html: string) {
@@ -68,6 +103,11 @@ export class PageRender extends Render {
 
         this.removeAllChildren(rootElement.real);
         rootElement.real.appendChild(highestParentRoute.element.virtual);
+
+        this.app.iterationElementsApplied.real = this.app.iterationElementsApplied.virtual;
+        this.app.iterationElementsApplied.virtual = [];
+
+        console.log(this.app.iterationElementsApplied.real);
 
         this.headerRender.resolveTitleAndMetaTags(currentRoute);
 

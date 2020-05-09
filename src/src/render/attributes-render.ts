@@ -185,10 +185,10 @@ export class AttributesRender {
         }
     }
 
-    public resolveChildren(elements: HTMLCollection, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void) {
+    public resolveChildren(elements: HTMLCollection, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void, onElementDirectiveApplied?: (el: HTMLElement, dir: Type<Directive>) => void) {
         for (var i = 0; i < elements.length; i++) {
             let child = elements[i] as HTMLElement;
-            let childAfterResolved = this.resolveElement(child, scope, beforeActivate, afterActivate);
+            let childAfterResolved = this.resolveElement(child, scope, beforeActivate, afterActivate, onElementDirectiveApplied);
 
             if (childAfterResolved.removed)
                 i--;
@@ -200,36 +200,40 @@ export class AttributesRender {
         }
     }
 
-    public resolveElement(element: HTMLElement, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void): AfterIterateElement {
-        let afterIterate = this.resolveIterateDirective(element, scope);
+    public resolveElement(element: HTMLElement, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void, onElementDirectiveApplied?: (el: HTMLElement, dir: Type<Directive>) => void): AfterIterateElement {
+        let { afterIterate, directive } = this.resolveIterateDirective(element, scope);
+
+        if (directive && onElementDirectiveApplied) {
+            onElementDirectiveApplied(element, directive);
+        }
 
         if (!afterIterate.removed) {
             if (!afterIterate.resolvedAllElements) {
                 if (element.children.length > 0) {
-                    this.resolveChildren(element.children, scope, beforeActivate, afterActivate);
+                    this.resolveChildren(element.children, scope, beforeActivate, afterActivate, onElementDirectiveApplied);
                 }
 
                 this.resolveInsideText(element, scope);
-                this.resolveNormalDirectives(element, scope, beforeActivate, afterActivate);
+                this.resolveNormalDirectives(element, scope, beforeActivate, afterActivate, onElementDirectiveApplied);
             }
         }
 
         return afterIterate;
     }
 
-    private resolveIterateDirective(element: HTMLElement, scope: IScope): AfterIterateElement {
-        let directive = this.getTheIterateDirectiveCanBeApply(element);
-        if (directive) {
-            let selector = directive.selectors.find(selector => element.hasAttribute(selector));
+    private resolveIterateDirective(element: HTMLElement, scope: IScope): {afterIterate: AfterIterateElement, directive: Type<Directive>} {
+        let { instance, type } = this.getTheIterateDirectiveCanBeApply(element);
+        if (instance) {
+            let selector = instance.selectors.find(selector => element.hasAttribute(selector));
             let value = element.attributes[selector].value;
             element.removeAttribute(selector);
-            let afterIterate = directive.resolve(selector, value, element, scope);
-            return afterIterate;
+            let afterIterate = instance.resolve(selector, value, element, scope);
+            return { afterIterate, directive: type };
         }
-        return new AfterIterateElement();
+        return { afterIterate: new AfterIterateElement(), directive: null };
     }
 
-    private getTheIterateDirectiveCanBeApply(element: HTMLElement): IterationDirective {
+    private getTheIterateDirectiveCanBeApply(element: HTMLElement): { instance: IterationDirective, type: Type<IterationDirective> } {
         let directives: {selector: string, directive: Type<IterationDirective>}[] = [];
         for(let directive of this.iterationDirectives.filter(x => x.prototype.selectors && x.prototype.selectors.length > 0)) {
             let selectors = directive.prototype.selectors as string[];
@@ -256,10 +260,11 @@ export class AttributesRender {
                 });
             }
 
-            let instance = NimbleApp.inject(directives[0].directive);
-            return instance;
+            let type = directives[0].directive;
+            let instance = NimbleApp.inject(type);
+            return { instance, type };
         }
-        return null;
+        return { instance: null, type: null };
     }
 
     private resolveInsideText(element: HTMLElement, scope: IScope) {
@@ -270,7 +275,7 @@ export class AttributesRender {
         });
     }
 
-    private resolveNormalDirectives(element: HTMLElement, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void) {
+    private resolveNormalDirectives(element: HTMLElement, scope: IScope, beforeActivate?: () => void, afterActivate?: () => void, onElementDirectiveApplied?: (el: HTMLElement, dir: Type<Directive>) => void) {
         if (element.attributes.length > 0) {
             let attributes = [];
             for (let i = 0; i < element.attributes.length; i++)
@@ -329,6 +334,9 @@ export class AttributesRender {
                     
                     if (!DirectiveHelper.isNativeSelector(name) || /^\[([^)]+)\]$/g.test(name))
                         element.removeAttribute(name);
+
+                    if (onElementDirectiveApplied)
+                        onElementDirectiveApplied(element, directive.directive);
                 }
                 else
                     this.resolveDefaultAttribute(element, attribute, scope);

@@ -32,9 +32,24 @@ export class Router {
 
     private static nextRejectedAndRedirectAfter: boolean = false;
 
-    private static get realCurrentPath() { return (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
-    public static get currentPath() { return (!isNullOrUndefined(this.nextPath) ? this.nextPath : (this.useHash ? location.hash : location.pathname)).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
-    public static get nextPath() { return this._nextPath; }
+    private static get realCurrentPath() { return (this.useHash ? location.hash : (location.pathname+location.hash)).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
+    public static get currentPath() {
+        if (!isNullOrUndefined(this.nextPath))
+            return this.nextPath;
+        else {
+            var path = (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+            var splittedPath = path.split('#');
+            return splittedPath.length > 0 ? splittedPath[0] : path;
+        }
+    }
+    public static get nextPath() {
+        if (this._nextPath) {
+            var nextPath = this._nextPath.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+            var splittedPath = nextPath.split('#');
+            return splittedPath.length > 0 ? splittedPath[0] : nextPath;
+        }
+        return this._nextPath;
+    }
 
     public static get routes() { return this._routes; }
     public static get abstractRoutes() { return this._routes.filter(x => x.isAbstract); }
@@ -68,6 +83,7 @@ export class Router {
 
     public static start() {
         if (this.app.state === NimbleAppState.INITIALIZING) {
+            // this._nextPath = this.currentPath;
             this.startListening();
         }
     }
@@ -332,7 +348,46 @@ export class Router {
     }
 
     private static updateURLPath(path: string) {
+
+        let isChangingHashLink = (path: string): boolean =>  {
+            return path.includes('#') && this.realCurrentPath.includes('#');
+        };
+        let isAddingHashLink = (path: string): boolean =>  {
+            if (path.includes('#'))
+                return path.split('#')[0].replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '') === this.realCurrentPath;
+            return false;
+        };
+        let isRemovingHashLink = (path: string): boolean =>  {
+            if (this.realCurrentPath.includes('#'))
+                return this.realCurrentPath.split('#')[0].replace(/\/$/g, '') === path;
+            return false;
+        };
+
+        path = path.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+
+        if (path.includes('#') || this.realCurrentPath.includes('#')) {
+            if (isChangingHashLink(path)) {
+                location.hash = path.replace(this.currentPath, '').replace(/#/g, '');
+                this.setState(RouterEvent.START_CHANGE, null);
+                this.setState(RouterEvent.FINISHED_CHANGE, null);
+                return;
+            }
+            else if (isAddingHashLink(path)) {
+                location.hash = path.replace(this.realCurrentPath, '').replace(/#/g, '');
+                this.setState(RouterEvent.START_CHANGE, null);
+                this.setState(RouterEvent.FINISHED_CHANGE, null);
+                return;
+            }
+            else if (isRemovingHashLink(path)) {
+                location.hash = '';
+                this.setState(RouterEvent.START_CHANGE, null);
+                this.setState(RouterEvent.FINISHED_CHANGE, null);
+                return;
+            }
+        }
+
         path = (path.startsWith('/') ? '' : '/') + path;
+        
         if (this.useHash) 
             location.hash = path;
         else
@@ -384,12 +439,38 @@ export class Router {
         return true;
     }
 
-    public static redirect(route: string) {
-        this.nextRejectedAndRedirectAfter = isNullOrUndefined(this.nextPath) ? false : true;
+    public static redirect(path: string) {
+        this.nextRejectedAndRedirectAfter = (!isNullOrUndefined(this.nextPath) || !this.current) ? true : false;
         if (this.nextRejectedAndRedirectAfter && isNullOrUndefined(this.current)) {
-            this.updateURLPath(route);
+            this.updateURLPath(path);
         }
-        this._nextPath = route;
+
+        if (!this.pathIsHashLink(path) || !this.pathIsHashLink(path, { checkIsCurrent: true })) {
+            var pathWithoutHash = (path.includes('#') ? path.split('#')[0] : path).replace(/^\//g, '');
+            if (this.currentPathIsHashLink() && this.currentPath !== pathWithoutHash)
+                this._nextPath = path;
+            else
+                this.updateURLPath(path);
+        }
+        else
+            this.updateURLPath(path);
+    }
+
+    private static pathIsHashLink(path: string, options: { checkIsCurrent: boolean } = {} as any): boolean {
+        path = path.replace(/^\//g, '');
+
+        if (options.checkIsCurrent) {
+            if (path.includes('#') && path.startsWith(this.currentPath)) {
+                let subtractedPath = path.replace(this.currentPath, '');
+                return subtractedPath.startsWith('/#');
+            }
+        }
+
+        return path.includes('#');
+    }
+
+    private static currentPathIsHashLink(): boolean {
+        return this.realCurrentPath.includes('#');
     }
 
     private static notifyOldRoutesElementExit() {

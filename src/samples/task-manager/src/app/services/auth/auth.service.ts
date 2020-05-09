@@ -22,13 +22,14 @@ export class AuthService {
     }
 
     public login(form: { user: string, password: string }) {
-        return new Promise<any>((resolve) => {
+        return new Promise<any>((resolve, reject) => {
             setTimeout(() => {
                 this.setUser({
                     name: 'Eric Ferreira',
                     id: 123
                 });
                 resolve(true);
+                // reject(false);
             }, 2000);
         });
     }

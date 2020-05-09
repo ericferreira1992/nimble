@@ -43,7 +43,12 @@ export class DialogRender extends Render {
             if (realAreaElement.hasAttribute('style'))
                 virtualAreaElement.setAttribute('style', realAreaElement.attributes['style'].value);
     
-            let { executedsDirectives } = this.diffTreeElementsAndUpdateOld(realAreaElement, virtualAreaElement);
+            let { executedsDirectives } = this.diffTreeElementsAndUpdateOld(
+                realAreaElement,
+                virtualAreaElement,
+                [],
+                []
+            );
             
             renderRef.executedDirectives = executedsDirectives;
         }

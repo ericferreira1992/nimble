@@ -1,7 +1,9 @@
-import { HeaderRender } from "./header-render";
-import { AttributesRender } from "./attributes-render";
-import { NimbleApp } from "./../app";
-import { DiffDOM } from "./diff-dom";
+import { HeaderRender } from './header-render';
+import { AttributesRender } from './attributes-render';
+import { NimbleApp } from './../app';
+import { DiffDOM } from './diff-dom';
+import { Type } from '../inject/type.interface';
+import { Directive } from '../directives/abstracts/directive';
 
 export abstract class Render {
     protected get app() { return NimbleApp.instance; }
@@ -45,12 +47,16 @@ export abstract class Render {
         }
     }
 
-    public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement) {
+    public diffTreeElementsAndUpdateOld(oldTreeElments: HTMLElement, newTreeElements: HTMLElement, oldIterationElements: { element: HTMLElement, directives: Type<Directive>[], anyChildrenApplied: boolean }[], newIterationElements: { element: HTMLElement, directives: Type<Directive>[], anyChildrenApplied: boolean }[]) {
 
         let currentElement = this.diffDOM.diff(
             oldTreeElments,
             newTreeElements,
-            (oldElement, newElement) => this.attributesRender.changeElementInTheAttrProccessPending(oldElement, newElement)
+            (oldElement, newElement) => this.attributesRender.changeElementInTheAttrProccessPending(oldElement, newElement),
+            (element) => {
+                return oldIterationElements.some(x => x.element === element) ||
+                    newIterationElements.some(x => x.element === element);
+            }
         );
 
         return { element: currentElement, executedsDirectives: this.attributesRender.processesPendingAttributes() };

@@ -17,16 +17,30 @@ export class HrefDirective extends Directive {
 
     public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
         selector = this.pureSelector(selector);
-        if (value && !value.startsWith('http:') && !value.startsWith('https:')) {
+        let startsWithHash = value.startsWith('#') || value.startsWith('/#');
+        let href = value.replace(/^(#)/g, '');
 
-            if (Router.useHash && !value.startsWith('#') && !value.startsWith('/#'))
-                value = '#/' + value.replace(/^(\/)/g, '');
+        if (value && !value.startsWith('http:') && !value.startsWith('https:')) {
+            if (Router.useHash) {
+                if (!startsWithHash)
+                    href = '#/' + href.replace(/^(\/)/g, '');
+                else
+                    console.error(`The link "#${href}" with "#" not work in useHash mode setted in NimbleApple.`);
+            }
             else if (!Router.useHash) {
-                value = value.replace(/^(#)/g, '');
+                if (startsWithHash) {
+                    href = `${location.pathname}#${href}`;
+                }
+                else if (!href.startsWith('/')) {
+                    href = `${location.pathname.replace(/(\/)$/g, '')}/${href}`;
+                }
+
                 this.listenersCollector.subscribe(element, 'click', (e) => {
                     let attr = element.attributes[selector];
-                    if (attr)
-                        Router.redirect(attr.value);
+                    if (attr) {
+                        let href = attr.value
+                        Router.redirect(href);
+                    }
 
                     e.preventDefault();
                     return false;
@@ -35,9 +49,9 @@ export class HrefDirective extends Directive {
         }
 
         if (!element.hasAttribute(selector))
-            element.setAttribute(selector, value);
+            element.setAttribute(selector, href);
         else
-            element.attributes[selector].value = value;
+            element.attributes[selector].value = href;
     }
 
     public onDestroy(selector: string, scope: IScope) {

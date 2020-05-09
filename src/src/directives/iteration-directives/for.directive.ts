@@ -57,14 +57,22 @@ export class ForDirective extends IterationDirective {
 
             let item = iterationArray.value[i];
             let index = i;
+
+            let existingVarNameBefore = iterationVarName in scope;
+            let varValueBefore = existingVarNameBefore ? scope[iterationVarName] : null;
             
             let beforeActivate =  () => {
                 scope[iterationVarName] = item;
                 scope['$index'] = index;
             };
             let afterActivate = () => {
-                delete scope[iterationVarName];
                 delete scope['$index'];
+                if (existingVarNameBefore) {
+                    scope[iterationVarName] = varValueBefore;
+                }
+                else {
+                    delete scope[iterationVarName];
+                }
             };
 
             beforeActivate();

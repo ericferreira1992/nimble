@@ -190,31 +190,6 @@ export class Route extends RouteBase {
         return null;
     }
 
-    /* public checkIfMatchCurrentLocation(alsoCheckPriority: boolean = false) {
-        if (this.isAbstract && this.currentPathStartsRoutePath()) {
-            if (this.children.some((route: Route) => route.checkIfMatchCurrentLocation()))
-                return true;
-            else if (alsoCheckPriority && this.children.some((route: Route) => route.checkIfMatchCurrentLocation(true)))
-                return true;
-            return false;
-        }
-        else
-            return this.currentPathIsMatch() || (alsoCheckPriority && this.isPriority);
-    }
-
-    public getMatchedPageWithLocation(alsoCheckPriority: boolean = false) {
-        if (this.isAbstract && this.currentPathStartsRoutePath()) {
-            for (let route of this.children as Route[]) {
-                if (route.checkIfMatchCurrentLocation(alsoCheckPriority))
-                    return route.getMatchedPageWithLocation(alsoCheckPriority);
-            }
-        }
-        else if (this.currentPathIsMatch() || (alsoCheckPriority && this.isPriority))
-            return this;
-
-        return null;
-    } */
-
     private currentPathIsMatch() {
         let completePath = this.completePath();
         if (/{(.|\n)*?}/g.test(completePath)) {
