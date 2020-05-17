@@ -1,7 +1,6 @@
 import { Type } from '../inject/type.interface';
-import { PageRender } from '../page/page-render';
+import { RouteRender } from '../route/route-render';
 import { HeaderRender } from '../render/header-render';
-import { AttributesRender } from '../render/attributes-render';
 import { HttpClient } from './http-client/http-client';
 import { Helper } from './helper';
 import { ListenersCollector } from './listeners-collector';
@@ -11,15 +10,16 @@ import { DialogRender } from '../dialog/dialog-render';
 import { DialogRefCollector } from '../dialog/dialog-ref-collector';
 import { InternalObserversCollector } from './internal-observers-collector';
 import { RouteParams } from './route-params/route-params';
+import { RenderAbstract } from '../render/render-abstract';
 
 export const INTERNAL_PROVIDERS: Type<{}>[] = [
     Helper,
-    PageRender,
+    RenderAbstract,
+    RouteRender,
     DialogRender,
     DialogBuilder,
     DialogRefCollector,
     HeaderRender,
-    AttributesRender,
     HttpClient,
     Listener,
     ListenersCollector,

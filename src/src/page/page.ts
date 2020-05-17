@@ -11,7 +11,7 @@ export class Page implements IScope {
     public isInitialized: boolean = false;
     public isDestroyed: boolean = false;
 
-    public onNeedRerender: (page: Page) => void;
+    public onNeedRerender: (page: Page) => Promise<any>;
 
     /**
      * When element is rendered
@@ -42,19 +42,20 @@ export class Page implements IScope {
     /**
      * Method to render and update current template
      */
-    public render(action?: () => void) {
+    public render(action?: () => void): Promise<any> {
         if (action) action();
         if (this.onNeedRerender) {
-            this.onNeedRerender(this);
+            return this.onNeedRerender(this);
         }
+        return new Promise<any>((resolve) => resolve());
     }
 
     public eval(expression: string): any {
-        try {
-            return (new Function(`with(this) { return ${expression} }`)).call(this);
-        }
-        catch(e) {
-            console.error(e.message);
-        }
+        return (new Function(`with(this) { return ${expression} }`)).call(this);
+        // try {
+        // }
+        // catch(e) {
+        //     console.error(e.message);
+        // }
     }
 }

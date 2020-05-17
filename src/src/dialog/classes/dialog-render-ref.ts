@@ -1,21 +1,15 @@
 import { Dialog } from "./dialog";
 import { DialogRef } from "./dialog-ref";
-import { DirectiveExecute } from "../../render/attributes-render";
+import { ElementStructure } from "../../render/element-structure";
+import { RenderHelper } from "../../render/render-helper";
 
 export class DialogRenderRef<T extends Dialog> {
-    public rootElement: HTMLElement;
+    public structuredTemplate: ElementStructure;
     public dialogRef: DialogRef<T>;
     public listenerCancelFunctions: (() => void)[] = [];
-    
-    public executedDirectives: DirectiveExecute[] = [];
+    public rootElement: HTMLElement;
 
-    public set containerElement(element: HTMLElement) {
-        let dialogContainerElement = this.rootElement.querySelector('.nimble-dialog-container');
-        if (dialogContainerElement) {
-            dialogContainerElement.append(element);
-            this.applyConfigDimesions();
-        }
-    }
+    public get dialogElement(): HTMLElement { return this.structuredTemplate.compiledNode as HTMLElement; }
 
     public get containerElement(): HTMLElement {
         let dialogContainerElement = this.rootElement.querySelector('.nimble-dialog-container');
@@ -30,9 +24,19 @@ export class DialogRenderRef<T extends Dialog> {
         return (dialogAreaElement) ? dialogAreaElement as HTMLElement : null;
     }
     
-    constructor(init: { dialogRef: DialogRef<T>, rootElement: HTMLElement }) {
+    constructor(init: { dialogRef: DialogRef<T>, structuredTemplate: ElementStructure }) {
         this.dialogRef = init.dialogRef;
-        this.rootElement = init.rootElement;
+        this.structuredTemplate = init.structuredTemplate;
+
+        this.rootElement = document.createElement('nimble-dialog');
+        document.body.append(this.rootElement);
+    }
+
+    public insertDialogArea(node: Node) {
+        let container = this.containerElement;
+        RenderHelper.removeAllChildrenOfElement(container);
+        container.appendChild(node);
+        this.applyConfigDimesions();
     }
 
     public closeElements(onEnd: () => void) {
@@ -51,7 +55,6 @@ export class DialogRenderRef<T extends Dialog> {
     public removeFromDOM() {
         if (this.rootElement && this.rootElement.parentElement)
             this.rootElement.parentElement.removeChild(this.rootElement);
-        delete this.rootElement;
     }
 
     private applyConfigDimesions() {
@@ -64,13 +67,5 @@ export class DialogRenderRef<T extends Dialog> {
             if (this.dialogRef.config.minWidth)
                 areaElement.style.minWidth = this.dialogRef.config.minWidth;
         }
-    }
-
-    public notifyDestructionExecutedsDirectives() {
-        for(let proc of this.executedDirectives) {
-            for(let applicable of proc.applicables)
-                proc.directiveInstance.onDestroy(applicable.selector, proc.scope);
-        }
-        this.executedDirectives = [];
     }
 }

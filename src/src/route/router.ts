@@ -24,7 +24,7 @@ export class Router {
     private static lastLocationPath: string;
     private static stopListening: boolean = false;
 
-    private static listeners: { type: RouterEvent, callback: (route?: any) => void, internal: boolean }[] = [];
+    private static listeners: { event: RouterEvent, callback: (route?: any) => void, internal: boolean }[] = [];
 
     public static useHash: boolean = false;
 
@@ -91,14 +91,21 @@ export class Router {
     /**
      * Adds a listener for when the routing state changes.
      * Also it returns a void function to cancel listen when want. 
-     * @param types 
+     * @param events 
      * @param callback 
      */
-    public static addListener(types: RouterEvent | RouterEvent[], callback: () => void) {
-        types = !isArray(types) ? [types] : types;
+    public static addListener(events: string | RouterEvent | (RouterEvent | string)[], callback: () => void) {
+        let initial: (RouterEvent | string)[] = !isArray(events) ? [events] : events;
+        let filtered = initial.filter(event => Object.values(RouterEvent).map(x => x.toString()).includes(event)) as RouterEvent[];
         let listeners = [];
-        for(let type of types) {
-            let listener = { type: type, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
+
+        if (initial.some(x => filtered.indexOf(x as RouterEvent) < 0)) {
+            let invalids = initial.filter(x => !filtered.includes(x as RouterEvent)).map(x => `'${x}'`);
+            console.warn(`The following events are invalids: ${invalids.join(', ')}.`);
+        }
+
+        for(let event of filtered) {
+            let listener = { event, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
             listeners.push(listener);
             this.listeners.push(listener);
         }
@@ -113,7 +120,7 @@ export class Router {
     }
 
     private static notifyListeners(event: RouterEvent, sender?: any) {
-        let listeners = this.listeners.filter(x => x.type === event);
+        let listeners = this.listeners.filter(x => x.event === event);
 
         if (this.getEventType() === RouterEventType.START)
             listeners = listeners.sort((a,b) => {
@@ -256,6 +263,7 @@ export class Router {
             this.loadRoutePage(this.next).then(
                 () => {
                     this.defineCurrentAfterFinished();
+                    this.setState(RouterEvent.RENDERING, this.current);
                     this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                 },
                 () => {
@@ -300,6 +308,7 @@ export class Router {
                 this.loadRoutePage(this.next).then(
                     () => {
                         this.defineCurrentAfterFinished();
+                        this.setState(RouterEvent.RENDERING, this.current);
                         this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                     },
                     () => {
@@ -403,7 +412,6 @@ export class Router {
                     if (this.routeCanActivate(route)) {
                         route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         route.pageInstance.pageParent = route.parent ? route.parent.pageInstance : null;
-                        route.pageInstance.onEnter();
                         this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
                         resolve(route);
                     }
@@ -492,17 +500,21 @@ export class Router {
         }
     }
 
-    private static whenRerenderIsRequested(page: Page) {
-        let changingRouteInProgress = this.state === RouterEvent.START_CHANGE;
-        let routeChangeFinished = this.state === RouterEvent.FINISHED_CHANGE;
-        
-        this.setState(RouterEvent.STARTED_RERENDER, (changingRouteInProgress && this.previous) ? this.previous : this.current);
-
-        if (!routeChangeFinished || this.state === RouterEvent.STARTED_RERENDER)
+    private static whenRerenderIsRequested(page: Page): Promise<any> {
+        if (this.state !== RouterEvent.RENDERING) {
+            let changingRouteInProgress = this.state === RouterEvent.START_CHANGE;
+            
+            this.setState(RouterEvent.STARTED_RERENDER, (changingRouteInProgress && this.previous) ? this.previous : this.current);
             this.setState(RouterEvent.FINISHED_RERENDER, this.current);
+    
+            if (changingRouteInProgress)
+                this._state = RouterEvent.START_CHANGE;
+        }
+        else {
+            console.warn(`The render() was requested and did not work because the page was being constructing.`);
+        }
 
-        if (changingRouteInProgress)
-            this._state = RouterEvent.START_CHANGE;
+        return new Promise<any>((resolve) => resolve());
     }
 
     public static getCommonParentOfTwoRoutes(routeA: Route, routeB: Route): Route {
@@ -532,6 +544,7 @@ export class Router {
             case RouterEvent.CHANGE_ERROR:
                 return RouterEventType.END
 
+            case RouterEvent.RENDERING:
             default:
                 return RouterEventType.NONE
         }

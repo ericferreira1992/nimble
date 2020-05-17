@@ -14,9 +14,9 @@ export class ListenersCollector {
                 options
             });
             subscribed.callback = (e) => {
-                if (subscribed.beforeListen) subscribed.beforeListen();
+                if (subscribed.beforeListen) subscribed.beforeListen.forEach(x => x());
                 callback(e);
-                if (subscribed.afterListen) subscribed.afterListen();
+                if (subscribed.afterListen) subscribed.afterListen.forEach(x => x());
             }
             this.listenersSubscribed.push(subscribed);
             
@@ -78,8 +78,11 @@ export class ListenersCollector {
         if (before || after) {
             let subscribed = this.listenersSubscribed.find(x => x.target === element);
             if (subscribed) {
-                subscribed.beforeListen = before;
-                subscribed.afterListen = after;
+                if (!subscribed.beforeListen.some(x => x === before))
+                    subscribed.beforeListen.push(before);
+
+                if (!subscribed.afterListen.some(x => x === after))
+                    subscribed.afterListen.push(after);
             }
         }
     }
@@ -94,8 +97,8 @@ export class ListenerSubscribed {
     public options: AddEventListenerOptions;
     public applied: boolean = false
 
-    beforeListen: () => void;
-    afterListen: () => void;
+    beforeListen: (() => void)[] = [];
+    afterListen: (() => void)[] = [];
 
     constructor(obj: Partial<ListenerSubscribed>) {
         Object.assign(this, obj);

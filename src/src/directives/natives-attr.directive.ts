@@ -4,7 +4,7 @@ import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Helper } from '../providers/helper';
 import { isObject, isArray } from 'util';
 
-export const NATIVE_SELECTORS = [
+export const NATIVE_SELECTORS: string[] = [
     '[disabled]',
     'class',
     'style',
@@ -58,14 +58,17 @@ export class NativesAttrsDirective extends Directive {
     private resolveClass(value: string, element: HTMLElement, scope: IScope) {
         if (value) {
             value = value.trim();
-            let classes: string[] = [];
+            let classesAdd: string[] = [];
+            let classesRemove: string[] = [];
 
             if (value.startsWith('{') && value.endsWith('}')) {
                 let listExpressions = this.helper.splitStringJSONtoKeyValue(value);
                 listExpressions.forEach((keyValue) => {
                     try {
                         if (scope.eval(keyValue.value))
-                            classes.push(keyValue.key);
+                            classesAdd.push(keyValue.key);
+                        else
+                            classesRemove.push(keyValue.key);
                     }
                     catch(e){
                         console.error(e.message);
@@ -75,19 +78,21 @@ export class NativesAttrsDirective extends Directive {
             else if (value.startsWith('[') && value.endsWith(']')) {
                 value = scope.eval(value);
                 if (isArray(value))
-                    classes = value;
+                    classesAdd = value;
             }
             else{
                 value = scope.eval(value);
                 if (value && typeof value === 'string') {
+                    value = value.trim();
                     if(value.includes(' '))
-                        classes = value.split(' ');
+                        classesAdd = value.split(' ');
                     else
-                        classes = [value];
+                        classesAdd = [value];
                 }
             }
             
-            classes.forEach(c => element.classList.add(c));
+            classesAdd.forEach(c => element.classList.add(c));
+            classesRemove.forEach(c => element.classList.remove(c));
         }
     }
 

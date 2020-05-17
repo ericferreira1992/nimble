@@ -27,12 +27,17 @@ export abstract class Directive {
         return null;
     }
 
-    /** Change the value matched to the selector if it was entered */
+    /** Change/Add the value matched to the selector if it was entered */
     public setValueOfSelector(selector: string, value: any) {
-        selector = this.pureSelector(selector);
-        let selectorApplied = this.selectorsApplied.find(x => this.pureSelector(x.selector) === selector);
+        let selectorApplied = this.selectorsApplied.find(x => this.pureSelector(x.selector) === this.pureSelector(selector));
         if (selectorApplied)
             selectorApplied.content = value;
+        else {
+            this.selectorsApplied.push({
+                selector: selector,
+                content: value,
+            });
+        }
     }
 
     /** Anothers directives can be applies in the same element. 

@@ -1,6 +1,6 @@
 import { IterationDirective } from '../abstracts/iteration-directive';
 import { IScope } from '../../page/interfaces/scope.interface';
-import { AfterIterateElement } from '../../render/attributes-render';
+import { IterateDirectiveResponse } from "../../render/render-abstract";
 import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive.decor';
 
 @PrepareIterateDirective({
@@ -8,13 +8,15 @@ import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive
 })
 export class IfDirective extends IterationDirective {
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): AfterIterateElement {
+    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): IterateDirectiveResponse[] {
         let success = scope.eval(value as string);
 
         if (!success)
-            element.remove();
-
-        return new AfterIterateElement({ removed: !success });
+            return [];
+        else
+            return [
+                new IterateDirectiveResponse()
+            ];
     }
 
     public onDestroy(selector: string, scope: IScope) {

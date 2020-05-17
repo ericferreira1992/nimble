@@ -26,15 +26,42 @@ export class TaskEditDialog extends Dialog {
 
     private makeForm() {
         this.form = new Form({
-            name: { value: this.task.name, validators: [ Validators.required ] },
-            type: { value: this.task.type, validators: [ Validators.required ] },
-            done: { value: this.task.done ? true : false, validators: [ Validators.required ] },
-            checklist: { value: this.task.checklist, validators: [ Validators.required ] },
-            date: { value: this.task.date, validators: [ Validators.required ] },
-            order: { value: this.task.order, validators: [ Validators.required ] },
-            teste: { value: this.task.teste, validators: [ Validators.required ] },
-            email: { value: this.task.email, validators: [ Validators.required, Validators.email ] },
-            phone: { value: this.task.phone, validators: [ Validators.required ] },
+            name: {
+                value: this.task.name,
+                validators: [ Validators.required ]
+            },
+            type: {
+                value: this.task.type,
+                validators: [ Validators.required ]
+            },
+            done: {
+                value: this.task.done === true,
+                validators: [ Validators.required ]
+            },
+            checklist: {
+                value: this.task.checklist,
+                validators: [ Validators.required ]
+            },
+            date: {
+                value: this.task.date,
+                validators: [ Validators.required ]
+            },
+            order: {
+                value: this.task.order,
+                validators: [ Validators.required ]
+            },
+            teste: {
+                value: this.task.teste,
+                validators: [ Validators.required ]
+            },
+            email: {
+                value: this.task.email,
+                validators: [ Validators.required, Validators.email ]
+            },
+            phone: {
+                value: this.task.phone,
+                validators: [ Validators.required ]
+            },
         });
     }
 
@@ -43,11 +70,10 @@ export class TaskEditDialog extends Dialog {
     }
 
     public onSubmit() {
-        for(let field in this.form.fields) {
-            if (this.form.fields[field].errors)
-                console.log(field, this.form.fields[field].errors);
-        }
-
+        // for(let field in this.form.fields) {
+        //     if (this.form.fields[field].errors)
+        //         console.log(field, this.form.fields[field].errors);
+        // }
         if (this.form.isValid) {
             this.save();
         }
@@ -59,7 +85,6 @@ export class TaskEditDialog extends Dialog {
     }
 
     public toggleMoreDetails() {
-        console.log('AAAAAA');
         this.render(() => {
             this.moreDetailsVisible = !this.moreDetailsVisible;
         });

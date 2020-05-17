@@ -27,8 +27,8 @@
                 </div>
                 <div class="col-6">
                     <div class="form-check">
-                        <input form-field-name="done" type="checkbox" class="form-check-input"/>
-                        <label class="form-check-label">Feita</label>
+                        <input form-field-name="done" type="checkbox" class="form-check-input" id="task-done"/>
+                        <label class="form-check-label" for="task-done">Feita</label>
                     </div>
                     <span @if="form.get('done').hasError('required')" class="form-control-error">Campo obrigatório</span>
                 </div>

@@ -1,57 +1,52 @@
-import { HeaderRender } from "../render/header-render";
-import { AttributesRender } from "../render/attributes-render";
 import { Injectable } from "../inject/injectable";
 import { Dialog } from "./classes/dialog";
 import { DialogRenderRef } from "./classes/dialog-render-ref";
 import { DialogRef } from "./classes/dialog-ref";
-import { Render } from "../render/render.abstract";
+import { RenderAbstract } from "../render/render-abstract";
 import { Listener } from "../render/listener";
+import { ListenersCollector } from "../providers/listeners-collector";
+import { RenderHelper } from "../render/render-helper";
+import { ElementStructure } from "../render/element-structure";
 
 @Injectable({ single: true })
-export class DialogRender extends Render {
+export class DialogRender extends RenderAbstract {
 
     constructor(
-        headerRender: HeaderRender,
-        attributesRender: AttributesRender,
+        protected listenersCollector: ListenersCollector,
         private listener: Listener
     ) {
-        super(headerRender, attributesRender);
+        super(listenersCollector);
     }
 
-    public renderDialog<T extends Dialog>(dialogRef: DialogRef<T>) {
+    public renderDialog<T extends Dialog>(dialogRef: DialogRef<T>): DialogRenderRef<T> {
 
         let renderRef = new DialogRenderRef<T>({
             dialogRef: dialogRef,
-            rootElement: this.createRootDialogElement()
+            structuredTemplate: this.createStructure(dialogRef)
         });
-        renderRef.containerElement = this.createDialogTemplateAndResolve(dialogRef.instance);
+
+        this.createElementFromStructure(renderRef.structuredTemplate);
+        let templateCompiled = this.compileElementFromStructure(renderRef.structuredTemplate);
+        renderRef.insertDialogArea(templateCompiled);
 
         this.applyCloseEvents(renderRef);
-        
-        renderRef.executedDirectives = this.attributesRender.processesPendingAttributes();
+
+        this.listenersCollector.applyAllListeners();
 
         return renderRef;
     }
 
     public rerenderDialog<T extends Dialog>(renderRef: DialogRenderRef<T>) {
-        if (renderRef && renderRef.areaElement) {
-            renderRef.notifyDestructionExecutedsDirectives();
-            
-            let realAreaElement = renderRef.areaElement;
-            let virtualAreaElement = this.createDialogTemplateAndResolve(renderRef.dialogRef.instance);
-            virtualAreaElement.className = realAreaElement.className;
-            if (realAreaElement.hasAttribute('style'))
-                virtualAreaElement.setAttribute('style', realAreaElement.attributes['style'].value);
-    
-            let { executedsDirectives } = this.diffTreeElementsAndUpdateOld(
-                realAreaElement,
-                virtualAreaElement,
-                [],
-                []
-            );
-            
-            renderRef.executedDirectives = executedsDirectives;
+        if (renderRef) {
+            this.recompileElementFromStructure(renderRef.structuredTemplate);
+            this.listenersCollector.applyAllListeners();
         }
+    }
+
+    private createStructure(dialog: DialogRef<Dialog>): ElementStructure {
+        let htmlTemplate = dialog.instance.template;
+        let scope = dialog.instance;
+        return RenderHelper.buildStructureFromTemplate(htmlTemplate, scope, 'nimble-dialog-area');
     }
 
     private applyCloseEvents<T extends Dialog>(renderRef: DialogRenderRef<T>) {
@@ -89,24 +84,5 @@ export class DialogRender extends Render {
                     renderRef.dialogRef.close();
             }
         }));
-    }
-
-    private createDialogTemplateAndResolve(dialog: Dialog): HTMLElement {
-        let virtualElement = this.createVirtualElement(dialog.template);
-        this.attributesRender.resolveChildren(virtualElement.children, dialog);
-        return virtualElement;
-    }
-
-    private createVirtualElement(templateHtml: string) {
-        let element = document.createElement('nimble-dialog-area');
-        element.innerHTML = templateHtml;
-        return element;
-    }
-
-    private createRootDialogElement() {
-        let dialogElement = document.createElement('nimble-dialog');
-        document.body.append(dialogElement);
-
-        return dialogElement;
     }
 }

@@ -41,6 +41,6 @@ export class LoginPage extends Page {
                 this.loading = false;
                 this.render();
             }
-        );
+        );;
     }
 }

@@ -5,15 +5,14 @@ import { isNullOrUndefined } from 'util';
 import { TemplatedPage } from '../page/templated-page';
 import { Type } from '../inject/type.interface';
 import { NimbleApp } from '../app';
-import { DirectiveExecute } from '../render/attributes-render';
 import { RouteParams } from '../providers/route-params/route-params';
+import { ElementStructure } from '../render/element-structure';
+import { RenderHelper } from '../render/render-helper';
 
 export class Route extends RouteBase {
     public parent?: Route;
-    public element: { virtual: HTMLElement, real: HTMLElement } = {
-        virtual: null,
-        real: null
-    };
+    public structuredTemplate: (ElementStructure) = null;
+    public currentElement: HTMLElement = null;
 
     public get isNotFoundPath() { return this.path === '**'; }
     public get pathWithParams() { return /{(.|\n)*?}/g.test(this.path); }
@@ -30,8 +29,10 @@ export class Route extends RouteBase {
     public get hasParent() { return !isNullOrUndefined(this.parent); }
     public get isAbstract() { return this.children && this.children.length > 0; }
     public get childIndex() { return this.parent ? (this.parent.children.indexOf(this)) : 0; }
-    
-    public executedDirectives: DirectiveExecute[] = [];
+    public get tallestParent() { return this.hasParent ? this.getAllParents().pop() : this; }
+
+    private _pageTemplate: string = '';
+    private get pageTemplate() { return this._pageTemplate; }
 
     constructor(route?: Partial<RouteBase>) {
         super(route);
@@ -39,6 +40,12 @@ export class Route extends RouteBase {
         this.checkRoutePage();
         this.checkChildren();
         this.checkRoutesParent();
+    }
+
+    public isChild(route: Route, deep: boolean = false): boolean {
+        return this.children != null && this.children.some((child) => {
+            return child === route || (deep && (child as Route).isChild(route, true));
+        });
     }
 
     private trimRoutePath() {
@@ -53,8 +60,8 @@ export class Route extends RouteBase {
                     try {
                         if (makeNewInstancePage || !this.pageInstance) {
                             this.pageType = TemplatedPage;
-                            this.executedDirectives = [];
                             this.pageInstance = new TemplatedPage(this.page);
+                            this.structureTemplate();
                         }
                         success(this);
                         complete();
@@ -108,7 +115,6 @@ export class Route extends RouteBase {
 
     private instancePage(pageType: Type<Page>) {
         this.pageType = pageType;
-        this.executedDirectives = [];
         this.prevPageInstance = this.pageInstance;
         this.routeParams = new RouteParams();
         this.pageInstance = NimbleApp.inject<Page>(this.pageType, (instance) => {
@@ -120,9 +126,19 @@ export class Route extends RouteBase {
             }
         });
 
-        if (!this.pageInstance) {
+        this._pageTemplate = this.pageInstance.template;
+        delete this.pageInstance.template;
+
+        if (this.pageInstance) {
+            this.structureTemplate();
+        }
+        else {
             throw new Error(`Cannot be load page of path: '${this.completePath()}'`);
         }
+    }
+
+    private structureTemplate() {
+        this.structuredTemplate = RenderHelper.buildStructureFromTemplate(this.pageTemplate, this.pageInstance, 'nimble-page');
     }
 
     private getParams(): { [key: string]: any } {
@@ -234,13 +250,5 @@ export class Route extends RouteBase {
             return this.getAllParents().pop();
         else
             return this;
-    }
-
-    public notifyDestructionExecutedsDirectives() {
-        for(let proc of this.executedDirectives) {
-            for(let applicable of proc.applicables)
-                proc.directiveInstance.onDestroy(applicable.selector, proc.scope);
-        }
-        this.executedDirectives = [];
     }
 }

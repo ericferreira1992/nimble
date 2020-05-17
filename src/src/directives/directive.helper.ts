@@ -8,13 +8,17 @@ export class DirectiveHelper {
         ].map(x => x.replace(/\[|\(|\]|\)/g, ''));
     }
 
-    public static checkSelectorMustHavePureValue(selector: string) {
+    public static checkSelectorMustHavePureValue(selector: string): boolean {
         selector = selector.replace(/\[|\(|\]|\)/g, '');
         return this.getAllPureSelectors().indexOf(selector) >= 0;
     }
 
-    public static isNativeSelector(selector: string) {
+    public static isNativeSelector(selector: string): boolean {
         selector = selector.replace(/\[|\(|\]|\)/g, '');
-        return NATIVE_SELECTORS.some(x => x.replace(/\[|\(|\]|\)/g, '') === selector);
+        return this.getNativesSelector().some(x => x.replace(/\[|\(|\]|\)/g, '') === selector);
+    }
+
+    public static getNativesSelector(): string[] {
+        return ['href', ...NATIVE_SELECTORS];
     }
 }

@@ -105,7 +105,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                             else
                                 values = values.filter(x => x !== value);
 
-                            field.setValue(values.length > 0 ? value : null);
+                            field.setValue(values);
                         }
                         else {
                             console.error('The [form-field] input of type "checkbox" must contain the attribute "value"');

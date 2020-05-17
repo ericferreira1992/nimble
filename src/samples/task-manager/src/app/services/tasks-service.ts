@@ -22,6 +22,6 @@ export class TasksService {
     }
 
     public removeTask(taskId: number) {
-        return this.http.del(`${this.prefixUrl}/tasks/${taskId}`);
+        return this.http.del<Task[]>(`${this.prefixUrl}/tasks/${taskId}`);
     }
 }

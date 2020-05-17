@@ -95,14 +95,16 @@ export class TasksPage extends Page {
         this.render(() => {
             this.loadingTasks = true;
             this.taskService.removeTask(task.id).then(
-                () => {
-                    this.loadingTasks = false;
-                    this.tasks = this.tasks.filter(x => x !== task);
-                    this.render();
+                (response) => {
+                    this.render(() => {
+                        this.loadingTasks = false;
+                        this.tasks = response.data;
+                    });
                 },
                 (error) => {
-                    this.loadingTasks = false;
-                    this.render();
+                    this.render(() => {
+                        this.loadingTasks = false;
+                    });
                 }
             );
         });

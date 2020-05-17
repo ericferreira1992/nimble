@@ -14,7 +14,7 @@ export { NimbleRouter } from './elements/nimble-router.element';
 export { NimbleDialog } from './elements/nimble-dialog.element';
 export { NimbleDialogArea } from './elements/nimble-dialog-area.element';
 
-// MODAL
+// DIALOG
 export * from './dialog';
 
 // RENDER
