@@ -41,9 +41,16 @@ export abstract class ElementStructureAbstract {
     }
 
     public removeCompiledNode() {
-        if (this.nodeIsRenderedInDOM)
+        if (this.hasChildren) {
+            for(let child of this.children) {
+                child.removeCompiledNode();
+            }
+        }
+
+        if (this.nodeIsRenderedInDOM) {
             this.compiledNode.parentNode.removeChild(this.compiledNode);
-        this.isRendered = false;
+            this.isRendered = false;
+        }
     }
 
     public getIterationDirective(): AttributeStructure<IterationDirective> {
@@ -130,6 +137,9 @@ export abstract class ElementStructureAbstract {
 
     public renderNodeIfNot() {
         this.checkRenderedCorrectly();
+        if (this.tagName === 'li') {
+            let teste = '';
+        }
         if (!this.isRendered && this.parent && this.parent.compiledNode) {
             let structureIndex = this.parent.children.findIndex(x => x === this);
 
@@ -155,14 +165,17 @@ export abstract class ElementStructureAbstract {
             let nodeAbove = getNextNodeAbove();
             if (nodeAbove) {
                 this.parent.compiledNode.insertBefore(this.compiledNode, nodeAbove);
+                this.isRendered = true;
             }
             else {
                 let nodeBelow = getNextNodeBelow();
                 if (nodeBelow) {
                     this.parent.compiledNode.insertBefore(this.compiledNode, nodeBelow);
+                    this.isRendered = true;
                 }
                 else {
                     this.parent.compiledNode.appendChild(this.compiledNode);
+                    this.isRendered = true;
                 }
             }
         }

@@ -19,6 +19,7 @@ export class ElementIterationStructure extends ElementStructureAbstract {
         this.rawNode = from.rawNode.cloneNode();
         this.isVoid = from.isVoid;
         this.isPureElement = from.isPureElement;
+        this.isRendered = false;
         this.compiledNode = null;
         this.compiledBeginFn = null;
         this.compiledEndFn = null;
@@ -36,6 +37,7 @@ export class ElementIterationStructure extends ElementStructureAbstract {
             child.attritubes = x.attritubes.map(x => new AttributeStructure(
                 x.name, x.value, child, x.directiveType
             ));
+            child.isRendered = false;
             child.rawNode = x.rawNode.cloneNode();
             child.children = (x.children.length > 0) ? this.cloneChildrensRecursive(x.children, child) : [];
             return child;
