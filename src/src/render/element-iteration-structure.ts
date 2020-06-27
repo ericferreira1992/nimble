@@ -1,7 +1,5 @@
-import { IScope } from "../page/interfaces/scope.interface";
 import { ElementStructureAbstract, AttributeStructure } from "./element-structure-abstract";
 import { ElementStructure } from "./element-structure";
-import { IterationDirective } from "../directives/abstracts/iteration-directive";
 
 export class ElementIterationStructure extends ElementStructureAbstract {
     from: ElementStructureAbstract = null

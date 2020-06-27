@@ -51,11 +51,11 @@ export class Page implements IScope {
     }
 
     public eval(expression: string): any {
-        return (new Function(`with(this) { return ${expression} }`)).call(this);
-        // try {
-        // }
-        // catch(e) {
-        //     console.error(e.message);
-        // }
+        try {
+            return (new Function(`with(this) { return ${expression} }`)).call(this);
+        }
+        catch(e) {
+            console.error(e.message);
+        }
     }
 }

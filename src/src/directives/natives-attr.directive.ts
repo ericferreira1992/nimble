@@ -47,7 +47,7 @@ export class NativesAttrsDirective extends Directive {
         else {
             if (!element.hasAttribute(selector))
                 element.setAttribute(selector, value);
-            else
+            else if (element.attributes[selector].value !== value)
                 element.attributes[selector].value = value;
         }
     }

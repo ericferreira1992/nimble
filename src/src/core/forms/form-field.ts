@@ -46,10 +46,12 @@ export class FormField {
             let element = this.elements[0];
             if (element.type !== 'checkbox' && element.type !== 'radio'){
                 element.value = value; 
-                element.dispatchEvent(new Event('input', {
-                    bubbles: false,
-                    cancelable: true,
-                }));
+                if (element.value === value) {
+                    element.dispatchEvent(new Event('input', {
+                        bubbles: false,
+                        cancelable: true,
+                    }));
+                }
             }
         }
         

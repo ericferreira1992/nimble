@@ -118,7 +118,7 @@ export class NimbleApp {
     public start() {
         if (this.state === NimbleAppState.INITIALIZING) {
             this.registerElements();
-            Router.addListener(RouterEvent.START_CHANGE, this.onRouteStartChange.bind(this));
+            Router.addListener(RouterEvent.STARTED_CHANGE, this.onRouteStartChange.bind(this));
             Router.addListener(RouterEvent.FINISHED_CHANGE, this.onRouteFinishedChange.bind(this));
             Router.addListener(RouterEvent.CHANGE_ERROR, this.onRouteChangeError.bind(this));
             Router.addListener(RouterEvent.STARTED_LOADING, this.onRouteStartedLoading.bind(this));
@@ -141,13 +141,12 @@ export class NimbleApp {
         window.customElements.define('nimble-dialog-area', NimbleDialogArea);
     }
 
-    private onRouteStartChange(route: Route) {
-    }
+    private onRouteStartChange(route: Route) {}
 
     private onRouteRendering(route: Route) {
         if (route) {
             // if (Router.rerenderedBeforeFinishedRouteChange) {}
-            this.routeRender.processRoute(route);
+            this.routeRender.prepareRouteToCompileAndRender(route);
             this.routeRender.compileAndRenderRoute(route);
         }
     }
@@ -165,20 +164,18 @@ export class NimbleApp {
                 
                 this.rootElement.firstRender = false;
             }
+
+            this.routeRender.notifyRoutesAfterRouteChanged(route);
         }
     }
 
-    private onRouteChangeError(route: Route) {
-    }
+    private onRouteChangeError(route: Route) {}
 
-    private onRouteStartedLoading(route: Route) {
-    }
+    private onRouteStartedLoading(route: Route) {}
 
-    private onRouteFinishedLoading(route: Route) {
-    }
+    private onRouteFinishedLoading(route: Route) {}
 
-    private onRouteErrorLoading(error, route: Route) {
-    }
+    private onRouteErrorLoading(error, route: Route) {}
 
     private onRouteStartRerender(route: Route) {
         this.state = NimbleAppState.RERENDERING;
@@ -188,6 +185,8 @@ export class NimbleApp {
     private onRouteFinishedRerender(route: Route) {
         document.dispatchEvent(new Event('render-event'));
         this.state = NimbleAppState.INITIALIZED;
+
+        this.routeRender.notifyRoutesAfterRerender(route);
     }
 
     public static inject<T>(type: Type<T>, onInstaciate?: (instance: any) => void): T {

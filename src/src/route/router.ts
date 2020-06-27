@@ -5,6 +5,7 @@ import { NimbleApp, NimbleAppState } from '../app';
 import { Page } from '../page/page';
 import { RouterEvent } from './router-event.enum';
 import { RouterEventType } from './router-event-type.enum';
+// import 'zone.js';
 
 export class Router {
     public static get app() { return NimbleApp.instance; }
@@ -83,7 +84,6 @@ export class Router {
 
     public static start() {
         if (this.app.state === NimbleAppState.INITIALIZING) {
-            // this._nextPath = this.currentPath;
             this.startListening();
         }
     }
@@ -116,7 +116,10 @@ export class Router {
 
     private static startListening() {
         this.stopListening = false;
-        setTimeout(() => this.listen(), 200);
+        this.listen();
+        // Zone.current.run(() => {
+            setTimeout(() => this.listen(), 200);
+        // });
     }
 
     private static notifyListeners(event: RouterEvent, sender?: any) {
@@ -172,8 +175,42 @@ export class Router {
                 }
             }
             finally {
-                setTimeout(this.listen.bind(this), 200);
+                //Zone.current.run(() => {
+                    setTimeout(this.listen.bind(this), 200);
+                //});
             }
+        }
+    }
+
+    private static onRedirect() {
+        if (this.currentPath !== this.lastLocationPath) {
+            if (isNullOrUndefined(this.nextPath)){ 
+                this.lastLocationPath = this.currentPath;
+            }
+
+            let changed = false;
+            if (this.checkPageCanBeCurrent()) {
+                changed = this.defineCurrentPage();
+                if (changed && !isNullOrUndefined(this.next.redirect)) {
+                    let redirectPath = this.next.redirect;
+                    this._redirecting = true;
+                    this._next = null;
+                    this.redirect(redirectPath);
+                    return;
+                }
+                else if(!changed && this._redirecting) {
+                    if (this.current && this.current.completePath() !== this.realCurrentPath) {
+                        this._redirecting = false;
+                        let redirectPath = this.current.completePath();
+                        this._next = null;
+                        this.updateURLPath(redirectPath);
+                        this.lastLocationPath = redirectPath;                             
+                        return;
+                    }
+                }
+            }
+            this._redirecting = false;
+            this.onRouterChange(changed);
         }
     }
 
@@ -255,7 +292,7 @@ export class Router {
     }
 
     private static loadCurrentRoutePage() {
-        this.setState(RouterEvent.START_CHANGE, this.next);
+        this.setState(RouterEvent.STARTED_CHANGE, this.next);
 
         if (this.next.hasParent)
             this.loadRoutesPageFromAllParents();
@@ -263,6 +300,7 @@ export class Router {
             this.loadRoutePage(this.next).then(
                 () => {
                     this.defineCurrentAfterFinished();
+                    this.setState(RouterEvent.FINISHED_LOADING, this.current);
                     this.setState(RouterEvent.RENDERING, this.current);
                     this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                 },
@@ -299,7 +337,6 @@ export class Router {
                     },
                     (error) => {
                         this.abortChangeRoute();
-                        this.setState(RouterEvent.COMPLETED_LOADING);
                         this.setState(RouterEvent.ERROR_LOADING, error);
                     }
                 );
@@ -308,6 +345,7 @@ export class Router {
                 this.loadRoutePage(this.next).then(
                     () => {
                         this.defineCurrentAfterFinished();
+                        this.setState(RouterEvent.FINISHED_LOADING, this.current);
                         this.setState(RouterEvent.RENDERING, this.current);
                         this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                     },
@@ -374,22 +412,25 @@ export class Router {
 
         path = path.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
 
-        if (path.includes('#') || this.realCurrentPath.includes('#')) {
+        let pathWithoutHash = (!this.useHash && path.includes('#')) ? path.split('#')[0] : path;
+        let currentPathWithoutHash = (!this.useHash && this.realCurrentPath.includes('#')) ? this.realCurrentPath.split('#')[0] : path;
+
+        if ((path.includes('#') || this.realCurrentPath.includes('#')) && pathWithoutHash === currentPathWithoutHash) {
             if (isChangingHashLink(path)) {
                 location.hash = path.replace(this.currentPath, '').replace(/#/g, '');
-                this.setState(RouterEvent.START_CHANGE, null);
+                this.setState(RouterEvent.STARTED_CHANGE, null);
                 this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
             else if (isAddingHashLink(path)) {
                 location.hash = path.replace(this.realCurrentPath, '').replace(/#/g, '');
-                this.setState(RouterEvent.START_CHANGE, null);
+                this.setState(RouterEvent.STARTED_CHANGE, null);
                 this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
             else if (isRemovingHashLink(path)) {
                 location.hash = '';
-                this.setState(RouterEvent.START_CHANGE, null);
+                this.setState(RouterEvent.STARTED_CHANGE, null);
                 this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
@@ -397,7 +438,7 @@ export class Router {
 
         path = (path.startsWith('/') ? '' : '/') + path;
         
-        if (this.useHash) 
+        if (this.useHash)
             location.hash = path;
         else
             history.pushState(null, null, path);
@@ -426,7 +467,6 @@ export class Router {
                     reject(error);
                 },
                 () => {
-                    this.setState(RouterEvent.COMPLETED_LOADING, null, silentMode);
                 },
                 makeNewInstacePage
             );
@@ -472,6 +512,8 @@ export class Router {
                 let subtractedPath = path.replace(this.currentPath, '');
                 return subtractedPath.startsWith('/#');
             }
+            else
+                return false;
         }
 
         return path.includes('#');
@@ -502,13 +544,13 @@ export class Router {
 
     private static whenRerenderIsRequested(page: Page): Promise<any> {
         if (this.state !== RouterEvent.RENDERING) {
-            let changingRouteInProgress = this.state === RouterEvent.START_CHANGE;
+            let changingRouteInProgress = this.state === RouterEvent.STARTED_CHANGE;
             
             this.setState(RouterEvent.STARTED_RERENDER, (changingRouteInProgress && this.previous) ? this.previous : this.current);
             this.setState(RouterEvent.FINISHED_RERENDER, this.current);
     
             if (changingRouteInProgress)
-                this._state = RouterEvent.START_CHANGE;
+                this._state = RouterEvent.STARTED_CHANGE;
         }
         else {
             console.warn(`The render() was requested and did not work because the page was being constructing.`);
@@ -531,14 +573,13 @@ export class Router {
     private static getEventType(state?: RouterEvent) {
         state = state ? state : this.state;
         switch(state) {
-            case RouterEvent.START_CHANGE:
+            case RouterEvent.STARTED_CHANGE:
             case RouterEvent.STARTED_LOADING:
             case RouterEvent.STARTED_RERENDER:
                 return RouterEventType.START
 
             case RouterEvent.FINISHED_CHANGE:
             case RouterEvent.FINISHED_LOADING:
-            case RouterEvent.COMPLETED_LOADING:
             case RouterEvent.ERROR_LOADING:
             case RouterEvent.FINISHED_RERENDER:
             case RouterEvent.CHANGE_ERROR:

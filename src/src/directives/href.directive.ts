@@ -35,15 +35,16 @@ export class HrefDirective extends Directive {
                     href = `${location.pathname.replace(/(\/)$/g, '')}/${href}`;
                 }
 
-                this.listenersCollector.subscribe(element, 'click', (e) => {
+                this.listenersCollector.subscribe(element, 'click', (e: MouseEvent) => {
                     let attr = element.attributes[selector];
                     if (attr) {
                         let href = attr.value
-                        Router.redirect(href);
+                        setTimeout(() => {
+                            Router.redirect(href);
+                        });
                     }
 
                     e.preventDefault();
-                    return false;
                 });
             }
         }

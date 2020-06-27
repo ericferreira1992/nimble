@@ -41,6 +41,7 @@ export class RenderAbstract {
                 }
             }
 
+
             for(let child of structured.children) {
                 this.createElementFromStructure(child);
             }
@@ -124,6 +125,7 @@ export class RenderAbstract {
 
     public recompileElementFromStructure(structured: ElementStructure): boolean {
         if (!structured.isText) {
+
             if (!structured.compiledNode)
                 structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
             let element = structured.compiledNode as HTMLElement;

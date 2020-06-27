@@ -16,11 +16,15 @@ export class RouteRender extends RenderAbstract {
         super(listenersCollector);
     }
 
-    public processRoute(currentRoute: Route) {
-        let childRoutes = [currentRoute, ...currentRoute.getAllParents()];
+    /**
+     * Prepare a specific route to be compiled and rendered
+     * @param route 
+     */
+    public prepareRouteToCompileAndRender(route: Route) {
+        let childRoutes = [route, ...route.getAllParents()];
         childRoutes.reverse();
 
-        let commonParentRoute = Router.previous ? Router.getCommonParentOfTwoRoutes(currentRoute, Router.previous) : null;
+        let commonParentRoute = Router.previous ? Router.getCommonParentOfTwoRoutes(route, Router.previous) : null;
 
         for(let route of childRoutes) {
             this.createElementFromStructure(route.structuredTemplate);
@@ -30,8 +34,11 @@ export class RouteRender extends RenderAbstract {
         }
     }
 
+    /**
+     * Compile and render a specific route and your children
+     * @param route 
+     */
     public compileAndRenderRoute(route: Route) {
-        let previousRoute = Router.previous;
         let childRoutes = [route, ...route.getAllParents()].reverse();
         let talletsRoute = childRoutes[0];
 
@@ -45,14 +52,6 @@ export class RouteRender extends RenderAbstract {
                 routerElement.appendChild(child);
                 parent = child
             }
-            else {
-                console.error(`The path "/${route.completePath()}" cannot be rendered, because the parent route need of "nimble-router" element in your template.`);
-
-                RenderHelper.removeAllChildrenOfElement(this.app.rootElement.real);
-                this.app.rootElement.real.appendChild(routeRootElement);
-                
-                return;
-            }
         }
 
         RenderHelper.removeAllChildrenOfElement(this.app.rootElement.real);
@@ -60,23 +59,61 @@ export class RouteRender extends RenderAbstract {
 
         this.listenersCollector.applyAllListeners();
 
+        this.headerRender.resolveTitleAndMetaTags(route);
+    }
+
+    /**
+     * Render again a specific route and your children
+     * @param route 
+     */
+    public rerenderRoute(route: Route) {
+        let childRoutes = [route, ...route.getAllParents()].reverse();
+        let parent: Node = null;
+
+        for(let child of childRoutes) {
+            if (!parent || child.structuredTemplate.isRendered) {
+                this.recompileElementFromStructure(child.structuredTemplate);
+            }
+            else {
+                let routerElement = this.getRouterElement(parent as HTMLElement);
+                if (routerElement) {
+                    let childNode = this.compileElementFromStructure(child.structuredTemplate);
+                    routerElement.appendChild(childNode);
+                    parent = childNode;
+                }
+            }
+
+            parent = child.structuredTemplate.compiledNode as HTMLElement;
+        }
+
+        this.listenersCollector.applyAllListeners();
+    }
+
+    /**
+     * Notifies the "onDestroy()" methods of pages unrendereds and "onInit()" methods of pages already rendered
+     * @param route 
+     */
+    public notifyRoutesAfterRouteChanged(route: Route) {
+        let previousRoute = Router.previous;
+
         let highestParentRoute = route.getHighestParentOrHimself();
         let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
-
-        this.headerRender.resolveTitleAndMetaTags(route);
 
         this.notifyOldRoutesElementDestroyed(commonParentRoute, previousRoute);
         this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route);
     }
 
-    public rerenderRoute(route: Route) {
-        let childRoutes = [route, ...route.getAllParents()].reverse();
+    /**
+     * Notifies the "onInit()" methods of pages already rendered
+     * @param route 
+     */
+    public notifyRoutesAfterRerender(route: Route) {
+        let previousRoute = Router.previous;
 
-        for(let route of childRoutes) {
-            this.recompileElementFromStructure(route.structuredTemplate);
-        }
+        let highestParentRoute = route.getHighestParentOrHimself();
+        let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
 
-        this.listenersCollector.applyAllListeners();
+        this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route, true);
     }
 
     private notifyOldRoutesElementDestroyed(commonParentRoute: Route, previousRoute: Route) {
@@ -98,20 +135,29 @@ export class RouteRender extends RenderAbstract {
         }
     }
 
-    private notifyNewRoutesElementRendered(commonParentRoute: Route, highestParentRoute: Route, currentRoute: Route) {
+    /**
+     * Notifies the "onInit()" methods of pages already rendered
+     * @param commonParentRoute 
+     * @param highestParentRoute 
+     * @param route 
+     * @param inRerender 
+     */
+    private notifyNewRoutesElementRendered(commonParentRoute: Route, highestParentRoute: Route, route: Route, inRerender: boolean = false) {
         let onlyNewRoutesRendered: Route[] = [];
 
-        if (commonParentRoute !== highestParentRoute && highestParentRoute !== currentRoute)
-            for(let route of [currentRoute, ...currentRoute.getAllParents()]) {
+        let allRoutes = [route, ...route.getAllParents()];
+        if (!inRerender && commonParentRoute !== highestParentRoute && highestParentRoute !== route) {
+            for(let route of allRoutes) {
                 if (route === commonParentRoute)
                     break;
                 onlyNewRoutesRendered.push(route);
             }
+        }
         else
-            onlyNewRoutesRendered = [currentRoute, ...currentRoute.getAllParents()];
+            onlyNewRoutesRendered = allRoutes;
 
         onlyNewRoutesRendered.reverse().forEach((route) => {
-            if (!route.pageInstance.isInitialized) {
+            if (!route.pageInstance.isInitialized && route.structuredTemplate.isRendered) {
                 route.pageInstance.isInitialized = true;
                 route.pageInstance.onInit();
             }

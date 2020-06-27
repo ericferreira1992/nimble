@@ -18,7 +18,7 @@ export class RootPage extends Page {
 
     onInit() {
         this.cancelListeners = [
-            Router.addListener(RouterEvent.START_CHANGE, () => {
+            Router.addListener(RouterEvent.STARTED_CHANGE, () => {
                 this.render(() => this.loading = true);
             }),
             Router.addListener([RouterEvent.FINISHED_CHANGE, RouterEvent.CHANGE_REJECTED, RouterEvent.CHANGE_ERROR], () => {

@@ -15,12 +15,14 @@ import { FieldMaskDirective } from './forms/field-mask.directive';
 import { FieldDateMaskDirective } from './forms/field-date-mask.directive';
 import { FieldCurrencyMaskDirective } from './forms/field-currency-mask.directive';
 import { FormDirective } from './forms/form.directive';
+import { ElementsDirective } from './elements.directive';
 
 export const INTERNAL_DIRECTIVES: Type<Directive | IterationDirective>[] = [
     IfDirective,
     ForDirective,
     HrefDirective,
     NativesAttrsDirective,
+    ElementsDirective,
     ClipboardEventsDirective,
     DragEventsDirective,
     FormEventsDirective,

@@ -76,44 +76,49 @@ export class RenderHelper {
     }
 
     public static buildStructureFromTemplate(htmlTemplate: string, scope: IScope, rootTagName: string): ElementStructure {
+        htmlTemplate = htmlTemplate?.trim().replace(/<!--(.|\s)*?-->/g, '').trim() ?? '';
         if (htmlTemplate) {
-            let element = document.createElement(rootTagName);
-            element.innerHTML = htmlTemplate;
             let serializer = new XMLSerializer();
+            let domParser = new DOMParser();
+            let documentParsed = domParser.parseFromString(`<${rootTagName}>${htmlTemplate}</${rootTagName}>`, 'text/html');
+            let element = documentParsed.body.childNodes[0];
 
-            let checkElement = (element: ChildNode): ElementStructure => {
+            let checkNode = (node: ChildNode): ElementStructure => {
                 let structure = new ElementStructure(scope);
-                if (element.nodeType !== Node.TEXT_NODE) {
-                    structure.tagName = (element as HTMLElement).tagName.toLowerCase();
-                    structure.attritubes  = checkAttributes((element as HTMLElement).attributes, structure);
+                if (node.nodeType !== Node.TEXT_NODE) {
+                    structure.tagName = (node as HTMLElement).tagName.toLowerCase();
+                    structure.attritubes  = checkAttributes((node as HTMLElement).attributes, structure);
+
                     if (RenderHelper.isPureElement(structure.tagName)) {
-                        let attributes = (element as HTMLElement).attributes;
+                        let attributes = (node as HTMLElement).attributes;
                         if (attributes.length > 0) {
                             do{
-                                (element as HTMLElement).removeAttributeNode(attributes[0]);
-                            } while((element as HTMLElement).attributes.length > 0)
+                                (node as HTMLElement).removeAttributeNode(attributes[0]);
+                            } while((node as HTMLElement).attributes.length > 0)
                         }
-                        structure.rawNode = element;
+                        structure.rawNode = node;
                         structure.isPureElement = true;
                     }
                     else {
-                        structure.isVoid = ((element as HTMLElement).outerHTML || serializer.serializeToString(element)).indexOf("></") < 0;
-                        structure.children = checkChildren(element.childNodes, structure);
+                        structure.isVoid = ((node as HTMLElement).outerHTML || serializer.serializeToString(node)).indexOf("></") < 0;
+
+                        if ((node as HTMLElement).innerHTML.trim() !== '')
+                            structure.children = checkChildNodes(node.childNodes, structure);
                     }
                 }
                 else {
                     structure.isVoid = true;
-                    structure.content = element.textContent;
+                    structure.content = node.textContent;
                 }
 
                 return structure;
             };
 
-            let checkChildren = (children: NodeListOf<ChildNode>, parent: ElementStructure): ElementStructure[] => {
+            let checkChildNodes = (children: NodeListOf<ChildNode>, parent: ElementStructure): ElementStructure[] => {
                 let structures: ElementStructure[] = [];
                 if (children.length > 0) {
                     for(let i = 0; i < children.length; i++) {
-                        let estruture = checkElement(children[i]);
+                        let estruture = checkNode(children[i]);
                         estruture.parent = parent
                         structures.push(estruture);
                     }
@@ -139,7 +144,7 @@ export class RenderHelper {
                 return attributes;
             };
 
-            let structured = checkElement(element) as ElementStructure;
+            let structured = checkNode(element) as ElementStructure;
             element.remove();
 
             return structured;

@@ -92,6 +92,7 @@ export abstract class ElementStructureAbstract {
     
     public resolveAttrDirectives() {
         let attrs = this.getNormalDirectives();
+        
         attrs = attrs.sort((a,b) => {
             if (DirectiveHelper.isNativeSelector(a.name))
                 return -1;
@@ -196,14 +197,7 @@ export class AttributeStructure<T extends Directive> {
     public value: string = '';
     public directiveType: Type<T> = null;
 
-    public get directiveInstance() {
-        return this.structure.directivesInstance.find(x => this.directiveType != null && x instanceof this.directiveType);
-        // try {
-        // }
-        // catch{
-        //     return null;
-        // }
-    }
+    public get directiveInstance() { return this.structure.directivesInstance.find(x => this.directiveType != null && x instanceof this.directiveType); }
     public get isIterationDirective() { return this.directiveType != null && this.directiveType.prototype.type === 'IterationDirective'; }
     public get isNormalDirective() { return this.directiveType != null && this.directiveType.prototype.type !== 'IterationDirective'; }
 
