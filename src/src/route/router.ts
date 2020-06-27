@@ -84,7 +84,21 @@ export class Router {
 
     public static start() {
         if (this.app.state === NimbleAppState.INITIALIZING) {
-            this.startListening();
+            this.onRedirect();
+
+            if (this.useHash) {
+                window.onhashchange = () => {
+                    this.currentPath;
+                    this.onRedirect();
+                }
+            }
+            else {
+                window.onpopstate = () => {
+                    this.currentPath;
+                    this.onRedirect();
+                }
+            }
+            // this.startListening();
         }
     }
 
@@ -114,14 +128,6 @@ export class Router {
         };
     }
 
-    private static startListening() {
-        this.stopListening = false;
-        this.listen();
-        // Zone.current.run(() => {
-            setTimeout(() => this.listen(), 200);
-        // });
-    }
-
     private static notifyListeners(event: RouterEvent, sender?: any) {
         let listeners = this.listeners.filter(x => x.event === event);
 
@@ -141,47 +147,6 @@ export class Router {
         listeners.forEach((listener) => listener.callback(sender));
     }
 
-    private static listen() {
-        if (!this.stopListening) {
-            try {
-                if (!this.onRoute || this.currentPath !== this.lastLocationPath) {
-                    if (isNullOrUndefined(this.nextPath)){ 
-                        this.lastLocationPath = this.currentPath;
-                    }
-    
-                    let changed = false;
-                    if (this.checkPageCanBeCurrent()) {
-                        changed = this.defineCurrentPage();
-                        if (changed && !isNullOrUndefined(this.next.redirect)) {
-                            let redirectPath = this.next.redirect;
-                            this._redirecting = true;
-                            this._next = null;
-                            this.redirect(redirectPath);
-                            return;
-                        }
-                        else if(!changed && this._redirecting) {
-                            if (this.current && this.current.completePath() !== this.realCurrentPath) {
-                                this._redirecting = false;
-                                let redirectPath = this.current.completePath();
-                                this._next = null;
-                                this.updateURLPath(redirectPath);
-                                this.lastLocationPath = redirectPath;                             
-                                return;
-                            }
-                        }
-                    }
-                    this._redirecting = false;
-                    this.onRouterChange(changed);
-                }
-            }
-            finally {
-                //Zone.current.run(() => {
-                    setTimeout(this.listen.bind(this), 200);
-                //});
-            }
-        }
-    }
-
     private static onRedirect() {
         if (this.currentPath !== this.lastLocationPath) {
             if (isNullOrUndefined(this.nextPath)){ 
@@ -193,23 +158,21 @@ export class Router {
                 changed = this.defineCurrentPage();
                 if (changed && !isNullOrUndefined(this.next.redirect)) {
                     let redirectPath = this.next.redirect;
-                    this._redirecting = true;
                     this._next = null;
-                    this.redirect(redirectPath);
+                    this.updateURLPath(redirectPath, { pathRedirect: true });
+                    this.onRedirect();
                     return;
                 }
-                else if(!changed && this._redirecting) {
+                else if(!changed) {
                     if (this.current && this.current.completePath() !== this.realCurrentPath) {
-                        this._redirecting = false;
                         let redirectPath = this.current.completePath();
                         this._next = null;
-                        this.updateURLPath(redirectPath);
+                        this.updateURLPath(redirectPath, { pathRedirect: true });
                         this.lastLocationPath = redirectPath;                             
                         return;
                     }
                 }
             }
-            this._redirecting = false;
             this.onRouterChange(changed);
         }
     }
@@ -394,7 +357,7 @@ export class Router {
         }
     }
 
-    private static updateURLPath(path: string) {
+    private static updateURLPath(path: string, options: { pathRedirect: boolean } = {} as any) {
 
         let isChangingHashLink = (path: string): boolean =>  {
             return path.includes('#') && this.realCurrentPath.includes('#');
@@ -440,8 +403,14 @@ export class Router {
         
         if (this.useHash)
             location.hash = path;
-        else
-            history.pushState(null, null, path);
+        else {
+            if (options?.pathRedirect) {
+                history.replaceState(null, null, path);
+            }
+            else {
+                history.pushState(null, null, path);
+            }
+        }
     }
 
     private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true, silentMode: boolean = false, notifyStart: boolean = true) {
@@ -497,11 +466,19 @@ export class Router {
             var pathWithoutHash = (path.includes('#') ? path.split('#')[0] : path).replace(/^\//g, '');
             if (this.currentPathIsHashLink() && this.currentPath !== pathWithoutHash)
                 this._nextPath = path;
-            else
-                this.updateURLPath(path);
+            else {
+                let currentPageIsThisPath = this.current?.completePath() === pathWithoutHash;
+                this.updateURLPath(path, { pathRedirect: currentPageIsThisPath });
+
+                if (currentPageIsThisPath) {
+                    return;
+                }
+            }
         }
         else
             this.updateURLPath(path);
+        
+        this.onRedirect();
     }
 
     private static pathIsHashLink(path: string, options: { checkIsCurrent: boolean } = {} as any): boolean {

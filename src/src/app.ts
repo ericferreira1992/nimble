@@ -164,6 +164,10 @@ export class NimbleApp {
                 
                 this.rootElement.firstRender = false;
             }
+            else {
+                document.body.scrollTo({top: 0, left: 0});
+                document.children.item(0).scrollTo({top: 0, left: 0});
+            }
 
             this.routeRender.notifyRoutesAfterRouteChanged(route);
         }
