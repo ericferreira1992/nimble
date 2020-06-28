@@ -14,11 +14,15 @@ export class TasksService {
     }
 
     public createTask(task: Task) {
-        return this.http.post<Task>(`${this.prefixUrl}/tasks`, task);
+        let body = new Task(task);
+        delete body.loading;
+        return this.http.post<Task>(`${this.prefixUrl}/tasks`, body);
     }
 
     public updateTask(task: Task) {
-        return this.http.put<Task>(`${this.prefixUrl}/tasks`, task);
+        let body = new Task(task);
+        delete body.loading;
+        return this.http.put<Task>(`${this.prefixUrl}/tasks`, body);
     }
 
     public removeTask(taskId: number) {

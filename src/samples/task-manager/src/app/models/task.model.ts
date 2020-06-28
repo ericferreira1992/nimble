@@ -8,6 +8,8 @@ export class Task {
     public order: number;
     public teste: string = '';
 
+    public loading: boolean = false;
+
     constructor(obj?: Partial<Task>) {
         Object.assign(this, obj);
     }

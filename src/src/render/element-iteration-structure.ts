@@ -11,14 +11,14 @@ export class ElementIterationStructure extends ElementStructureAbstract {
         this.tagName = from.tagName;
         this.content = from.content;
         this.directivesInstance = [];
-        this.attritubes = from.attritubes.filter(x => !x.isIterationDirective).map(x => new AttributeStructure(
-            x.name, x.value, this, x.directiveType
-        ));
-        this.rawNode = from.rawNode.cloneNode();
+        this.rawNode = from.rawNode.cloneNode(from.isPureElement);
         this.isVoid = from.isVoid;
         this.isPureElement = from.isPureElement;
         this.isRendered = false;
         this.compiledNode = null;
+        this.attritubes = from.attritubes.filter(x => !x.isIterationDirective).map(x => new AttributeStructure(
+            x.name, x.value, this, x.directiveType
+        ));
         this.compiledBeginFn = null;
         this.compiledEndFn = null;
 
@@ -32,11 +32,12 @@ export class ElementIterationStructure extends ElementStructureAbstract {
             child.tagName = x.tagName;
             child.content = x.content;
             child.directivesInstance = [];
+            child.rawNode = x.rawNode.cloneNode(x.isPureElement);
+            child.isVoid = x.isVoid;
+            child.isPureElement = x.isPureElement;
             child.attritubes = x.attritubes.map(x => new AttributeStructure(
                 x.name, x.value, child, x.directiveType
             ));
-            child.isRendered = false;
-            child.rawNode = x.rawNode.cloneNode();
             child.children = (x.children.length > 0) ? this.cloneChildrensRecursive(x.children, child) : [];
             return child;
         });

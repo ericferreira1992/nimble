@@ -12,6 +12,7 @@ import { Task } from 'src/app/models/task.model';
 export class TasksPage extends Page {
 
     public loadingTasks: boolean = true;
+    public toggleLoading: boolean = false;
     public form: Form;
     public tasks: Task[] = [];
 
@@ -33,19 +34,16 @@ export class TasksPage extends Page {
     }
 
     public getTasks() {
-        this.render(() => {
-            this.loadingTasks = true;
-            this.taskService.getTasks().then(
-                (response: HttpResponse<Task[]>) => {
-                    this.tasks = response.data;
-                    this.loadingTasks = false;
-                    this.render();
-                },
-                (error) => {
-                    this.loadingTasks = false;
-                    this.render();
-                }
-            );
+        this.render(() => this.loadingTasks = true);
+        this.taskService.getTasks().then(
+            (response: HttpResponse<Task[]>) => {
+                this.tasks = response.data;
+            },
+            (error) => {
+                console.log(error);
+            }
+        ).finally(() => {
+            this.render(() => this.loadingTasks = false);
         });
     }
 
@@ -54,39 +52,35 @@ export class TasksPage extends Page {
             this.loadingTasks = true;
             this.taskService.createTask(this.form.value).then(
                 (response: HttpResponse<Task>) => {
-                    this.render(() => {
-                        this.loadingTasks = false;
-                        this.tasks.push(response.data);
-                        this.form
-                            .reset()
-                            .validate();
-                    });
+                    this.tasks.push(response.data);
+                    this.form
+                        .reset()
+                        .validate();
                 },
                 (error) => {
-                    this.render(() => {
-                        this.loadingTasks = false;
-                    });
+                    console.log(error);
                 }
-            );
+            ).finally(() => {
+                this.render(() => this.loadingTasks = false);
+            });
         }
     }
 
     public toggle(task: Task, event: MouseEvent) {
         event.stopImmediatePropagation();
         this.render(() => {
-            this.loadingTasks = true;
+            task.loading = true;
             task.done = task.done ? false : true;
             this.taskService.updateTask(task).then(
                 (response: HttpResponse<Task>) => {
-                    this.loadingTasks = false;
-                    this.render();
                 },
                 (error) => {
                     task.done = !task.done;
-                    this.loadingTasks = false;
-                    this.render();
+                    console.log(error);
                 }
-            );
+            ).finally(() => {
+                this.render(() => task.loading = false);
+            });
         });
     }
 

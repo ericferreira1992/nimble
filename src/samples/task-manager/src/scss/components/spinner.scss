@@ -2,17 +2,42 @@
     display: table;
     margin: auto;
 
-    > svg:first-child {
-        fill: transparent;
-        stroke: $primaryColor;
-        stroke-width: 5;
-        animation: spinner-dash 1.7s ease infinite, spinner-rotate 1.7s linear infinite;
+    > svg {
+        width: 100px;
+        height: 100px;
+
+        &:first-child {
+            fill: transparent;
+            stroke: $primaryColor;
+            stroke-width: 5;
+            animation: spinner-dash 1.7s ease infinite, spinner-rotate 1.7s linear infinite;
+            stroke-linecap: round;
+        }
+    }
+
+    &.size-50 {
+        > svg {
+            width: 50px;
+            height: 50px;
+
+            &:first-child {
+                stroke-width: 3.5;
+                animation: spinner-dash-50 1.7s ease infinite, spinner-rotate 1.7s linear infinite;
+            }
+        }
     }
 
     &.white {
-        > svg:first-child {
-            stroke: #FFF;
+        > svg {
+            &:first-child {
+                stroke: #FFF;
+            }
         }
+    }
+    
+    @keyframes spinner-rotate {
+        0% {transform: rotate(0deg); }
+        100% {transform: rotate(360deg); }
     }
 
     @keyframes spinner-dash {
@@ -20,9 +45,10 @@
         50% { stroke-dasharray: 142,158; stroke-dashoffset: -42; }
         100% { stroke-dasharray: 142,158; stroke-dashoffset: -155; }
     }
-    
-    @keyframes spinner-rotate {
-        0% {transform: rotate(0deg); }
-        100% {transform: rotate(360deg); }
+
+    @keyframes spinner-dash-50 {
+        0% { stroke-dasharray: 1,79; stroke-dashoffset: 0; }
+        50% { stroke-dasharray: 71,79; stroke-dashoffset: -21; }
+        100% { stroke-dasharray: 71,79; stroke-dashoffset: -77; }
     }
 }

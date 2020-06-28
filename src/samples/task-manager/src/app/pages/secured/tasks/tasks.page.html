@@ -14,25 +14,30 @@
         </form>
     </div>
     <div @if="loadingTasks" class="loading-spinner animated fadeIn mt-4 pt-4">
-        <svg width="100" height="100" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="25" strokeLinecap="round"/>
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="25"/>
         </svg>
     </div>
     <div @if="!loadingTasks && tasks.length > 0" class="task-list-container animated fadeIn">
-        <div @for="let task of tasks" class="task-item animated fadeIn" [class]="{ 'done': task.done }" (click)="editTask(task)">
+        <div @for="var task of tasks" class="task-item animated fadeIn" [class]="{ 'done': task.done, 'loading': task.loading }" (click)="!task.loading && editTask(task)">
             <section class="animated fadeIn">
                 <div class="check-cell">
-                    <button type="button" (click)="toggle(task, $event)">
+                    <button @if="!task.loading" type="button" (click)="toggle(task, $event)" class="animated fadeIn">
                         <i class="material-icons">
                             {{ task.done ? 'check_box' : 'check_box_outline_blank' }}
                         </i>
                     </button>
+                    <div @if="task.loading" class="loading-spinner size-50 animated fadeIn">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="25" cy="25" r="13"/>
+                        </svg>
+                    </div>
                 </div>
                 <div class="content-cell">
                     {{ task.name }}
                 </div>
                 <div class="options-cell">
-                    <button type="button" title="Remover" (click)="remove(task, $event)">
+                    <button type="button" title="Remover" (click)="remove(task, $event)" [disabled]="task.loading">
                         <i class="material-icons">delete</i>
                     </button>
                 </div>
