@@ -23,11 +23,11 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         if (this.checkForm()) {
             if (selector === '[form-field]') {
                 if (this.elementIsValid() && value instanceof FormField) {
-                    this.formField.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
+                    this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                     if (this.canApplyFormField()) {
                         this.resolveFormFieldSelector();
                     }
@@ -35,18 +35,18 @@ export class FormFieldDirective extends BaseFormFieldDirective {
             }
             else if (selector === 'form-field-name') {
                 if (this.elementIsValid() && this.formFieldNameSelectorIsValid(value)) {
-                    this.formField.setElement(element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
+                    this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                     if (this.canApplyFormField()) {
                         this.resolveFormFieldSelector();
                     }
                 }
             }
             else if (selector === '(valueChange)')
-                this.resolveValueChangeSelector(value, scope);
+                this.resolveValueChangeSelector(value);
         }
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 
     private formFieldNameSelectorIsValid(value: any) {
@@ -127,12 +127,12 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         }
     }
 
-    private resolveValueChangeSelector(expression: any, scope: IScope) {
+    private resolveValueChangeSelector(expression: any) {
         if (this.formField) {
-            this.intervalEventsCollector.add(scope, '(valueChanges)', this.formField.valueChanges.subscribe((value) => {
-                Object.assign(scope, { $event: value });
-                scope.eval(expression);
-                delete scope['$event'];
+            this.intervalEventsCollector.add(this.scope, '(valueChanges)', this.formField.valueChanges.subscribe((value) => {
+                Object.assign(this.scope, { $event: value });
+                this.scope.compile(expression);
+                delete this.scope['$event'];
             }));
         }
         else {

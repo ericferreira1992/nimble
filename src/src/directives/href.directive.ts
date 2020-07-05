@@ -1,4 +1,3 @@
-import { IScope } from '../page/interfaces/scope.interface';
 import { Directive } from './abstracts/directive';
 import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Router } from '../route/router';
@@ -15,7 +14,7 @@ export class HrefDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
         let startsWithHash = value.startsWith('#') || value.startsWith('/#');
         let href = value.replace(/^(#)/g, '');
@@ -35,8 +34,8 @@ export class HrefDirective extends Directive {
                     href = `${location.pathname.replace(/(\/)$/g, '')}/${href}`;
                 }
 
-                this.listenersCollector.subscribe(element, 'click', (e: MouseEvent) => {
-                    let attr = element.attributes[selector];
+                this.listenersCollector.subscribe(this.element, 'click', (e: MouseEvent) => {
+                    let attr = this.element.attributes[selector];
                     if (attr) {
                         let href = attr.value
                         setTimeout(() => {
@@ -49,13 +48,13 @@ export class HrefDirective extends Directive {
             }
         }
 
-        if (!element.hasAttribute(selector))
-            element.setAttribute(selector, href);
+        if (!this.element.hasAttribute(selector))
+			this.element.setAttribute(selector, href);
         else
-            element.attributes[selector].value = href;
+			this.element.attributes[selector].value = href;
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 
 }

@@ -30,7 +30,7 @@ export class RenderHelper {
                 value = value.replace(regex, (expression) => {
                     expression = expression.replace(/(^{{)|(}}$)/g, '');
                     if (expression !== '')
-                        return scope.eval(expression);
+                        return scope.compile(expression);
 
                     return '';
                 });
@@ -46,7 +46,7 @@ export class RenderHelper {
                 let isInterpreted = /^\[([^)]+)\]$/g.test(name);
                 if (isInterpreted) {
                     name = name.substr(1, name.length - 2);
-                    value = scope.eval(value);
+                    value = scope.compile(value);
                 }
                 else 
                     value = this.resolveInterpolationIfHave(value, scope);

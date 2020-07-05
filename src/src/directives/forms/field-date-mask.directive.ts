@@ -25,22 +25,22 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         if (this.checkForm()) {
             if (this.elementIsValid(selector, value)) {
                 try {
                     this.prepareRegex();
                     this.checkValueOnInitialize();
-                    this.listenerCollector.subscribe(element, 'keypress', this.onKeypress.bind(this), true);
-                    this.listenerCollector.subscribe(element, 'keydown', this.onKeydown.bind(this), true);
-                    this.listenerCollector.subscribe(element, 'input', this.onInput.bind(this), true);
+                    this.listenerCollector.subscribe(this.element, 'keypress', this.onKeypress.bind(this), true);
+                    this.listenerCollector.subscribe(this.element, 'keydown', this.onKeydown.bind(this), true);
+                    this.listenerCollector.subscribe(this.element, 'input', this.onInput.bind(this), true);
                 }
                 catch (e) { console.error(e.message); }
             }
         }
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 
     private checkValueOnInitialize() {

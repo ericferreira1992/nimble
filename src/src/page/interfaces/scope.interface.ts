@@ -1,4 +1,4 @@
 export interface IScope {
-    eval(expression: string): any;
+    compile(expression: string): any;
     onNeedRerender: (scope: any) => void;
 }

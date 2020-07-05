@@ -15,14 +15,15 @@ export abstract class Dialog implements IScope {
     /**
      * Method to render and update current template
      */
-    public render(action?: () => void) {
+    public render(action?: () => void): Promise<any> {
         if (this.onNeedRerender) {
             if (action) action();
             this.onNeedRerender(this);
         }
+        return new Promise<any>((resolve) => resolve());
     }
 
-    public eval(expression: string): any {
+    public compile(expression: string): any {
         try {
             return (new Function(`with(this) { return ${expression} }`)).call(this);
         }

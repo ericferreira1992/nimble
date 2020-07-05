@@ -1,4 +1,6 @@
 import { IScope } from "../../page/interfaces/scope.interface";
+import { Page } from "../../page/page";
+import { Dialog } from "../../dialog/classes/dialog";
 
 export abstract class Directive {
     public selectors: string[];
@@ -10,7 +12,27 @@ export abstract class Directive {
 
     public all: Directive[] = [];
 
-    public element: HTMLElement;
+    public element?: HTMLElement;
+
+    public scope: IScope;
+
+    public render(action: () => void = null) {
+        if (this.scope instanceof Page) {
+            return this.scope.render(action);
+        }
+        else if (this.scope instanceof Dialog) {
+            return this.scope.render(action);
+        }
+    }
+
+    public compile(expression: string) {
+        if (this.scope instanceof Page) {
+            return this.scope.compile(expression);
+        }
+        else if (this.scope instanceof Dialog) {
+            return this.scope.compile(expression);
+        }
+    }
 
     public get others() {
         return this.all.filter(x => x !== this);
@@ -52,7 +74,7 @@ export abstract class Directive {
         return selector.replace(/\[|\(|\]|\)/g, '');
     }
 
-    abstract resolve(selector: string, value: any, element: HTMLElement, scope: IScope): any;
+    abstract resolve(selector: string, value: any): any;
     abstract onDestroy(selector: string, scope: IScope);
 }
 

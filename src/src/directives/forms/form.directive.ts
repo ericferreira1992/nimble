@@ -25,19 +25,19 @@ export class FormDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         if (this.isValid(selector)) {
             selector = this.pureSelector(selector);
             if (selector === 'form')
-                this.resolveFormSelector(scope);
+                this.resolveFormSelector();
             else if (selector === 'submit')
-                this.resolveSubmitSelector(value, scope);
+                this.resolveSubmitSelector(value);
             else if (selector === 'render-on-interact')
                 this.resolveRenderOnInteractSelector(value);
         }
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
         selector = this.pureSelector(selector);
         if (selector === 'form' && this.form) {
             for(let sub of this.subscribes)
@@ -54,20 +54,20 @@ export class FormDirective extends Directive {
         return true;
     }
 
-    private resolveFormSelector(scope: IScope){
+    private resolveFormSelector(){
         if (this.formSelectorIsValid()) {
-            this.form.scope = scope;
+            this.form.scope = this.scope;
             this.form.formElement = this.element as HTMLFormElement;
             this.checkSubmitDirective();
         }
     }
 
-    private resolveSubmitSelector(value: any, scope: IScope) {
+    private resolveSubmitSelector(value: any) {
         if (this.checkSubmitSelectorIsValid())
             this.subscribes.push(this.form.onSubmit.subscribe((e) => {
-                Object.assign(scope, { $event: e });
-                scope.eval(value);
-                delete scope['$event'];
+                Object.assign(this.scope, { $event: e });
+                this.scope.compile(value);
+                delete this.scope['$event'];
 
                 e.preventDefault();
             }));

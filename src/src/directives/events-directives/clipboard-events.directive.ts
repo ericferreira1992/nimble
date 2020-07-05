@@ -18,15 +18,15 @@ export class ClipboardEventsDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
-            this.listener.listen(element, this.pureSelector(selector), (e) => {
-                Object.assign(scope, { $event: e });
-                scope.eval(value);
-                delete scope['$event'];
+    public resolve(selector: string, value: any): void {
+            this.listener.listen(this.element, this.pureSelector(selector), (e) => {
+                Object.assign(this.scope, { $event: e });
+                this.scope.compile(value);
+                delete this.scope['$event'];
             });
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 
 }

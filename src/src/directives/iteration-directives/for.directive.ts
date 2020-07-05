@@ -1,23 +1,19 @@
 import { IterationDirective } from '../abstracts/iteration-directive';
 import { IScope } from '../../page/interfaces/scope.interface';
-import { IterateDirectiveResponse, RenderAbstract } from "../../render/render-abstract";
+import { IterateDirectiveResponse } from "../../render/render-abstract";
 import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive.decor';
 import { isArray } from 'util';
-import { Helper } from '../../providers/helper';
 
 @PrepareIterateDirective({
     selector: ['for']
 })
 export class ForDirective extends IterationDirective {
 
-    constructor(
-        private render: RenderAbstract,
-        private helper: Helper,
-    ) {
+    constructor() {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): IterateDirectiveResponse[] {
+    public resolve(selector: string, value: any): IterateDirectiveResponse[] {
         let forExpression = (value as string).trim();
 
         if (forExpression.startsWith('(') && forExpression.endsWith(')')) {
@@ -25,7 +21,7 @@ export class ForDirective extends IterationDirective {
         }
 
         if (!forExpression.startsWith('let ') && !forExpression.startsWith('var ')) {
-            element.remove();
+            this.element.remove();
             console.error(`SyntaxError: Invalid expression: ${forExpression}: the expression should look similar to this: let item of items`);
             return [];
         }
@@ -33,11 +29,11 @@ export class ForDirective extends IterationDirective {
         let iterationVarName = forExpression.split(' ')[1];
         let iterationArray = {
             expressionOrName: forExpression.split(' ').slice(3).join(''),
-            value: scope.eval(forExpression.split(' ').slice(3).join('')) as any[]
+            value: this.compile(forExpression.split(' ').slice(3).join('')) as any[]
         };
 
         if (!isArray(iterationArray.value)) {
-            element.remove();
+            this.element.remove();
             console.error(`SyntaxError: Invalid expression: ${iterationArray.expressionOrName} does not appear to be an array.`);
             return [];
         }
@@ -47,21 +43,21 @@ export class ForDirective extends IterationDirective {
             let item = iterationArray.value[i];
             let index = i;
 
-            let existingVarNameBefore = iterationVarName in scope;
-            let varValueBefore = existingVarNameBefore ? scope[iterationVarName] : null;
+            let existingVarNameBefore = iterationVarName in this.scope;
+            let varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
             
             response.push(new IterateDirectiveResponse({
                 beginFn: () => {
-                    scope[iterationVarName] = item;
-                    scope['$index'] = index;
+                    this.scope[iterationVarName] = item;
+                    this.scope['$index'] = index;
                 },
                 endFn: () => {
-                    delete scope['$index'];
+                    delete this.scope['$index'];
                     if (existingVarNameBefore) {
-                        scope[iterationVarName] = varValueBefore;
+                        this.scope[iterationVarName] = varValueBefore;
                     }
                     else {
-                        delete scope[iterationVarName];
+                        delete this.scope[iterationVarName];
                     }
                 }
             }));
@@ -70,6 +66,6 @@ export class ForDirective extends IterationDirective {
         return response;
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 }

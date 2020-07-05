@@ -60,6 +60,7 @@ export abstract class ElementStructureAbstract {
             let instance = this.directivesInstance.find(x => x instanceof attr.directiveType);
             if (!instance) {
                 let instance = NimbleApp.inject<Directive>(attr.directiveType);
+                instance.scope = this.scope;
                 instance.element = this.compiledNode as HTMLElement;
                 this.directivesInstance.push(instance);
             }
@@ -117,6 +118,7 @@ export abstract class ElementStructureAbstract {
             if (!instance) {
                 instance = NimbleApp.inject<Directive>(attr.directiveType);
                 instance.element = this.compiledNode as HTMLElement;
+                instance.scope = this.scope;
                 this.directivesInstance.push(instance);
             }
             else {
@@ -214,7 +216,7 @@ export class AttributeStructure<T extends Directive> {
         if (!/^\(([^)]+)\)$/g.test(this.name)) {
             if (/^\[([^)]+)\]$/g.test(this.name)) {
                 if (!DirectiveHelper.checkSelectorMustHavePureValue(this.name))
-                value = this.structure.scope.eval(value);
+                value = this.structure.scope.compile(value);
             }
             else {
                 value = RenderHelper.resolveInterpolationIfHave(value, this.structure.scope);
@@ -229,7 +231,7 @@ export class AttributeStructure<T extends Directive> {
 
     public resolveDirective(){
         this.checkDirectiveBeforeResolve();
-        this.directiveInstance.resolve(this.name, this.getCompiledValue(), this.structure.compiledNode as HTMLElement, this.structure.scope);
+        this.directiveInstance.resolve(this.name, this.getCompiledValue());
     }
 
     private checkDirectiveBeforeResolve() {

@@ -1,8 +1,7 @@
-import { IScope } from '../page/interfaces/scope.interface';
 import { Directive } from './abstracts/directive';
 import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Helper } from '../providers/helper';
-import { isObject, isArray } from 'util';
+import { isArray } from 'util';
 
 export const NATIVE_SELECTORS: string[] = [
     '[disabled]',
@@ -35,27 +34,27 @@ export class NativesAttrsDirective extends Directive {
         ];
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
 
         if (selector === 'class')
-            this.resolveClass(value, element, scope);
+            this.resolveClass(value);
         else if (selector === 'style')
-            this.resolveStyle(value, element, scope);
+            this.resolveStyle(value);
         else if (selector === 'disabled')
-            this.resolveRequired(value, element, scope);
+            this.resolveRequired(value);
         else {
-            if (!element.hasAttribute(selector))
-                element.setAttribute(selector, value);
-            else if (element.attributes[selector].value !== value)
-                element.attributes[selector].value = value;
+            if (!this.element.hasAttribute(selector))
+				this.element.setAttribute(selector, value);
+            else if (this.element.attributes[selector].value !== value)
+				this.element.attributes[selector].value = value;
         }
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 
-    private resolveClass(value: string, element: HTMLElement, scope: IScope) {
+    private resolveClass(value: string) {
         if (value) {
             value = value.trim();
             let classesAdd: string[] = [];
@@ -65,7 +64,7 @@ export class NativesAttrsDirective extends Directive {
                 let listExpressions = this.helper.splitStringJSONtoKeyValue(value);
                 listExpressions.forEach((keyValue) => {
                     try {
-                        if (scope.eval(keyValue.value))
+                        if (this.scope.compile(keyValue.value))
                             classesAdd.push(keyValue.key);
                         else
                             classesRemove.push(keyValue.key);
@@ -76,12 +75,12 @@ export class NativesAttrsDirective extends Directive {
                 });
             }
             else if (value.startsWith('[') && value.endsWith(']')) {
-                value = scope.eval(value);
+                value = this.scope.compile(value);
                 if (isArray(value))
                     classesAdd = value;
             }
             else{
-                value = scope.eval(value);
+                value = this.scope.compile(value);
                 if (value && typeof value === 'string') {
                     value = value.trim();
                     if(value.includes(' '))
@@ -91,12 +90,12 @@ export class NativesAttrsDirective extends Directive {
                 }
             }
             
-            classesAdd.forEach(c => element.classList.add(c));
-            classesRemove.forEach(c => element.classList.remove(c));
+            classesAdd.forEach(c => this.element?.classList.add(c));
+            classesRemove.forEach(c => this.element?.classList.remove(c));
         }
     }
 
-    private resolveStyle(value: string, element: HTMLElement, scope: IScope) {
+    private resolveStyle(value: string) {
         if (value) {
             value = value.trim();
             if (value.startsWith('{') && value.endsWith('}')) {
@@ -105,7 +104,7 @@ export class NativesAttrsDirective extends Directive {
                     try {
                         let property = keyValue.key;
 
-                        element.style[property] = value;
+                        this.element.style[property] = value;
                     }
                     catch(e){
                         console.error(e.message);
@@ -113,7 +112,7 @@ export class NativesAttrsDirective extends Directive {
                 });
             }
             else if (value.startsWith('[') && value.endsWith(']')) {
-                value = scope.eval(value);
+                value = this.scope.compile(value);
                 if (isArray(value))
                     value.forEach((style) => {
                         if(style.includes(':')) {
@@ -121,7 +120,7 @@ export class NativesAttrsDirective extends Directive {
                                 let property = style.split(':')[0].trim();
                                 let value = style.split(':')[1].trim();
         
-                                element.style[property] = value;
+                                this.element.style[property] = value;
                             }
                             catch(e){
                                 console.error(e.message);
@@ -130,7 +129,7 @@ export class NativesAttrsDirective extends Directive {
                     });
             }
             else {
-                value = scope.eval(value);
+                value = this.scope.compile(value);
                 if (value && typeof value === 'string') {
                     value = value.replace(/\;\;\;/g, ';').replace(/\;\;/g, ';');
                     if (value.includes(';')) {
@@ -140,7 +139,7 @@ export class NativesAttrsDirective extends Directive {
                                     let property = style.split(':')[0].trim();
                                     let value = style.split(':')[1].trim();
             
-                                    element.style[property] = value;
+                                    this.element.style[property] = value;
                                 }
                                 catch(e){
                                     console.error(e.message);
@@ -153,7 +152,7 @@ export class NativesAttrsDirective extends Directive {
                             let property = value.split(':')[0].trim();
                             value = value.split(':')[1].trim();
     
-                            element.style[property] = value;
+                            this.element.style[property] = value;
                         }
                         catch(e){
                             console.error(e.message);
@@ -164,11 +163,11 @@ export class NativesAttrsDirective extends Directive {
         }
     }
 
-    private resolveRequired(ok: boolean, element: HTMLElement, scope: IScope) {
+    private resolveRequired(ok: boolean) {
         if (ok)
-            element.setAttribute('disabled', '');
+			this.element.setAttribute('disabled', '');
         else
-            element.removeAttribute('disabled');
+			this.element.removeAttribute('disabled');
     }
 
     public static checkSelectorMustHavePureValue(selector: string) {

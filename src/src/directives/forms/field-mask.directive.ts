@@ -1,4 +1,3 @@
-import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { isNullOrUndefined } from 'util';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
@@ -28,20 +27,20 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         if (this.checkForm()) {
             if (this.elementIsValid(selector, value)) {
                 try {
                     this.checkValueOnInitialize();
-                    this.listenerCollector.subscribe(element, 'keypress', this.onKeypress.bind(this), true);
-                    this.listenerCollector.subscribe(element, 'input', this.onInput.bind(this), true);
+                    this.listenerCollector.subscribe(this.element, 'keypress', this.onKeypress.bind(this), true);
+                    this.listenerCollector.subscribe(this.element, 'input', this.onInput.bind(this), true);
                 }
                 catch (e) { console.error(e.message); }
             }
         }
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 
     private elementIsValid(selector: string, value: any) {

@@ -1,4 +1,3 @@
-import { Route } from "../route/route";
 import { MetaConfig } from "./decorators/classes/meta-config";
 import { IScope } from "./interfaces/scope.interface";
 
@@ -50,7 +49,7 @@ export class Page implements IScope {
         return new Promise<any>((resolve) => resolve());
     }
 
-    public eval(expression: string): any {
+    public compile(expression: string): any {
         try {
             return (new Function(`with(this) { return ${expression} }`)).call(this);
         }

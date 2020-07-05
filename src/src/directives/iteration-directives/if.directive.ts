@@ -8,8 +8,8 @@ import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive
 })
 export class IfDirective extends IterationDirective {
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): IterateDirectiveResponse[] {
-        let success = scope.eval(value as string);
+    public resolve(selector: string, value: any): IterateDirectiveResponse[] {
+        let success = this.scope.compile(value as string);
 
         if (!success)
             return [];
@@ -19,6 +19,6 @@ export class IfDirective extends IterationDirective {
             ];
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
 }

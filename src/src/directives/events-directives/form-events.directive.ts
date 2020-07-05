@@ -1,4 +1,3 @@
-import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Listener } from '../../render/listener';
@@ -29,16 +28,16 @@ export class FormEventsDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any, element: HTMLElement, scope: IScope): void {
+    public resolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
-        this.listener.listen(element, selector, (e) => {
-            Object.assign(scope, { $event: e });
-            scope.eval(value);
-            delete scope['$event'];
+        this.listener.listen(this.element, selector, (e) => {
+            Object.assign(this.scope, { $event: e });
+            this.scope.compile(value);
+            delete this.scope['$event'];
         });
     }
 
-    public onDestroy(selector: string, scope: IScope) {
+    public onDestroy(selector: string) {
     }
     
     private checkForm(selector: string) {
