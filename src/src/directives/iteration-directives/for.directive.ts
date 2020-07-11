@@ -1,11 +1,10 @@
 import { IterationDirective } from '../abstracts/iteration-directive';
-import { IScope } from '../../page/interfaces/scope.interface';
 import { IterateDirectiveResponse } from "../../render/render-abstract";
 import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive.decor';
 import { isArray } from 'util';
 
 @PrepareIterateDirective({
-    selector: ['for']
+    selector: 'for'
 })
 export class ForDirective extends IterationDirective {
 
@@ -14,22 +13,23 @@ export class ForDirective extends IterationDirective {
     }
 
     public resolve(selector: string, value: any): IterateDirectiveResponse[] {
-        let forExpression = (value as string).trim();
+        let expression = (value as string).trim();
 
-        if (forExpression.startsWith('(') && forExpression.endsWith(')')) {
-            forExpression = forExpression.substr(1, forExpression.length - 2);
+        if (expression.startsWith('(') && expression.endsWith(')')) {
+            expression = expression.substr(1, expression.length - 2);
         }
 
-        if (!forExpression.startsWith('let ') && !forExpression.startsWith('var ')) {
-            this.element.remove();
-            console.error(`SyntaxError: Invalid expression: ${forExpression}: the expression should look similar to this: let item of items`);
-            return [];
-        }
-
-        let iterationVarName = forExpression.split(' ')[1];
+        // if (!forExpression.startsWith('let ') && !forExpression.startsWith('var ')) {
+        //     this.element.remove();
+        //     console.error(`SyntaxError: Invalid expression: ${forExpression}: the expression should look similar to this: let item of items`);
+        //     return [];
+		// }
+		
+		const startWithVariable = expression.startsWith('let ') || expression.startsWith('var ') || expression.startsWith('const ');
+        let iterationVarName = expression.split(' ')[startWithVariable ? 1 : 0];
         let iterationArray = {
-            expressionOrName: forExpression.split(' ').slice(3).join(''),
-            value: this.compile(forExpression.split(' ').slice(3).join('')) as any[]
+            expressionOrName: expression.split(' ').slice(startWithVariable ? 3 : 2).join(''),
+            value: this.compile(expression.split(' ').slice(startWithVariable ? 3 : 2).join('')) as any[]
         };
 
         if (!isArray(iterationArray.value)) {

@@ -39,14 +39,5 @@ export class FormEventsDirective extends Directive {
 
     public onDestroy(selector: string) {
     }
-    
-    private checkForm(selector: string) {
-        if (!this.form || !(this.form instanceof Form)) {
-            console.error(`The "${selector}" directive not apply beacuse directive [form] not setted in form element, but you can do like it: <form [form]="yourForm" ...>`);
-            return false;
-        }
-
-        return true;
-    }
 
 }

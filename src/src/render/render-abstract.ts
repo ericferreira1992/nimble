@@ -139,7 +139,6 @@ export class RenderAbstract {
 
                 if (iterationResponses.length <= 0) {
                     structured.removeCompiledNode();
-                    this.listenersCollector.unsubscribeAllFromElement(element);
 
                     let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
                     if (iterationChildren) {
@@ -148,50 +147,50 @@ export class RenderAbstract {
                             iterationChild.removeCompiledNode();
                         }
                         structured.parent.children = structured.parent.children.filter(x => !iterationChildren.some(y => y === x));
-                    }
-                    
-                    return;
+					}
+					return;
                 }
+                else {
+					let currentIterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
                 
-                let currentIterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
-                
-                structured.compiledBeginFn = iterationResponses[0].beginFn;
-                structured.compiledEndFn = iterationResponses[0].endFn;
+					structured.compiledBeginFn = iterationResponses[0].beginFn;
+					structured.compiledEndFn = iterationResponses[0].endFn;
 
-                iterationResponses = iterationResponses.slice(1);
+					iterationResponses = iterationResponses.slice(1);
 
-                // REMOVE LEFTOVERS
-                if (currentIterationChildren.length > iterationResponses.length) {
-                    let toRemove = currentIterationChildren.slice(iterationResponses.length);
-                    currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
-                    for(let iterationChild of toRemove) {
-                        this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-                        iterationChild.removeCompiledNode();
-                    }
-                    structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
-                }
-                // ADD THE NEW ONES
-                else if (currentIterationChildren.length < iterationResponses.length) {
-                    let childrenDiff = iterationResponses.length - currentIterationChildren.length;
-                    let currentIndex = currentIterationChildren.length > 0
-                        ? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
-                        : structured.parent.children.findIndex(x => x === structured);
+					// REMOVE LEFTOVERS
+					if (currentIterationChildren.length > iterationResponses.length) {
+						let toRemove = currentIterationChildren.slice(iterationResponses.length);
+						currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
+						for(let iterationChild of toRemove) {
+							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
+							iterationChild.removeCompiledNode();
+						}
+						structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
+					}
+					// ADD THE NEW ONES
+					else if (currentIterationChildren.length < iterationResponses.length) {
+						let childrenDiff = iterationResponses.length - currentIterationChildren.length;
+						let currentIndex = currentIterationChildren.length > 0
+							? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
+							: structured.parent.children.findIndex(x => x === structured);
 
-                    for(let i = 1; i <= childrenDiff; i++) {
-                        let interation = iterationResponses[currentIterationChildren.length + i - 1];
-                        let nextIndex = currentIndex + i;
-                        let iterationEstructured = this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn);
-                        structured.parent.children.splice(nextIndex, 0, iterationEstructured);
-                        iterationEstructured.isRendered = false;
-                    }
-                }
+						for(let i = 1; i <= childrenDiff; i++) {
+							let interation = iterationResponses[currentIterationChildren.length + i - 1];
+							let nextIndex = currentIndex + i;
+							let iterationEstructured = this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn);
+							structured.parent.children.splice(nextIndex, 0, iterationEstructured);
+							iterationEstructured.isRendered = false;
+						}
+					}
 
-                for (let i = 0; i < currentIterationChildren.length; i++) {
-                    let interationResponse = iterationResponses[i];
-                    let iterationChild = currentIterationChildren[i];
-                    iterationChild.compiledBeginFn = interationResponse.beginFn;
-                    iterationChild.compiledEndFn = interationResponse.endFn;
-                }
+					for (let i = 0; i < currentIterationChildren.length; i++) {
+						let interationResponse = iterationResponses[i];
+						let iterationChild = currentIterationChildren[i];
+						iterationChild.compiledBeginFn = interationResponse.beginFn;
+						iterationChild.compiledEndFn = interationResponse.endFn;
+					}
+				}
             }
             
             if (structured.compiledBeginFn)
