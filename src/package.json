@@ -1,6 +1,6 @@
 {
     "name": "@nimble-ts/core",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "scripts": {
         "build": "rm -rf dist && tsc && node copy",
         "publish-version": "npm run build && pushd dist && npm publish --access public"
@@ -31,8 +31,7 @@
     },
     "dependencies": {
         "@webcomponents/webcomponentsjs": "^2.3.0",
-        "reflect-metadata": "^0.1.13",
-        "zone.js": "^0.10.3"
+        "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",

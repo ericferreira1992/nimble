@@ -5,7 +5,6 @@ import { NimbleApp, NimbleAppState } from '../app';
 import { Page } from '../page/page';
 import { RouterEvent } from './router-event.enum';
 import { RouterEventType } from './router-event-type.enum';
-// import 'zone.js';
 
 export class Router {
     public static get app() { return NimbleApp.instance; }
