@@ -1,4 +1,3 @@
-import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Form } from '../../core';
@@ -17,7 +16,7 @@ export class FormDirective extends Directive {
 
     public get form() { return this.getValueOfSelector('[form]') as Form; }
 
-    private subscribes: ObserverListener<Event>[] = [];
+    private subscribes: { id: string, observation: ObserverListener<Event> }[] = [];
 
     constructor(
         private listenersCollector: ListenersCollector
@@ -25,7 +24,7 @@ export class FormDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         if (this.isValid(selector)) {
             selector = this.pureSelector(selector);
             if (selector === 'form')
@@ -37,12 +36,12 @@ export class FormDirective extends Directive {
         }
     }
 
-    public onDestroy(selector: string) {
-        selector = this.pureSelector(selector);
-        if (selector === 'form' && this.form) {
-            for(let sub of this.subscribes)
-                sub.unsubscribe();
-        }
+    public onDestroy() {
+        // selector = this.pureSelector(selector);
+        // if (selector === 'form' && this.form) {
+        // }
+		for(let sub of this.subscribes)
+			sub.observation.unsubscribe();
     }
 
     private isValid(selector: string) {
@@ -55,7 +54,7 @@ export class FormDirective extends Directive {
     }
 
     private resolveFormSelector(){
-        if (this.formSelectorIsValid()) {
+        if (this.selectorIsValid('[form]')) {
             this.form.scope = this.scope;
             this.form.formElement = this.element as HTMLFormElement;
             this.checkSubmitDirective();
@@ -63,53 +62,46 @@ export class FormDirective extends Directive {
     }
 
     private resolveSubmitSelector(value: any) {
-        if (this.checkSubmitSelectorIsValid())
-            this.subscribes.push(this.form.onSubmit.subscribe((e) => {
-                Object.assign(this.scope, { $event: e });
-                this.scope.compile(value);
-                delete this.scope['$event'];
-
-                e.preventDefault();
-            }));
+        if (this.selectorIsValid('(submit)')) {
+			if (!this.subscribes.find(x => x.id === 'fromDirective')) {
+				this.subscribes.push({
+					id: 'fromDirective',
+					observation: this.form.onSubmit.subscribe((e) => {
+						Object.assign(this.scope, { $event: e });
+						this.scope.compile(value);
+						delete this.scope['$event'];
+		
+						e.preventDefault();
+					})
+				});
+			}
+		}
     }
 
     private checkSubmitDirective() {
-        if (!this.selectorsApplied.some(x => x.selector === '(submit)') && this.listenersCollector.getSubscribedsByTargetAndEventName(this.element, 'submit').length <= 1)
-            this.subscribes.push(this.form.onSubmit.subscribe((e) => {
-                e.preventDefault();
-            }));
+        if (!this.selectorsApplied.some(x => x.selector === '(submit)') && this.listenersCollector.getSubscribedsByTargetAndEventName(this.element, 'submit').length <= 1) {
+			if (!this.subscribes.find(x => x.id === 'internal')) {
+				this.subscribes.push({
+					id: 'internal',
+					observation: this.form.onSubmit.subscribe((e) => {
+						e.preventDefault();
+					})
+				});
+			}
+		}
     }
 
     private resolveRenderOnInteractSelector(value: any){
-        if (this.renderOnInteractSelectorIsValid()) {
+        if (this.selectorIsValid('render-on-interact')) {
             this.form.renderOnInteract = (typeof value === 'boolean') ? value : !!(isNullOrUndefined(value) || value === '');
         }
-    }
-
-    private renderOnInteractSelectorIsValid() {
+	}
+	
+    private selectorIsValid(selector: string) {
         if (!(this.form instanceof Form)) {
-            console.warn(`The directive "render-on-interact" works only with Form as value. Example: <form [form]="myForm">...`);
+            console.warn(`The directive "${selector}" works only with Form as value. Example: <form [form]="myForm">...`);
             return false;
         }
-
-        return true;
-    }
-
-    private checkSubmitSelectorIsValid() {
-        if (!(this.form instanceof Form)) {
-            console.warn(`The directive "(submit)" works only with Form as value. Example: <form [form]="myForm">...`);
-            return false;
-        }
-
-        return true;
-    }
-
-    private formSelectorIsValid() {
-        if (!(this.form instanceof Form)) {
-            console.warn(`The directive "[form]" works only with Form as value. Example: <form [form]="myForm">...`);
-            return false;
-        }
-
         return true;
     }
 

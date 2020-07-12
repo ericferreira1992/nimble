@@ -16,7 +16,7 @@ export class ElementsDirective extends Directive {
         super();ElementsDirective
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
         let stringValue = value ? value.toString() : '';
 
@@ -38,6 +38,6 @@ export class ElementsDirective extends Directive {
         }
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 }

@@ -28,7 +28,7 @@ export class FormEventsDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
         this.listener.listen(this.element, selector, (e) => {
             Object.assign(this.scope, { $event: e });
@@ -37,7 +37,7 @@ export class FormEventsDirective extends Directive {
         });
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 
 }

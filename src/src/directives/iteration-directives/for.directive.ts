@@ -12,7 +12,7 @@ export class ForDirective extends IterationDirective {
         super();
     }
 
-    public resolve(selector: string, value: any): IterateDirectiveResponse[] {
+    public onResolve(selector: string, value: any): IterateDirectiveResponse[] {
         let expression = (value as string).trim();
 
         if (expression.startsWith('(') && expression.endsWith(')')) {
@@ -66,6 +66,6 @@ export class ForDirective extends IterationDirective {
         return response;
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 }

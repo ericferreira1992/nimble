@@ -63,7 +63,7 @@ export class RenderAbstract {
             // ITERATION DIRECTIVE
             if (structured.hasIterationDirectivesToApply) {
                 let attr = structured.getIterationDirective();
-                let iterationResponses = (attr.directiveInstance as IterationDirective).resolve(attr.name, attr.value);
+                let iterationResponses = (attr.directiveInstance as IterationDirective).onResolve(attr.name, attr.value);
 
                 if (iterationResponses.length <= 0)
                     return null;
@@ -135,7 +135,7 @@ export class RenderAbstract {
             // ITERATION DIRECTIVE
             if (structured.hasIterationDirectivesToApply) {
                 let attr = structured.getIterationDirective();
-                let iterationResponses = (attr.directiveInstance as IterationDirective).resolve(attr.name, attr.value);
+                let iterationResponses = (attr.directiveInstance as IterationDirective).onResolve(attr.name, attr.value);
 
                 if (iterationResponses.length <= 0) {
                     structured.removeCompiledNode();

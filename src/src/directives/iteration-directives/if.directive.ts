@@ -8,7 +8,7 @@ import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive
 })
 export class IfDirective extends IterationDirective {
 
-    public resolve(selector: string, value: any): IterateDirectiveResponse[] {
+    public onResolve(selector: string, value: any): IterateDirectiveResponse[] {
         let success = this.scope.compile(value as string);
 
         if (!success)
@@ -19,6 +19,6 @@ export class IfDirective extends IterationDirective {
             ];
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 }

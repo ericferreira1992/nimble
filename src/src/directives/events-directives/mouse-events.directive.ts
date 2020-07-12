@@ -24,7 +24,7 @@ export class MouseEventsDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         this.listener.listen(this.element, this.pureSelector(selector), (e) => {
             Object.assign(this.scope, { $event: e });
             this.scope.compile(value);
@@ -32,7 +32,7 @@ export class MouseEventsDirective extends Directive {
         });
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 
 }

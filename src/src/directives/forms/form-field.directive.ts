@@ -23,7 +23,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         if (this.checkForm()) {
             if (selector === '[form-field]') {
                 if (this.elementIsValid() && value instanceof FormField) {
@@ -46,7 +46,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         }
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 
     private formFieldNameSelectorIsValid(value: any) {

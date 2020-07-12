@@ -74,8 +74,11 @@ export abstract class Directive {
         return selector.replace(/\[|\(|\]|\)/g, '');
     }
 
-    abstract resolve(selector: string, value: any): any;
-    abstract onDestroy(selector: string, scope: IScope);
+	/** This method will always be invoked when the render happens */
+	abstract onResolve(selector: string, value: any): any;
+	
+	/** This method will always be invoked when the element it is linked to is removed from the DOM. */
+    abstract onDestroy();
 }
 
 export class ResolverData {

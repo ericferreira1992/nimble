@@ -50,8 +50,17 @@ export abstract class ElementStructureAbstract {
         if (this.nodeIsRenderedInDOM) {
             this.compiledNode.parentNode.removeChild(this.compiledNode);
             this.isRendered = false;
-        }
-    }
+		}
+		this.destroyAllDirectives();
+	}
+	
+	private destroyAllDirectives() {
+		for (let directiveInstance of this.directivesInstance) {
+			directiveInstance.onDestroy();
+		}
+
+		this.directivesInstance = [];
+	}
 
     public getIterationDirective(): AttributeStructure<IterationDirective> {
         let attr = this.attritubes.find(x => x.directiveType != null && x.directiveType.prototype.type === 'IterationDirective');
@@ -59,19 +68,16 @@ export abstract class ElementStructureAbstract {
         if (attr) {
             let instance = this.directivesInstance.find(x => x instanceof attr.directiveType);
             if (!instance) {
-                let instance = NimbleApp.inject<Directive>(attr.directiveType);
+                instance = NimbleApp.inject<Directive>(attr.directiveType);
                 instance.scope = this.scope;
                 instance.element = this.compiledNode as HTMLElement;
                 this.directivesInstance.push(instance);
             }
             else {
                 instance.element = this.compiledNode as HTMLElement;
-                instance.onDestroy(attr.name, this.scope);
+                // instance.onDestroy();
             }
-
-            if (instance) {
-                instance.all = this.directivesInstance.filter(x => x !== instance);
-            }
+			instance.all = this.directivesInstance.filter(x => x !== instance);
         }
 
         return attr;
@@ -123,7 +129,7 @@ export abstract class ElementStructureAbstract {
             }
             else {
                 instance.element = this.compiledNode as HTMLElement;
-                instance.onDestroy(attr.name, this.scope);
+                // instance.onDestroy();
             }
 
             instance.setValueOfSelector(attr.name, attr.getCompiledValue());
@@ -231,7 +237,7 @@ export class AttributeStructure<T extends Directive> {
 
     public resolveDirective(){
         this.checkDirectiveBeforeResolve();
-        this.directiveInstance.resolve(this.name, this.getCompiledValue());
+        this.directiveInstance.onResolve(this.name, this.getCompiledValue());
     }
 
     private checkDirectiveBeforeResolve() {

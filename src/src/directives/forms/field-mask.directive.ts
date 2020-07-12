@@ -27,7 +27,7 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         if (this.checkForm()) {
             if (this.elementIsValid(selector, value)) {
                 try {
@@ -40,7 +40,7 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         }
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 
     private elementIsValid(selector: string, value: any) {

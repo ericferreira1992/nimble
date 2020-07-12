@@ -14,7 +14,7 @@ export class HrefDirective extends Directive {
         super();
     }
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
         let startsWithHash = value.startsWith('#') || value.startsWith('/#');
         let href = value.replace(/^(#)/g, '');
@@ -54,7 +54,7 @@ export class HrefDirective extends Directive {
 			this.element.attributes[selector].value = href;
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 
 }

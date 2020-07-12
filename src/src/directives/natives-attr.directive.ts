@@ -32,9 +32,17 @@ export class NativesAttrsDirective extends Directive {
             'class',
             'style',
         ];
-    }
+	}
+	
+	private previousValue: { [key: string]: any } = {
+		class: {
+			add: [],
+			remove: []
+		},
+		style: '',
+	};
 
-    public resolve(selector: string, value: any): void {
+    public onResolve(selector: string, value: any): void {
         selector = this.pureSelector(selector);
 
         if (selector === 'class')
@@ -51,7 +59,7 @@ export class NativesAttrsDirective extends Directive {
         }
     }
 
-    public onDestroy(selector: string) {
+    public onDestroy() {
     }
 
     private resolveClass(value: string) {
@@ -89,15 +97,26 @@ export class NativesAttrsDirective extends Directive {
                         classesAdd = [value];
                 }
             }
-            
-            classesAdd.forEach(c => this.element?.classList.add(c));
-            classesRemove.forEach(c => this.element?.classList.remove(c));
+
+			if (classesAdd.sort().join(',') !== (this.previousValue.class.add ?? []).sort().join('')) {
+				classesAdd.forEach(c => this.element?.classList.add(c));
+			}
+			if (classesRemove.sort().join(',') !== (this.previousValue.class.remove ?? []).sort().join('')) {
+				classesRemove.forEach(c => this.element?.classList.remove(c));
+			}
+			
+			this.previousValue.class = {
+				add: classesAdd,
+				remove: classesRemove,
+			}
         }
     }
 
     private resolveStyle(value: string) {
         if (value) {
             value = value.trim();
+            let toAdd: { prop: string, value: string }[] = [];
+			
             if (value.startsWith('{') && value.endsWith('}')) {
                 let listExpressions = this.helper.splitStringJSONtoKeyValue(value);
                 listExpressions.forEach((keyValue) => {
