@@ -3,5 +3,16 @@
     <div>
         Wellcome to <strong>Nimble framework</strong>
     </div>
-    First page rendered!
+	
+	<p>
+		Look what to do:
+	</p>
+
+	<div class="page-example">
+		<button (click)="decrease()">-</button>
+		<button (click)="increase()">+</button>
+		<div class="line-bar">
+			<div [style]="{ 'width': (width + '%') }"></div>
+		</div>
+	</div>
 </div>

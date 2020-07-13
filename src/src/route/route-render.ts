@@ -67,26 +67,26 @@ export class RouteRender extends RenderAbstract {
      * @param route 
      */
     public rerenderRoute(route: Route) {
-        let childRoutes = [route, ...route.getAllParents()].reverse();
-        let parent: Node = null;
+		let childRoutes = [route, ...route.getAllParents()].reverse();
+		let parent: Node = null;
 
-        for(let child of childRoutes) {
-            if (!parent || child.structuredTemplate.isRendered) {
-                this.recompileElementFromStructure(child.structuredTemplate);
-            }
-            else {
-                let routerElement = this.getRouterElement(parent as HTMLElement);
-                if (routerElement) {
-                    let childNode = this.compileElementFromStructure(child.structuredTemplate);
-                    routerElement.appendChild(childNode);
-                    parent = childNode;
-                }
-            }
+		for(let child of childRoutes) {
+			if (!parent || child.structuredTemplate.isRendered) {
+				this.recompileElementFromStructure(child.structuredTemplate);
+			}
+			else {
+				let routerElement = this.getRouterElement(parent as HTMLElement);
+				if (routerElement) {
+					let childNode = this.compileElementFromStructure(child.structuredTemplate);
+					routerElement.appendChild(childNode);
+					parent = childNode;
+				}
+			}
 
-            parent = child.structuredTemplate.compiledNode as HTMLElement;
-        }
+			parent = child.structuredTemplate.compiledNode as HTMLElement;
+		}
 
-        this.listenersCollector.applyAllListeners();
+		this.listenersCollector.applyAllListeners();
     }
 
     /**

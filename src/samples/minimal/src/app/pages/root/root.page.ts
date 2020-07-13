@@ -1,4 +1,4 @@
-import { Page, PreparePage, Router, RouterEvent } from '@nimble-ts/core';
+import { Page, PreparePage, Router } from '@nimble-ts/core';
 
 @PreparePage({
     template: require('./root.page.html'),
@@ -9,25 +9,27 @@ export class RootPage extends Page {
 
     public loading = false;
     public menuItems = [
-        { text: 'First Page', path: 'first' },
-        { text: 'Second Page', path: 'second' },
-        { text: 'Third Page', path: 'third' },
+        { text: 'First page', path: '' },
+        { text: 'Second page', path: 'second' },
+        { text: 'Third page', path: 'third' },
     ];
 
-    private cancelListeners: any[] = [];
+    private cancelListeners: (() => void)[] = [];
 
     onInit() {
         this.cancelListeners = [
-            Router.addListener(RouterEvent.STARTED_CHANGE, () => {
+            Router.addListener('STARTED_CHANGE', () => {
                 this.render(() => this.loading = true);
             }),
-            Router.addListener([RouterEvent.FINISHED_CHANGE, RouterEvent.CHANGE_REJECTED, RouterEvent.CHANGE_ERROR], () => {
-                this.render(() => this.loading = false);
+            Router.addListener(['FINISHED_CHANGE', 'CHANGE_REJECTED', 'CHANGE_ERROR'], () => {
+				this.render(() => this.loading = false);
             })
         ]
-    }
+	}
 
     onDestroy() {
-        this.cancelListeners.forEach(x => x());
+        this.cancelListeners.forEach(unlistener => {
+			unlistener();
+		});
     }
 }

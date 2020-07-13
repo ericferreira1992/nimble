@@ -8,6 +8,8 @@
     },
     "vendors": {
         "js": [],
-        "css": []
+        "css": [
+			"src/style.scss"
+		]
     }
 }

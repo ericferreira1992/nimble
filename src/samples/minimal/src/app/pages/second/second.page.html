@@ -1,4 +1,17 @@
 <div  class="second-page">
     <span>🤪</span><br>
-    Second page rendered!
+    <p>
+		Second page rendered!
+	</p>
+	
+	<p>
+		Now look at this (drag the box):
+	</p>
+
+	<div class="page-example">
+		<div [style]="{ 'top': (boxPositioned.Y + 'px'), 'left': (boxPositioned.X + 'px') }"
+			(mousedown)="onMouseDownChange($event, true)"
+			(mouseup)="onMouseDownChange($event, false)">
+		</div>
+	</div>
 </div>

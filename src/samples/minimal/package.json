@@ -1,6 +1,6 @@
 {
     "name": "minimal",
-    "version": "1.0.0",
+    "version": "1.2.4",
     "scripts": {
         "start": "npm run serve:local",
         "build": "npm run build:prod",

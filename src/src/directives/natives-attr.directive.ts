@@ -122,6 +122,7 @@ export class NativesAttrsDirective extends Directive {
                 listExpressions.forEach((keyValue) => {
                     try {
                         let property = keyValue.key;
+                        let value = this.compile(keyValue.value);
 
                         this.element.style[property] = value;
                     }

@@ -520,13 +520,15 @@ export class Router {
 
     private static whenRerenderIsRequested(page: Page): Promise<any> {
         if (this.state !== RouterEvent.RENDERING) {
-            let changingRouteInProgress = this.state === RouterEvent.STARTED_CHANGE;
-            
-            this.setState(RouterEvent.STARTED_RERENDER, (changingRouteInProgress && this.previous) ? this.previous : this.current);
-            this.setState(RouterEvent.FINISHED_RERENDER, this.current);
-    
-            if (changingRouteInProgress)
-                this._state = RouterEvent.STARTED_CHANGE;
+			let changingRouteInProgress = this.state === RouterEvent.STARTED_CHANGE;
+			
+			let routeToRender = (changingRouteInProgress && this.previous) ? this.previous : this.current;
+
+			this.setState(RouterEvent.STARTED_RERENDER, routeToRender);
+			this.setState(RouterEvent.FINISHED_RERENDER, this.current);
+	
+			if (changingRouteInProgress)
+				this._state = RouterEvent.STARTED_CHANGE;
         }
         else {
             console.warn(`The render() was requested and did not work because the page was being constructing.`);

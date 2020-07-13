@@ -37,9 +37,6 @@ export class FormDirective extends Directive {
     }
 
     public onDestroy() {
-        // selector = this.pureSelector(selector);
-        // if (selector === 'form' && this.form) {
-        // }
 		for(let sub of this.subscribes)
 			sub.observation.unsubscribe();
     }

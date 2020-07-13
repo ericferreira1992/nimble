@@ -1,8 +1,47 @@
+@import 'src/scss/variables';
+
 .first-page {
     padding: 15px;
     text-align: center;
 
     > span  {
         font-size: 50px;
-    }
+	}
+	
+	.page-example {
+		padding-top: 10px;
+		max-width: 300px;
+		margin: auto;
+
+		> button {
+			outline: 0;
+			margin: 0 5px;
+			cursor: pointer;
+			background: transparent;
+			border-radius: 50%;
+			width: 35px;
+			height: 35px;
+			font-size: 25px;
+			font-weight: bold;
+			border: 3px solid #FFF;
+			color: #FFF;
+		}
+
+		.line-bar {
+			position: relative;
+			height: 30px;
+			margin: 20px auto 0 auto;
+			border-radius: 6px;
+			border: 2px solid #FFF;
+			overflow: hidden;
+
+			> div {
+				position: absolute;
+				height: 100%;
+				background: #FFF;
+				transition-duration: 200ms;
+				transition-delay: 50ms;
+			}
+		}
+	}
 }

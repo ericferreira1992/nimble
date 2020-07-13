@@ -1,12 +1,14 @@
 <div  class="root-page">
     <header>
-        <div>Nimble</div>
+        <img src="/assets/img/logo.svg#white"/>
         <ul>
             <li @for="let item of menuItems" [class]="{ 'actived': routePath === item.path }">
                 <a href="/{{item.path}}">{{item.text}}</a>
             </li>
         </ul>
-    </header>
-    <nimble-router class="root-content"></nimble-router>
-    <div @if="loading">Carregando...</div>
+	</header>
+	
+	<nimble-router class="root-content"></nimble-router>
+	
+	<div @if="loading" class="root-loaing">Loading page...</div>
 </div>

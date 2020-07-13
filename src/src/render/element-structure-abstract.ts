@@ -54,7 +54,7 @@ export abstract class ElementStructureAbstract {
 		this.destroyAllDirectives();
 	}
 	
-	private destroyAllDirectives() {
+	public destroyAllDirectives() {
 		for (let directiveInstance of this.directivesInstance) {
 			directiveInstance.onDestroy();
 		}

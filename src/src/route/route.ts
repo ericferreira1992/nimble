@@ -1,18 +1,18 @@
 import { Router } from './router';
 import { RouteBase } from './route-base';
 import { Page } from './../page/page';
-import { isNullOrUndefined } from 'util';
+import { isNullOrUndefined, isArray } from 'util';
 import { TemplatedPage } from '../page/templated-page';
 import { Type } from '../inject/type.interface';
 import { NimbleApp } from '../app';
 import { RouteParams } from '../providers/route-params/route-params';
 import { ElementStructure } from '../render/element-structure';
 import { RenderHelper } from '../render/render-helper';
+import { ElementStructureAbstract } from '../render/element-structure-abstract';
 
 export class Route extends RouteBase {
     public parent?: Route;
-    public structuredTemplate: (ElementStructure) = null;
-    public currentElement: HTMLElement = null;
+    public structuredTemplate: ElementStructure = null;
 
     public get isNotFoundPath() { return this.path === '**'; }
     public get pathWithParams() { return /{(.|\n)*?}/g.test(this.path); }
@@ -62,7 +62,10 @@ export class Route extends RouteBase {
                             this.pageType = TemplatedPage;
                             this.pageInstance = new TemplatedPage(this.page);
                             this.structureTemplate();
-                        }
+						}
+						else {
+							this.destroyDirectiveOfStructure();
+						}
                         success(this);
                         complete();
                     }
@@ -80,6 +83,9 @@ export class Route extends RouteBase {
                                         if (makeNewInstancePage || !this.pageInstance) {
                                             this.instancePage(pageType)
                                         }
+										else {
+											this.destroyDirectiveOfStructure();
+										}
                                         success(this);
                                     }
                                     catch (e) {
@@ -100,6 +106,9 @@ export class Route extends RouteBase {
                             if (makeNewInstancePage || !this.pageInstance) {
                                 this.instancePage(this.page as Type<Page>);
                             }
+							else {
+								this.destroyDirectiveOfStructure();
+							}
                             success(this);
                             complete();
                         }
@@ -127,8 +136,8 @@ export class Route extends RouteBase {
         });
 
         this._pageTemplate = this.pageInstance.template;
-        delete this.pageInstance.template;
-
+		delete this.pageInstance.template;
+		
         if (this.pageInstance) {
             this.structureTemplate();
         }
@@ -250,5 +259,21 @@ export class Route extends RouteBase {
             return this.getAllParents().pop();
         else
             return this;
-    }
+	}
+	
+	private destroyDirectiveOfStructure() {
+		this.destroyRecursiveDirectiveOfStructure(this.structuredTemplate);
+	}
+
+	private destroyRecursiveDirectiveOfStructure(structure: ElementStructureAbstract) {
+		if (structure) {
+			if (structure.children && isArray(structure.children)) {
+				for (let child of structure.children) {
+					this.destroyRecursiveDirectiveOfStructure(child);
+				}
+			}
+	
+			structure.destroyAllDirectives();
+		}
+	}
 }
