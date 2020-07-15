@@ -158,7 +158,8 @@ export class Router {
                 if (changed && !isNullOrUndefined(this.next.redirect)) {
                     let redirectPath = this.next.redirect;
                     this._next = null;
-                    this.updateURLPath(redirectPath, { pathRedirect: true });
+					this.updateURLPath(redirectPath, { pathRedirect: true });
+					this._nextPath = redirectPath;
                     this.onRedirect();
                     return;
                 }
