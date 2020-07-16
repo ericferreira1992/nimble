@@ -8,11 +8,16 @@
         font-size: 50px;
 	}
 	
-	.page-example-1 {
+	.page-example-1,
+	.page-example-2 {
 		border-top: dashed 2px rgba(#FFF, .25);
 		margin: auto;
-		margin-top: 25px;
+		padding-top: 5px;
 		max-width: 300px;
+	}
+	
+	.page-example-1 {
+		margin-top: 25px;
 
 		> .drop-down {
 			position: relative;
@@ -25,7 +30,7 @@
 				position: relative;
 				cursor: pointer;
 				background: #FFF;
-				box-shadow: 2px 2px 5px rgba(#000, .5);
+				box-shadow: 2px 2px 5px rgba(#000, .25);
 				border-radius: 5px;
 				padding: 10px 30px 10px 12px;
 				color: #777;
@@ -33,6 +38,10 @@
 
 				> span {
 					vertical-align: middle;
+
+					&:not(.selected) {
+						color: #999;
+					}
 				}
 			
 				&::after {
@@ -58,7 +67,7 @@
 				position: absolute;
 				top: 50px;
 				width: inherit;
-				box-shadow: 2px 2px 5px rgba(#000, .5);
+				box-shadow: 2px 2px 5px rgba(#000, .25);
 				border-radius: 5px;
 				list-style: none;
 				margin: 0;
@@ -97,4 +106,60 @@
 			}
 		}
 	}
+
+	.page-example-2 {
+		margin-top: 40px;
+
+		input {
+			background: #FFF;
+			box-shadow: 2px 2px 5px rgba(#000, .25);
+			border: none;
+			border-radius: 5px;
+			height: 46px;
+			padding: 0 12px;
+			color: #777;
+			width: 100%;
+			max-width: 250px;
+			outline: 0;
+			font-size: 16px;
+		}
+
+		*:nth-child(3) {
+			margin: auto;
+			display: block;
+			text-align: left;
+			max-width: 250px;
+			margin-top: 10px;
+		}
+
+		> button{
+			cursor: pointer;
+			margin-top: 20px;
+			border: solid 2px #FFF;
+			padding: 8px 14px;
+			color: #FFF;
+			background: transparent;
+			border-radius: 17px;
+			outline: 0;
+		}
+		> span {
+			display: block;
+			margin-top: 25px;
+			font-size: 13px;
+		}
+	}
+}
+
+
+::placeholder {
+	color: #999;
+	opacity: 1;
+}
+
+:-ms-input-placeholder {
+	color: #999;
+}
+
+::-ms-input-placeholder {
+	color: #999;
 }

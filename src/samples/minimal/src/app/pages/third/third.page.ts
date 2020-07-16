@@ -1,4 +1,4 @@
-import { Page, PreparePage } from '@nimble-ts/core';
+import { Page, PreparePage, Form } from '@nimble-ts/core';
 
 @PreparePage({
     template: require('./third.page.html'),
@@ -17,8 +17,15 @@ export class ThirdPage extends Page {
 		]
 	}
 
+	public myForm: Form;
+	public needShowFormData: boolean = false;
+
 	constructor() {
-		super()
+		super();
+
+		this.myForm = new Form({
+			anyText: { value: '' }
+		});
 	}
 
 	onInit() {
@@ -34,6 +41,12 @@ export class ThirdPage extends Page {
 		this.render(() => {
 			this.dropDown.selected = item;
 			this.dropDown.show = false;
+		});
+	}
+
+	public showFormData() {
+		this.render(() => {
+			this.needShowFormData = true;
 		});
 	}
 

@@ -72,7 +72,19 @@
                 }
             }
         }
-    }
+	}
+	
+	.root-alert {
+		text-align: center;
+		font-size: 11px;
+		display: block;
+		margin: auto;
+		max-width: 500px;
+		border-top: 1px dashed rgba(#FFF, 0.2);
+		margin-top: 10px;
+		padding-top: 20px;
+		color: #FFF;
+	}
 
     .root-content {
         display: block;
