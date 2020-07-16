@@ -11,19 +11,20 @@
     },
     "private": true,
     "dependencies": {
-        "@nimble-ts/core": "^1.1.0"
+        "@nimble-ts/core": "^1.2.6"
     },
     "devDependencies": {
+        "@nimble-ts/cli": "^1.2.8",
         "@types/node": "^12.12.7",
         "@types/webpack-env": "^1.14.1",
-        "node-sass": "^4.11.0",
-        "ts-loader": "^5.4.5",
-        "typescript": "^3.7.3",
+        "css-loader": "^2.1.1",
+        "file-loader": "^3.0.1",
+        "html-loader": "^0.5.5",
+        "node-sass": "^4.14.1",
         "postcss-loader": "^3.0.0",
         "sass-loader": "^7.1.0",
         "style-loader": "^0.23.1",
-        "css-loader": "^2.1.1",
-        "file-loader": "^3.0.1",
-        "html-loader": "^0.5.5"
+        "ts-loader": "^5.4.5",
+        "typescript": "^3.7.3"
     }
 }
