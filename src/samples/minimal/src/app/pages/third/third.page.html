@@ -1,4 +1,25 @@
 <div  class="third-page">
     <span>✌🏼</span><br>
-    Third page rendered!
+    <p>
+		Third page rendered!
+	</p>
+
+	<div class="page-example-1">
+		<p>
+			Look that select dropdown:
+		</p>
+
+		<div class="drop-down">
+			<div (click)="toggleShow()">
+				<span>
+					{{dropDown.selected ? dropDown.selected.text : '🥺 Select a fruit'}}
+				</span>
+			</div>
+			<ul @if="dropDown.show">
+				<li @for="item of dropDown.items" (click)="selectItem(item)" [class]="{'selected': dropDown.selected === item}">
+					{{item.text}}
+				</li>
+			</ul>
+		</div>
+	</div>
 </div>

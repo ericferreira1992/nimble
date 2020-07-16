@@ -9,9 +9,10 @@
 	}
 	
 	.page-example {
-		padding-top: 10px;
+		border-top: dashed 2px rgba(#FFF, .25);
 		max-width: 300px;
 		margin: auto;
+		margin-top: 25px;
 
 		> button {
 			outline: 0;

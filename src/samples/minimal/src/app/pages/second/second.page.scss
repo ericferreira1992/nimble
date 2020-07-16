@@ -12,9 +12,25 @@
 		position: relative;
 		width: calc(100% + 60px);
 		margin: 0 -30px;
+		margin-top: 70px;
+
+		> p {
+			margin-top: -35px;
+		}
+
+		&::before {
+			position: relative;
+			content: '';
+			display: block;
+			max-width: 300px;
+			border-top: dashed 2px rgba(#FFF, .25);
+			margin: auto;
+			top: -50px;
+		}
 		
 		> div {
 			position: absolute;
+			user-select: none;
 			background: #FFF;
 			border-radius: 6px;
 			width: 200px;
@@ -22,6 +38,36 @@
 			border: 3px solid lighten($primaryColor, 5);
 			box-shadow: 2px 2px 10px rgba(#000, .2);
 			transform: translateX(-50%);
+			cursor: -webkit-grab;
+			cursor: grab;
+
+			&:active {
+				cursor: -webkit-grabbing;
+				cursor: grabbing;
+			}
+
+			> div {
+				position: relative;
+				display: block;
+				text-align: center;
+				top: 50%;
+				font-size: 50px;
+				transform: translateY(-50%);
+				opacity: 0;
+				transition-delay: 800ms;
+				transition-duration: 300ms;
+				
+				> span {
+					margin-top: -8px;
+    				display: block;
+					font-size: 25px;
+					color: $primaryColor;
+				}
+
+				&.dragged {
+					opacity: 1;
+				}
+			}
 		}
 	}
 }

@@ -3,15 +3,20 @@
     <p>
 		Second page rendered!
 	</p>
-	
-	<p>
-		Now look at this (drag the box):
-	</p>
 
 	<div class="page-example">
-		<div [style]="{ 'top': (boxPositioned.Y + 'px'), 'left': (boxPositioned.X + 'px') }"
+		<p>
+			Now look at this (drag the box):
+		</p>
+
+		<div [style]="{ 'top': (boxPosition.Y + 'px'), 'left': (boxPosition.X + 'px') }"
 			(mousedown)="onMouseDownChange($event, true)"
-			(mouseup)="onMouseDownChange($event, false)">
+			(mouseup)="onMouseDownChange($event, false)"
+		>
+			<div [class]="{ 'dragged': draggedOnce }">
+				👏🏼<br/>
+				<span>Great!!</span>
+			</div>
 		</div>
 	</div>
 </div>
