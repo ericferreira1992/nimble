@@ -1,5 +1,3 @@
-# Personal page
-
-This is my professional and personal page.
+# Nimble Minimal Page
 
 

@@ -1,6 +1,6 @@
 {
     "name": "minimal",
-    "version": "1.2.4",
+    "version": "1.0.0",
     "scripts": {
         "start": "npm run serve:local",
         "build": "npm run build:prod",
@@ -26,6 +26,6 @@
         "sass-loader": "^7.1.0",
         "style-loader": "^0.23.1",
         "ts-loader": "^5.4.5",
-        "typescript": "^3.7.3"
+        "typescript": "^3.9.3"
     }
 }
