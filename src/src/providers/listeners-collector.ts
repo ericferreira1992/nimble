@@ -15,7 +15,7 @@ export class ListenersCollector {
             });
             subscribed.callback = (e) => {
                 if (subscribed.beforeListen) subscribed.beforeListen.forEach(x => x());
-                callback(e);
+				callback(e);
                 if (subscribed.afterListen) subscribed.afterListen.forEach(x => x());
             }
             this.listenersSubscribed.push(subscribed);
@@ -25,7 +25,7 @@ export class ListenersCollector {
         return () => {};
     }
 
-    public getSubscribedsByTarget(target: HTMLElement) {
+    public getSubscribersByTarget(target: HTMLElement) {
         return this.listenersSubscribed.filter(x => x.target === target);
     }
 
@@ -76,14 +76,12 @@ export class ListenersCollector {
 
     public addActionsInElementsListeners(element: HTMLElement, before: () => void, after: () => void) {
         if (before || after) {
-            let subscribed = this.listenersSubscribed.find(x => x.target === element);
-            if (subscribed) {
-                if (!subscribed.beforeListen.some(x => x === before))
+            for (let subscribed of this.getSubscribersByTarget(element)) {
+				if (!subscribed.beforeListen.some(x => x === before))
                     subscribed.beforeListen.push(before);
-
                 if (!subscribed.afterListen.some(x => x === after))
                     subscribed.afterListen.push(after);
-            }
+			}
         }
     }
 }

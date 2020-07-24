@@ -235,24 +235,18 @@ export class RenderAbstract {
     }
 
     private checkStructureNodeActions(structure: ElementStructureAbstract) {
-        let element = structure.compiledNode as HTMLElement;
+		let element = structure.compiledNode as HTMLElement;
+
         if (structure.compiledBeginFn) {
             this.listenersCollector.addActionsInElementsListeners(element, structure.compiledBeginFn, structure.compiledEndFn);
-        }
-        else {
-            let parent = structure.parent;
-            let beginFn = null;
-            let endFn = null;
-            while(parent && !beginFn && !endFn) {
-                if (parent && parent.compiledBeginFn && parent.compiledEndFn) {
-                    beginFn = parent.compiledBeginFn;
-                    endFn = parent.compiledEndFn;
-                    break;
-                }
-                parent = parent.parent;
-            }
-            this.listenersCollector.addActionsInElementsListeners(element, beginFn, endFn);
-        }
+		}
+		let parent = structure.parent;
+		while(parent) {
+			if (parent && parent.compiledBeginFn && parent.compiledEndFn) {
+				this.listenersCollector.addActionsInElementsListeners(element, parent.compiledBeginFn, parent.compiledEndFn);
+			}
+			parent = parent.parent;
+		}
     }
 
     private cloneStructureDueIteration(structure: ElementStructure, beginFn: () => void, endFn: () => void): ElementIterationStructure {
