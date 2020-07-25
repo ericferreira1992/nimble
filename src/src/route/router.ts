@@ -471,6 +471,8 @@ export class Router {
                 this.updateURLPath(path, { pathRedirect: currentPageIsThisPath });
 
                 if (currentPageIsThisPath) {
+					this.setState(RouterEvent.STARTED_CHANGE);
+					this.setState(RouterEvent.FINISHED_CHANGE);
                     return;
                 }
             }

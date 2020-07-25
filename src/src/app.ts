@@ -158,32 +158,13 @@ export class NimbleApp {
     private onRouteFinishedChange(route: Route) {
         if (route) {
 			document.dispatchEvent(new Event('render-event'));
-			this.changedRoute = true;
 
-			this.routeRender.notifyRoutesAfterRouteChanged(route);
-    
-            if (this.firstRender) {
-                if (location.hash && !this.config.useHash) {
-                    // let currentHash = location.hash;
-                    // location.hash = '';
-                    // setTimeout(() => {
-					// 	location.hash = currentHash;
-					// 	Router.current?.pageInstance?.render();
-					// }, 0);
-                }
-                
-                this.firstRender = false;
-            }
-            if (!this.firstRender) {
-				document.body.style.scrollBehavior = 'initial';
-				(document.children.item(0) as HTMLElement).style.scrollBehavior = 'initial';
-				setTimeout(() => {
-					document.body.scrollTo({top: 0, left: 0});
-					document.children.item(0).scrollTo({top: 0, left: 0});
-					document.body.style.scrollBehavior = '';
-					(document.children.item(0) as HTMLElement).style.scrollBehavior = '';
-				});
-            }
+			let { isRendered } = this.routeRender.notifyRoutesAfterRouteChanged(route); 
+			
+			this.changedRoute = true;
+			if (isRendered) {
+				this.checkHashLinkAfterRouteChanged();
+			}
         }
     }
 
@@ -204,20 +185,33 @@ export class NimbleApp {
         document.dispatchEvent(new Event('render-event'));
         this.state = NimbleAppState.INITIALIZED;
 
-		this.routeRender.notifyRoutesAfterRerender(route);
+		let { isRendered } = this.routeRender.notifyRoutesAfterRerender(route);
 		
-		if (this.firstRender && this.changedRoute) {
-			this.firstRender = false;
-			if (location.hash && !this.config.useHash) {
+		if (this.changedRoute && isRendered) {
+			this.checkHashLinkAfterRouteChanged();
+		}
+	}
+	
+	private checkHashLinkAfterRouteChanged() {
+		this.changedRoute = false;
+		if (location.hash && !this.config.useHash) {
+			setTimeout(() => {
 				let currentHash = location.hash;
 				location.hash = '';
-				setTimeout(() => {
-					location.hash = currentHash;
-					Router.current?.pageInstance?.render();
-				}, 0);
-			}
+				location.hash = currentHash;
+			}, 250);
 		}
-    }
+		else {
+			document.body.style.scrollBehavior = 'initial';
+			(document.children.item(0) as HTMLElement).style.scrollBehavior = 'initial';
+			setTimeout(() => {
+				document.body.scrollTo({top: 0, left: 0});
+				document.children.item(0).scrollTo({top: 0, left: 0});
+				document.body.style.scrollBehavior = '';
+				(document.children.item(0) as HTMLElement).style.scrollBehavior = '';
+			});
+		}
+	}
 
     public static inject<T>(type: Type<T>, onInstaciate?: (instance: any) => void): T {
         return this.instance.containerInjector.inject<T>(type, onInstaciate);
