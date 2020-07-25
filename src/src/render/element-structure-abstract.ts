@@ -146,9 +146,7 @@ export abstract class ElementStructureAbstract {
 
     public renderNodeIfNot() {
         this.checkRenderedCorrectly();
-        if (this.tagName === 'li') {
-            let teste = '';
-        }
+
         if (!this.isRendered && this.parent && this.parent.compiledNode) {
             let structureIndex = this.parent.children.findIndex(x => x === this);
 

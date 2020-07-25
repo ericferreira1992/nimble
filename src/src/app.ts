@@ -24,10 +24,12 @@ export class NimbleApp {
 
     private afterRenderFn: () => void = null;
 
-    public state: NimbleAppState = NimbleAppState.INITIALIZING;
+	public state: NimbleAppState = NimbleAppState.INITIALIZING;
+	
+	private firstRender: boolean = true;
+	private changedRoute: boolean = false;
 
-    public rootElement: { firstRender: boolean, virtual: HTMLElement, real: HTMLElement } = {
-        firstRender: true,
+    public rootElement: { virtual: HTMLElement, real: HTMLElement } = {
         real: null,
         virtual: null
     };
@@ -141,7 +143,9 @@ export class NimbleApp {
         window.customElements.define('nimble-dialog-area', NimbleDialogArea);
     }
 
-    private onRouteStartChange(route: Route) {}
+    private onRouteStartChange(route: Route) {
+		this.changedRoute = false; 
+	}
 
     private onRouteRendering(route: Route) {
         if (route) {
@@ -153,23 +157,33 @@ export class NimbleApp {
 
     private onRouteFinishedChange(route: Route) {
         if (route) {
-            document.dispatchEvent(new Event('render-event'));
+			document.dispatchEvent(new Event('render-event'));
+			this.changedRoute = true;
+
+			this.routeRender.notifyRoutesAfterRouteChanged(route);
     
-            if (this.rootElement.firstRender) {
+            if (this.firstRender) {
                 if (location.hash && !this.config.useHash) {
-                    let currentHash = location.hash;
-                    location.hash = '';
-                    setTimeout(() => location.hash = currentHash, 0);
+                    // let currentHash = location.hash;
+                    // location.hash = '';
+                    // setTimeout(() => {
+					// 	location.hash = currentHash;
+					// 	Router.current?.pageInstance?.render();
+					// }, 0);
                 }
                 
-                this.rootElement.firstRender = false;
+                this.firstRender = false;
             }
-            else {
-                document.body.scrollTo({top: 0, left: 0});
-                document.children.item(0).scrollTo({top: 0, left: 0});
+            if (!this.firstRender) {
+				document.body.style.scrollBehavior = 'initial';
+				(document.children.item(0) as HTMLElement).style.scrollBehavior = 'initial';
+				setTimeout(() => {
+					document.body.scrollTo({top: 0, left: 0});
+					document.children.item(0).scrollTo({top: 0, left: 0});
+					document.body.style.scrollBehavior = '';
+					(document.children.item(0) as HTMLElement).style.scrollBehavior = '';
+				});
             }
-
-            this.routeRender.notifyRoutesAfterRouteChanged(route);
         }
     }
 
@@ -190,7 +204,19 @@ export class NimbleApp {
         document.dispatchEvent(new Event('render-event'));
         this.state = NimbleAppState.INITIALIZED;
 
-        this.routeRender.notifyRoutesAfterRerender(route);
+		this.routeRender.notifyRoutesAfterRerender(route);
+		
+		if (this.firstRender && this.changedRoute) {
+			this.firstRender = false;
+			if (location.hash && !this.config.useHash) {
+				let currentHash = location.hash;
+				location.hash = '';
+				setTimeout(() => {
+					location.hash = currentHash;
+					Router.current?.pageInstance?.render();
+				}, 0);
+			}
+		}
     }
 
     public static inject<T>(type: Type<T>, onInstaciate?: (instance: any) => void): T {
