@@ -54,8 +54,8 @@ export class RouteRender extends RenderAbstract {
             }
         }
 
-        RenderHelper.removeAllChildrenOfElement(this.app.rootElement.real);
-        this.app.rootElement.real.appendChild(routeRootElement);
+        RenderHelper.removeAllChildrenOfElement(this.app.rootElement);
+        this.app.rootElement.appendChild(routeRootElement);
 
         this.listenersCollector.applyAllListeners();
 

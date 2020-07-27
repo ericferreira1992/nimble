@@ -29,10 +29,12 @@ export class NimbleApp {
 	private firstRender: boolean = true;
 	private changedRoute: boolean = false;
 
-    public rootElement: { virtual: HTMLElement, real: HTMLElement } = {
-        real: null,
-        virtual: null
-    };
+	private _rootElement: HTMLElement = null;
+    public get rootElement() { return this._rootElement; }
+	
+    private _baseHref: string = '/';
+    public get baseHref() { return this._baseHref; }
+    public get hasBaseHref() { return this.baseHref !== '' && this.baseHref !== '/'; }
 
     public iterationElementsApplied: { virtual: { element: HTMLElement, directives: Type<Directive>[], anyChildrenApplied: boolean }[], real: { element: HTMLElement, directives: Type<Directive>[], anyChildrenApplied: boolean }[] } = {
         real: [],
@@ -61,7 +63,10 @@ export class NimbleApp {
         try{
             this.defineRootElement();
             this.registerDirectives();
-            this.registerProvidersInContainerInjector();
+			this.registerProvidersInContainerInjector();
+			
+			this._baseHref = document.head.querySelector('base')?.href ?? '/';
+			this._baseHref = this._baseHref.replace(location.origin, '');
 
             // Router
             Router.useHash = this.config.useHash;
@@ -75,11 +80,10 @@ export class NimbleApp {
     }
 
     private defineRootElement() {
-        this.rootElement.real = document.querySelector('nimble-root');
-        if (this.rootElement.real) {
-            this.rootElement.real.innerHTML = '';
-            this.rootElement.real.style.removeProperty('visibility');
-            this.rootElement.virtual = this.rootElement.real.cloneNode(true) as HTMLElement;
+        this._rootElement = document.querySelector('nimble-root');
+        if (this.rootElement) {
+            this.rootElement.innerHTML = '';
+            this.rootElement.style.removeProperty('visibility');
         }
         else {
             console.error(`Nimble not work, because the '<nimble-root></nimble-root>' element not found in body.`);

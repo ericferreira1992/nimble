@@ -32,19 +32,28 @@ export class Router {
 
     private static nextRejectedAndRedirectAfter: boolean = false;
 
-    private static get realCurrentPath() { return (this.useHash ? location.hash : (location.pathname+location.hash)).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, ''); }
+    private static get realCurrentPath() {
+		let path = (this.useHash ? location.hash : (location.pathname + location.hash))
+			.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+		path = this.removeBaseHrefPath(path).replace(/^(\/)/g, '');
+		return path;
+	}
     public static get currentPath() {
         if (!isNullOrUndefined(this.nextPath))
             return this.nextPath;
         else {
-            var path = (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+			var path = (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+			path = this.removeBaseHrefPath(path).replace(/^(\/)/g, '');
+
             var splittedPath = path.split('#');
             return splittedPath.length > 0 ? splittedPath[0] : path;
         }
     }
     public static get nextPath() {
         if (this._nextPath) {
-            var nextPath = this._nextPath.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+			var nextPath = this._nextPath.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+			nextPath = this.removeBaseHrefPath(nextPath).replace(/^(\/)/g, '');
+			
             var splittedPath = nextPath.split('#');
             return splittedPath.length > 0 ? splittedPath[0] : nextPath;
         }
@@ -73,7 +82,35 @@ export class Router {
                 throw new Error(`Occured an error with the route with path "${route.path}". Routes cannot have "page" and "redirect" properties together. Choose one of them.`);
             }
         }
-    }
+	}
+	
+	private static removeBaseHrefPath(path: string): string {
+		if (this.app.hasBaseHref) {
+			path = path.startsWith('/') ? path : `/${path}`;
+			let baseHref = this.app.baseHref.replace(/^(\/)|(\/)$/g, '');
+			path = path.replace(new RegExp(`^(/${baseHref})`, 'g'), '');
+		}
+
+		return path;
+	}
+
+	private static insertBaseHrefPath(path: string): string {
+		if (this.app.hasBaseHref) {
+			path = this.removeBaseHrefPath(path);
+			let baseHref = this.app.baseHref.replace(/^(\/)|(\/)$/g, '');
+			path = `/${baseHref}/${path}`.replace(/\/\//g, '/');
+		}
+
+		return path;
+	}
+
+	private static pathHasInsideBaseHref(path: string): boolean {
+		if (this.app.hasBaseHref) {
+			path.startsWith(this.app.baseHref);
+		}
+
+		return false;
+	}
 
     private static setState(state: RouterEvent, senderNotify?: any, silentMode: boolean = false) {
         this._previousState = this._state;
@@ -404,6 +441,8 @@ export class Router {
         if (this.useHash)
             location.hash = path;
         else {
+			// path = this.insertBaseHrefPath(path);
+
             if (options?.pathRedirect) {
                 history.replaceState(null, null, path);
             }
@@ -457,13 +496,15 @@ export class Router {
     }
 
     public static redirect(path: string) {
+		let hasBaseHref = this.pathHasInsideBaseHref(path);
+
         this.nextRejectedAndRedirectAfter = (!isNullOrUndefined(this.nextPath) || !this.current) ? true : false;
         if (this.nextRejectedAndRedirectAfter && isNullOrUndefined(this.current)) {
             this.updateURLPath(path);
         }
 
         if (!this.pathIsHashLink(path) || !this.pathIsHashLink(path, { checkIsCurrent: true })) {
-            var pathWithoutHash = (path.includes('#') ? path.split('#')[0] : path).replace(/^\//g, '');
+            let pathWithoutHash = this.removeBaseHrefPath(path.includes('#') ? path.split('#')[0] : path).replace(/^\//g, '');
             if (this.currentPathIsHashLink() && this.currentPath !== pathWithoutHash)
                 this._nextPath = path;
             else {
