@@ -1,6 +1,6 @@
 {
     "name": "@nimble-ts/core",
-    "version": "1.2.12",
+    "version": "1.2.13",
     "scripts": {
         "build": "rm -rf dist && tsc && node copy",
         "publish-version": "npm run build && pushd dist && npm publish --access public"
@@ -30,12 +30,12 @@
         "url": "https://github.com/ericferreira1992/nimble/issues"
     },
     "dependencies": {
-        "@webcomponents/webcomponentsjs": "^2.3.0",
+        "@webcomponents/webcomponentsjs": "^2.4.4",
         "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
         "@types/node": "^12.12.7",
         "cpx": "^1.5.0",
-        "typescript": "^3.9.3"
+        "typescript": "^3.9.7"
     }
 }

@@ -35,7 +35,6 @@ export class HrefDirective extends Directive {
                     href = `${location.pathname}#${href}`;
                 }
                 else if (!href.startsWith('/')) {
-					//let prefix = value ? location.pathname : this.baseHref;
 					let prefix = this.baseHref;
                     href = `${prefix.replace(/(\/)$/g, '')}/${href}`;
 				}
@@ -44,9 +43,6 @@ export class HrefDirective extends Directive {
                     let attr = this.element.attributes[selector];
 					let href = attr?.value as string;
                     if (!href || href.startsWith(this.baseHref)) {
-						// if (this.hasBaseHref && href.startsWith(this.baseHref)) {
-						// 	href = href.replace(this.baseHref, '/').replace('//', '/');
-						// }
                         setTimeout(() => {
                             Router.redirect(href);
                         });
