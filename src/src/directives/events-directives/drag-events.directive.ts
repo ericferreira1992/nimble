@@ -1,4 +1,3 @@
-import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Listener } from '../../render/listener';
