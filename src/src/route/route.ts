@@ -19,7 +19,7 @@ export class Route extends RouteBase {
 
     public pageType: Type<Page>;
 
-    public loadPage?: (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean) => void;
+    // public loadPage?: (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean) => void;
 
     public pageInstance?: Page;
     public prevPageInstance?: Page;
@@ -37,7 +37,7 @@ export class Route extends RouteBase {
     constructor(route?: Partial<RouteBase>) {
         super(route);
         this.trimRoutePath();
-        this.checkRoutePage();
+        // this.checkRoutePage();
         this.checkChildren();
         this.checkRoutesParent();
     }
@@ -47,79 +47,73 @@ export class Route extends RouteBase {
             return child === route || (deep && (child as Route).isChild(route, true));
         });
     }
+	
+	public loadPage(success: (route: Route) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true){
+		if (typeof this.page === 'string') {
+			try {
+				if (makeNewInstancePage || !this.pageInstance) {
+					this.pageType = TemplatedPage;
+					this.pageInstance = new TemplatedPage(this.page);
+					this.structureTemplate();
+				}
+				else {
+					this.destroyDirectiveOfStructure();
+				}
+				success(this);
+				complete();
+			}
+			catch (e) {
+				error(e);
+				throw e;
+			}
+		}
+		else if (this.page.name === 'page') {
+			try {
+				(this.page as () => Promise<any>)()
+					.then((pageType) => {
+						try {
+							if (makeNewInstancePage || !this.pageInstance) {
+								this.instancePage(pageType)
+							}
+							else {
+								this.destroyDirectiveOfStructure();
+							}
+							success(this);
+						}
+						catch (e) {
+							error(e);
+							throw e;
+						}
+					})
+					.catch(error)
+					.finally(complete);
+			}
+			catch (e) {
+				error(e);
+				throw e;
+			}
+		}
+		else {
+			try {
+				if (makeNewInstancePage || !this.pageInstance) {
+					this.instancePage(this.page as Type<Page>);
+				}
+				else {
+					this.destroyDirectiveOfStructure();
+				}
+				success(this);
+				complete();
+			}
+			catch (e) {
+				error(e);
+				throw e;
+			}
+		}
+	}
 
     private trimRoutePath() {
         this.path = (this.path ? this.path : '').trim();
         this.path = this.path.replace(/(^\/)|(\/$)/g, '');
-    }
-
-    private checkRoutePage() {
-        if (this.page) {
-            this.loadPage = (success: (route: Route) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true) => {
-                if (typeof this.page === 'string') {
-                    try {
-                        if (makeNewInstancePage || !this.pageInstance) {
-                            this.pageType = TemplatedPage;
-                            this.pageInstance = new TemplatedPage(this.page);
-                            this.structureTemplate();
-						}
-						else {
-							this.destroyDirectiveOfStructure();
-						}
-                        success(this);
-                        complete();
-                    }
-                    catch (e) {
-                        error(e);
-                        throw e;
-                    }
-                }
-                else {
-                    if (this.page.name === 'page') {
-                        try {
-                            (this.page as () => Promise<any>)()
-                                .then((pageType) => {
-                                    try {
-                                        if (makeNewInstancePage || !this.pageInstance) {
-                                            this.instancePage(pageType)
-                                        }
-										else {
-											this.destroyDirectiveOfStructure();
-										}
-                                        success(this);
-                                    }
-                                    catch (e) {
-                                        error(e);
-                                        throw e;
-                                    }
-                                })
-                                .catch(error)
-                                .finally(complete);
-                        }
-                        catch (e) {
-                            error(e);
-                            throw e;
-                        }
-                    }
-                    else {
-                        try {
-                            if (makeNewInstancePage || !this.pageInstance) {
-                                this.instancePage(this.page as Type<Page>);
-                            }
-							else {
-								this.destroyDirectiveOfStructure();
-							}
-                            success(this);
-                            complete();
-                        }
-                        catch (e) {
-                            error(e);
-                            throw e;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private instancePage(pageType: Type<Page>) {
@@ -248,7 +242,9 @@ export class Route extends RouteBase {
         let parents: Route[] = [];
         let route: Route = this;
         while (!isNullOrUndefined(route.parent)) {
-            parents.push(route.parent);
+			if (route.parent.page) {
+				parents.push(route.parent);
+			}
             route = route.parent;
         }
         return parents;

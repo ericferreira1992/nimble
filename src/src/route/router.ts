@@ -94,16 +94,6 @@ export class Router {
 		return path;
 	}
 
-	private static insertBaseHrefPath(path: string): string {
-		if (this.app.hasBaseHref) {
-			path = this.removeBaseHrefPath(path);
-			let baseHref = this.app.baseHref.replace(/^(\/)|(\/)$/g, '');
-			path = `/${baseHref}/${path}`.replace(/\/\//g, '/');
-		}
-
-		return path;
-	}
-
 	private static pathHasInsideBaseHref(path: string): boolean {
 		if (this.app.hasBaseHref) {
 			path.startsWith(this.app.baseHref);
@@ -134,7 +124,6 @@ export class Router {
                     this.onRedirect();
                 }
             }
-            // this.startListening();
         }
     }
 
@@ -215,21 +204,15 @@ export class Router {
     }
 
     private static checkPageCanBeCurrent(): boolean {
-        let found = this.routes.some((route, index) => {
-            if (route.checkIfMatchCurrentLocation())
-                return true;
-            // else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
-                // return route.checkIfMatchCurrentLocation();
-            return false;
+        let found = this.routes.some((route) => {
+			const found = route.checkIfMatchCurrentLocation();
+			return found;
         });
 
         if (!found) {
-            found = this.routes.some((route, index) => {
-                if (route.path === '**')
-                    return true;
-                // else if (index < ((this.routes.length - 1)) && !this.routes.slice(index + 1).some(x => x.path === route.path))
-                    // return route.path === '**';
-                return false;
+            found = this.routes.some((route) => {
+				const found = route.path === '**';
+				return found;
             });
         }
 
@@ -441,8 +424,6 @@ export class Router {
         if (this.useHash)
             location.hash = path;
         else {
-			// path = this.insertBaseHrefPath(path);
-
             if (options?.pathRedirect) {
                 history.replaceState(null, null, path);
             }

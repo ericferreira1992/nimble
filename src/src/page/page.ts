@@ -13,13 +13,13 @@ export class Page implements IScope {
     public onNeedRerender: (page: Page) => Promise<any>;
 
     /**
-     * When element is rendered
+     * When page element is rendered
      */
     onInit() {
     }
 
     /**
-     * When element is destroyed
+     * When page element is destroyed
      */
     onDestroy() {
     }
@@ -28,14 +28,12 @@ export class Page implements IScope {
      * When route match with this page and prepares to be rendered
      */
     onEnter() {
-
     }
 
     /**
      * When the route changes and the page no longer matches and will be removed
      */
     onExit() {
-
     }
 
     /**
