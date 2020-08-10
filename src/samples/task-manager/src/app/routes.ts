@@ -8,7 +8,7 @@ export const ROUTES: RouteBase[] = [
     },
     {
         path: '',
-        routeActivate: [AuthRouteActivate],
+        guard: [AuthRouteActivate],
         page: () => import('./pages/public/public.page').then(x => x.PublicPage),
         children: [
             {
@@ -19,7 +19,7 @@ export const ROUTES: RouteBase[] = [
     },
     {
         path: '',
-        routeActivate: [AuthRouteActivate],
+        guard: [AuthRouteActivate],
         page: () => import('./pages/secured/secured.page').then(x => x.SecuredPage),
         children: [
             {

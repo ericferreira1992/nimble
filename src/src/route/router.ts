@@ -466,8 +466,8 @@ export class Router {
         let currentPath = (this.realCurrentPath.startsWith('/') ? '' : '/') + this.realCurrentPath;
         let nextPath = this.nextPath ? ((this.nextPath.startsWith('/') ? '' : '/') + this.nextPath) : currentPath;
 
-        if (route.routeActivate && route.routeActivate.length > 0) {
-            for(let routeActivate of route.routeActivate) {
+        if (route.guard && route.guard.length > 0) {
+            for(let routeActivate of route.guard) {
                 let instance = NimbleApp.inject(routeActivate);
                 if (instance && !instance.doActivate(currentPath, nextPath, route))
                     return false;

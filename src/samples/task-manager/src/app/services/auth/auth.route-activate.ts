@@ -1,8 +1,8 @@
-import { ActivateRoute, Route, Router, Injectable } from '@nimble-ts/core';
+import { RouteGuard, Route, Router, Injectable } from '@nimble-ts/core';
 import { AuthService } from "./auth.service";
 
 @Injectable()
-export class AuthRouteActivate extends ActivateRoute {
+export class AuthRouteActivate extends RouteGuard {
 
     constructor(
         private authService: AuthService

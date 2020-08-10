@@ -1,10 +1,10 @@
 import { Page } from '../page/page';
 import { Type } from '../inject/type.interface';
-import { ActivateRoute } from './activate-route';
+import { RouteGuard } from './route-guard';
 
 export class RouteBase {
     public path: string = '';
-    public routeActivate?: Type<ActivateRoute>[];
+    public guard?: Type<RouteGuard>[];
     public data?: { [key: string]: any } = null;
     public redirect?: string;
     public page?: (() => Promise<any>) | Type<Page> | string;
