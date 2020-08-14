@@ -1,7 +1,7 @@
 import { Injectable } from "../inject/injectable";
 
 @Injectable({ single: true })
-export class ListenersCollector {
+export class ElementListenersCollector {
     private listenersSubscribed: ListenerSubscribed[] = [];
 
     public subscribe(target: HTMLElement, eventName: string, callback: (e?: any) => void, internal: boolean = false, options?: AddEventListenerOptions): () => void {

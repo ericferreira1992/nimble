@@ -3,8 +3,8 @@ import { RouteRender } from '../route/route-render';
 import { HeaderRender } from '../render/header-render';
 import { HttpClient } from './http-client/http-client';
 import { Helper } from './helper';
-import { ListenersCollector } from './listeners-collector';
-import { Listener } from '../render/listener';
+import { ElementListenersCollector } from './listeners-collector';
+import { ElementListener } from '../render/listener';
 import { DialogBuilder } from '../dialog/dialog-builder';
 import { DialogRender } from '../dialog/dialog-render';
 import { DialogRefCollector } from '../dialog/dialog-ref-collector';
@@ -21,8 +21,8 @@ export const INTERNAL_PROVIDERS: Type<{}>[] = [
     DialogRefCollector,
     HeaderRender,
     HttpClient,
-    Listener,
-    ListenersCollector,
+    ElementListener,
+    ElementListenersCollector,
     InternalObserversCollector,
     RouteParams
 ];

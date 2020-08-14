@@ -1,6 +1,6 @@
 import { Provider, Router, HttpClient } from '@nimble-ts/core';
 
-@Provider({
+@Injectable({
     single: true
 })
 export class AuthService {

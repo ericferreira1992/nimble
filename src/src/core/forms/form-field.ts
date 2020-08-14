@@ -1,6 +1,6 @@
 import { NimbleApp } from "../../app";
 import { Form } from "./form";
-import { ListenersCollector } from "../../providers/listeners-collector";
+import { ElementListenersCollector } from "../../providers/listeners-collector";
 import { Observer } from "../observer";
 import { isObject } from "util";
 
@@ -33,7 +33,7 @@ export class FormField {
     /**Check if all validators is valid and returns a boolean */
     public get isValid() { return !this.errors || Object.keys(this.errors).filter(x => !(this.errors[x] === false)).length === 0; }
 
-    private get listenerCollector() { return NimbleApp.inject(ListenersCollector); }
+    private get listenerCollector() { return NimbleApp.inject(ElementListenersCollector); }
 
     constructor(obj?: Partial<FormField>){
         Object.assign(this, obj);

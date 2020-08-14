@@ -1,7 +1,7 @@
 import { Injectable } from "../inject/injectable";
 import { Route } from "./route";
 import { RenderAbstract } from "../render/render-abstract";
-import { ListenersCollector } from "../providers/listeners-collector";
+import { ElementListenersCollector } from "../providers/listeners-collector";
 import { RenderHelper } from "../render/render-helper";
 import { Router } from "./router";
 import { HeaderRender } from "../render/header-render";
@@ -11,7 +11,7 @@ export class RouteRender extends RenderAbstract {
 
     constructor(
         private headerRender: HeaderRender,
-        protected listenersCollector: ListenersCollector
+        protected listenersCollector: ElementListenersCollector
     ) {
         super(listenersCollector);
     }

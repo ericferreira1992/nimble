@@ -3,8 +3,8 @@ import { Dialog } from "./classes/dialog";
 import { DialogRenderRef } from "./classes/dialog-render-ref";
 import { DialogRef } from "./classes/dialog-ref";
 import { RenderAbstract } from "../render/render-abstract";
-import { Listener } from "../render/listener";
-import { ListenersCollector } from "../providers/listeners-collector";
+import { ElementListener } from "../render/listener";
+import { ElementListenersCollector } from "../providers/listeners-collector";
 import { RenderHelper } from "../render/render-helper";
 import { ElementStructure } from "../render/element-structure";
 
@@ -12,8 +12,8 @@ import { ElementStructure } from "../render/element-structure";
 export class DialogRender extends RenderAbstract {
 
     constructor(
-        protected listenersCollector: ListenersCollector,
-        private listener: Listener
+        protected listenersCollector: ElementListenersCollector,
+        private listener: ElementListener
     ) {
         super(listenersCollector);
     }

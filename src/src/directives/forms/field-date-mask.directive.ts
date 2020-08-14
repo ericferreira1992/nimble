@@ -3,7 +3,7 @@ import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Helper } from '../../providers/helper';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { ElementListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: ['field-date-mask']
@@ -20,7 +20,7 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
 
     constructor(
         private helper: Helper,
-        private listenerCollector: ListenersCollector,
+        private listenerCollector: ElementListenersCollector,
     ) {
         super();
     }

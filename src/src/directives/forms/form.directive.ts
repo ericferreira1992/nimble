@@ -1,7 +1,7 @@
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Form } from '../../core';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { ElementListenersCollector } from '../../providers/listeners-collector';
 import { isNullOrUndefined } from 'util';
 import { ObserverListener } from '../../core/observer';
 
@@ -19,7 +19,7 @@ export class FormDirective extends Directive {
     private subscribes: { id: string, observation: ObserverListener<Event> }[] = [];
 
     constructor(
-        private listenersCollector: ListenersCollector
+        private listenersCollector: ElementListenersCollector
     ) {
         super();
     }

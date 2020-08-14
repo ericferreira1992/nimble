@@ -6,7 +6,7 @@ import { IterationDirective } from "../directives/abstracts/iteration-directive"
 import { Injectable } from "../inject/injectable";
 import { ElementIterationStructure } from "./element-iteration-structure";
 import { DirectiveHelper } from "../directives/directive.helper";
-import { ListenersCollector } from "../providers/listeners-collector";
+import { ElementListenersCollector } from "../providers/listeners-collector";
 import { RenderHelper } from "./render-helper";
 import { ElementStructureAbstract } from "./element-structure-abstract";
 
@@ -24,7 +24,7 @@ export class RenderAbstract {
     }
     
     constructor(
-        protected listenersCollector: ListenersCollector
+        protected listenersCollector: ElementListenersCollector
     ) {
     }
 

@@ -1,7 +1,7 @@
 import { IScope } from '../../page/interfaces/scope.interface';
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { Listener } from '../../render/listener';
+import { ElementListener } from '../../render/listener';
 
 @PrepareDirective({
     selector: [
@@ -13,7 +13,7 @@ import { Listener } from '../../render/listener';
 export class KeyboardEventsDirective extends Directive {
 
     constructor(
-        private listener: Listener
+        private listener: ElementListener
     ){
         super();
     }

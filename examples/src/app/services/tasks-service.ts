@@ -1,7 +1,7 @@
 import { Provider, HttpClient, enviroment } from '@nimble-ts/core';
 import { Task } from 'src/app/models/task.model';
 
-@Provider({ single: true })
+@Injectable({ single: true })
 export class TasksService {
 
     private prefixUrl: string = enviroment.baseUrl;

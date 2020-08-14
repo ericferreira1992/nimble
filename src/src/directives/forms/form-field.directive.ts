@@ -4,7 +4,7 @@ import { FormField } from '../../core/forms/form-field';
 import { InternalObserversCollector } from '../../providers/internal-observers-collector';
 import { isArray, isBoolean, isUndefined } from 'util';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { ElementListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: [
@@ -16,7 +16,7 @@ import { ListenersCollector } from '../../providers/listeners-collector';
 export class FormFieldDirective extends BaseFormFieldDirective {
 
     constructor(
-        private listenerCollector: ListenersCollector,
+        private listenerCollector: ElementListenersCollector,
         private intervalEventsCollector: InternalObserversCollector
 
     ) {

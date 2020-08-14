@@ -1,7 +1,7 @@
 import { Directive } from './abstracts/directive';
 import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Router } from '../route/router';
-import { ListenersCollector } from '../providers/listeners-collector';
+import { ElementListenersCollector } from '../providers/listeners-collector';
 import { NimbleApp } from '../app';
 
 @PrepareDirective({
@@ -13,13 +13,14 @@ export class HrefDirective extends Directive {
 	private get hasBaseHref() { return NimbleApp.instance.hasBaseHref; }
 
     constructor(
-        private listenersCollector: ListenersCollector
+        private listenersCollector: ElementListenersCollector
     ){
         super();
     }
 
     public onResolve(selector: string, value: any): void {
-        selector = this.pureSelector(selector);
+		selector = this.pureSelector(selector);
+		value = value ?? '';
         let startsWithHash = value.startsWith('#') || value.startsWith('/#');
         let href = value.replace(/^(#)/g, '');
 

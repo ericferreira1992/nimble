@@ -2,7 +2,7 @@ import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { isNullOrUndefined, isObject } from 'util';
 import { Helper } from '../../providers/helper';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { ElementListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: ['field-currency-mask']
@@ -23,7 +23,7 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
 
     constructor(
         private helper: Helper,
-        private listenerCollector: ListenersCollector,
+        private listenerCollector: ElementListenersCollector,
     ) {
         super();
     }

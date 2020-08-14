@@ -1,14 +1,14 @@
 import { Dialog } from "./classes/dialog";
 import { DialogRenderRef } from "./classes/dialog-render-ref";
 import { Injectable } from "../inject/injectable";
-import { ListenersCollector } from "../providers/listeners-collector";
+import { ElementListenersCollector } from "../providers/listeners-collector";
 import { ElementStructureAbstract } from "../render/element-structure-abstract";
 
 @Injectable({ single: true })
 export class DialogRefCollector {
 
     constructor(
-        private listenerCollector: ListenersCollector
+        private listenerCollector: ElementListenersCollector
     ) {
     }
 

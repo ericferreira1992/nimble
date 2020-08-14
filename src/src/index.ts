@@ -14,10 +14,9 @@ export * from './page';
 export * from './directives';
 
 // Providers / Service
-export { Provider } from './inject/injectable';
 export { Injectable } from './inject/injectable';
 export { Inject } from './inject/inject';
-export { Listener } from './render/listener';
+export { ElementListener as Listener } from './render/listener';
 export * from './providers/http-client';
 export * from './providers/route-params';
 

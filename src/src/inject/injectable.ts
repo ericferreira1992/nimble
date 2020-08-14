@@ -13,16 +13,6 @@ export function Injectable(config?: ProviderConfig) {
     };
 }
 
-export function Provider(config?: ProviderConfig) {
-    return function (target: any) {
-        if (config)
-            Object.assign(target.prototype, config);
-
-        Reflect.defineMetadata(INJECTABLE_METADATA_KEY, true, target);
-        return target;
-    };
-}
-
 export function isInjectable<T>(target: Type<T>) {
     return Reflect.getMetadata(INJECTABLE_METADATA_KEY, target) === true;
 }

@@ -60,11 +60,11 @@ export class DialogRenderRef<T extends Dialog> {
     private applyConfigDimesions() {
         let areaElement = this.rootElement.querySelector('.nimble-dialog-area') as HTMLElement;
         if (areaElement) {
-            if (this.dialogRef.config.width)
+            if (this.dialogRef.config?.width)
                 areaElement.style.width = this.dialogRef.config.width;
-            if (this.dialogRef.config.maxWidth)
+            if (this.dialogRef.config?.maxWidth)
                 areaElement.style.maxWidth = this.dialogRef.config.maxWidth;
-            if (this.dialogRef.config.minWidth)
+            if (this.dialogRef.config?.minWidth)
                 areaElement.style.minWidth = this.dialogRef.config.minWidth;
         }
     }

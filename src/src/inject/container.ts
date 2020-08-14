@@ -112,9 +112,7 @@ export class Container {
             // for the argument instead.
             if (argType === undefined) {
                 throw new Error(
-                    `Injection error. Recursive dependency detected in constructor for type ${
-                    target.name
-                    } with parameter at index ${index}`
+                    `Injection error. Recursive dependency detected in constructor for type ${target.name} with parameter at index ${index}`
                 );
             }
             const overrideToken = getInjectionToken(target, index);

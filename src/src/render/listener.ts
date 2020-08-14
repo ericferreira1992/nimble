@@ -1,10 +1,10 @@
 import { Injectable } from "../inject/injectable";
-import { ListenersCollector } from "../providers/listeners-collector";
+import { ElementListenersCollector } from "../providers/listeners-collector";
 
 @Injectable()
-export class Listener {
+export class ElementListener {
     constructor(
-        private listenersCollector: ListenersCollector
+        private listenersCollector: ElementListenersCollector
     ) {}
 
     public listen(target: any, eventName: string, callback: (e?: any) => void, options?: AddEventListenerOptions): () => void {

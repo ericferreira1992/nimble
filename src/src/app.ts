@@ -14,7 +14,7 @@ import { Container } from './inject/container';
 import { Provider, Token } from './inject/provider';
 import { IterationDirective } from './directives/abstracts/iteration-directive';
 import { INTERNAL_PROVIDERS } from './providers/internal-providers';
-import { Listener } from './render/listener';
+import { ElementListener } from './render/listener';
 import { RouteRender } from './route/route-render';
 
 export class NimbleApp {
@@ -229,7 +229,7 @@ export class NimbleApp {
         this.instance.containerInjector.removeProvider(provide);
     }
 
-    public static get listener() { return this.instance.containerInjector.inject(Listener); }
+    public static get listener() { return this.instance.containerInjector.inject(ElementListener); }
 }
 
 export enum NimbleAppState {

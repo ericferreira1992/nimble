@@ -1,7 +1,7 @@
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { isNullOrUndefined } from 'util';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
-import { ListenersCollector } from '../../providers/listeners-collector';
+import { ElementListenersCollector } from '../../providers/listeners-collector';
 
 @PrepareDirective({
     selector: ['field-mask']
@@ -22,7 +22,7 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
     private get mask(): string { return this.getValueOfSelector('field-mask') as string; }
 
     constructor(
-        private listenerCollector: ListenersCollector,
+        private listenerCollector: ElementListenersCollector,
     ) {
         super();
     }

@@ -1,7 +1,7 @@
 import { FormField } from "./form-field";
 import { FormFieldPrepare } from './form-field-prepare';
 import { NimbleApp } from "../../app";
-import { ListenersCollector } from "../../providers/listeners-collector";
+import { ElementListenersCollector } from "../../providers/listeners-collector";
 import { IScope } from "../../page/interfaces/scope.interface";
 import { Observer } from "../observer";
 
@@ -60,7 +60,7 @@ export class Form {
         return fieldsName.length === 0 || fieldsName.every(name => this.fields[name].isValid);
     }
 
-    private get listenerCollector() { return NimbleApp.inject(ListenersCollector); }
+    private get listenerCollector() { return NimbleApp.inject(ElementListenersCollector); }
 
     private _isReseting: boolean;
     public get isReseting(){ return this._isReseting; }
