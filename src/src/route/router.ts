@@ -102,10 +102,11 @@ export class Router {
 		return false;
 	}
 
-    private static setState(state: RouterEvent, senderNotify?: any, silentMode: boolean = false) {
+    private static async setState(state: RouterEvent, senderNotify?: any) {
         this._previousState = this._state;
         this._state = state;
-        if (!silentMode) this.notifyListeners(state, senderNotify);
+		
+		await this.notifyListeners(state, senderNotify);
     }
 
     public static start() {
@@ -153,7 +154,7 @@ export class Router {
         };
     }
 
-    private static notifyListeners(event: RouterEvent, sender?: any) {
+    private static async notifyListeners(event: RouterEvent, sender?: any) {
         let listeners = this.listeners.filter(x => x.event === event);
 
         if (this.getEventType() === RouterEventType.START)
@@ -169,7 +170,9 @@ export class Router {
                 return (internalA === internalB)? 0 : (internalA ? 1 : -1);
             });
         
-        listeners.forEach((listener) => listener.callback(sender));
+        for (let listener of listeners) {
+			await listener.callback(sender);
+		}
     }
 
     private static onRedirect() {
@@ -274,22 +277,22 @@ export class Router {
         }
     }
 
-    private static loadCurrentRoutePage() {
-        this.setState(RouterEvent.STARTED_CHANGE, this.next);
+    private static async loadCurrentRoutePage() {
+        await this.setState(RouterEvent.STARTED_CHANGE, this.next);
 
         if (this.next.hasParent)
             this.loadRoutesPageFromAllParents();
         else
             this.loadRoutePage(this.next).then(
-                () => {
-                    this.defineCurrentAfterFinished();
-                    this.setState(RouterEvent.FINISHED_LOADING, this.current);
-                    this.setState(RouterEvent.RENDERING, this.current);
-                    this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+                async () => {
+                    await this.defineCurrentAfterFinished();
+                    await this.setState(RouterEvent.FINISHED_LOADING, this.current);
+                    await this.setState(RouterEvent.RENDERING, this.current);
+                    await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                 },
-                () => {
-                    this.abortChangeRoute();
-                    this.setState(RouterEvent.CHANGE_ERROR, this.current)
+                async () => {
+                    await this.abortChangeRoute();
+                    await this.setState(RouterEvent.CHANGE_ERROR, this.current)
                 },
             );
     }
@@ -318,23 +321,23 @@ export class Router {
                     () => {
                         action();
                     },
-                    (error) => {
-                        this.abortChangeRoute();
-                        this.setState(RouterEvent.ERROR_LOADING, error);
+                    async (error) => {
+                        await this.abortChangeRoute();
+                        await this.setState(RouterEvent.ERROR_LOADING, error);
                     }
                 );
             }
             else{
                 this.loadRoutePage(this.next).then(
-                    () => {
-                        this.defineCurrentAfterFinished();
-                        this.setState(RouterEvent.FINISHED_LOADING, this.current);
-                        this.setState(RouterEvent.RENDERING, this.current);
-                        this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+                    async () => {
+                        await this.defineCurrentAfterFinished();
+                        await this.setState(RouterEvent.FINISHED_LOADING, this.current);
+                        await this.setState(RouterEvent.RENDERING, this.current);
+                        await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                     },
-                    () => {
-                        this.abortChangeRoute();
-                        this.setState(RouterEvent.CHANGE_ERROR, this.current)
+                    async () => {
+                        await this.abortChangeRoute();
+                        await this.setState(RouterEvent.CHANGE_ERROR, this.current)
                     },
                 );
             }
@@ -343,7 +346,7 @@ export class Router {
         action();
     }
 
-    private static defineCurrentAfterFinished() {
+    private static async defineCurrentAfterFinished() {
         if (this._current)
             this._previous = this._current;
     
@@ -353,21 +356,21 @@ export class Router {
         }
 
         if (!isNullOrUndefined(this._nextPath)) {
-            this.updateURLPath(this._nextPath);
+            await this.updateURLPath(this._nextPath);
             this._nextPath = null;
         }
         
         this.lastLocationPath = this.currentPath;
-        this.notifyOldRoutesElementExit();
+        await this.notifyOldRoutesElementExit();
     }
 
-    private static abortChangeRoute() {
+    private static async abortChangeRoute() {
         if(!isNullOrUndefined(this.nextPath) && !this.nextRejectedAndRedirectAfter && this.current) {
             let currentPath = this.nextPath;
             this._next = null;
             this._nextPath = null;
             
-            this.updateURLPath(currentPath);
+            await this.updateURLPath(currentPath);
             this.lastLocationPath = this.currentPath;
         }
         else if (isNullOrUndefined(this.nextPath) && !this.nextRejectedAndRedirectAfter) {
@@ -377,7 +380,7 @@ export class Router {
         }
     }
 
-    private static updateURLPath(path: string, options: { pathRedirect: boolean } = {} as any) {
+    private static async updateURLPath(path: string, options: { pathRedirect: boolean } = {} as any) {
 
         let isChangingHashLink = (path: string): boolean =>  {
             return path.includes('#') && this.realCurrentPath.includes('#');
@@ -401,20 +404,20 @@ export class Router {
         if ((path.includes('#') || this.realCurrentPath.includes('#')) && pathWithoutHash === currentPathWithoutHash) {
             if (isChangingHashLink(path)) {
                 location.hash = path.replace(this.currentPath, '').replace(/#/g, '');
-                this.setState(RouterEvent.STARTED_CHANGE, null);
-                this.setState(RouterEvent.FINISHED_CHANGE, null);
+                await this.setState(RouterEvent.STARTED_CHANGE, null);
+                await this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
             else if (isAddingHashLink(path)) {
                 location.hash = path.replace(this.realCurrentPath, '').replace(/#/g, '');
-                this.setState(RouterEvent.STARTED_CHANGE, null);
-                this.setState(RouterEvent.FINISHED_CHANGE, null);
+                await this.setState(RouterEvent.STARTED_CHANGE, null);
+                await this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
             else if (isRemovingHashLink(path)) {
                 location.hash = '';
-                this.setState(RouterEvent.STARTED_CHANGE, null);
-                this.setState(RouterEvent.FINISHED_CHANGE, null);
+                await this.setState(RouterEvent.STARTED_CHANGE, null);
+                await this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
         }
@@ -433,26 +436,26 @@ export class Router {
         }
     }
 
-    private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true, silentMode: boolean = false, notifyStart: boolean = true) {
-        return new Promise<Route>((resolve, reject) => {
-            this.setState(RouterEvent.STARTED_LOADING, route, silentMode || notifyStart);
+    private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true) {
+        return new Promise<Route>(async (resolve, reject) => {
+            await this.setState(RouterEvent.STARTED_LOADING, route);
             
             route.loadPage(
-                (route: Route) => {
+                async (route: Route) => {
                     if (this.routeCanActivate(route)) {
                         route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         route.pageInstance.pageParent = route.parent ? route.parent.pageInstance : null;
-                        this.setState(RouterEvent.FINISHED_LOADING, route, silentMode);
+                        await this.setState(RouterEvent.FINISHED_LOADING, route);
                         resolve(route);
                     }
                     else{
-                        this.setState(RouterEvent.CHANGE_REJECTED, route, silentMode);
+                        await this.setState(RouterEvent.CHANGE_REJECTED, route);
                         reject(null);
                     }
                 },
-                (error) => {
+                async (error) => {
                     console.error(error);
-                    this.setState(RouterEvent.ERROR_LOADING, error, silentMode);
+                    await this.setState(RouterEvent.ERROR_LOADING, error);
                     reject(error);
                 },
                 () => {
@@ -476,7 +479,7 @@ export class Router {
         return true;
     }
 
-    public static redirect(path: string) {
+    public static async redirect(path: string) {
 		let hasBaseHref = this.pathHasInsideBaseHref(path);
 
         this.nextRejectedAndRedirectAfter = (!isNullOrUndefined(this.nextPath) || !this.current) ? true : false;
@@ -493,8 +496,8 @@ export class Router {
                 this.updateURLPath(path, { pathRedirect: currentPageIsThisPath });
 
                 if (currentPageIsThisPath) {
-					this.setState(RouterEvent.STARTED_CHANGE, this.current);
-					this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+					await this.setState(RouterEvent.STARTED_CHANGE, this.current);
+					await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                     return;
                 }
             }
@@ -524,7 +527,7 @@ export class Router {
         return this.realCurrentPath.includes('#');
     }
 
-    private static notifyOldRoutesElementExit() {
+    private static async notifyOldRoutesElementExit() {
         let highestParentRoute = this.current.getHighestParentOrHimself();
         let commonParentRoute = this.previous ? Router.getCommonParentOfTwoRoutes(this.current, this.previous) : highestParentRoute;
         
@@ -537,20 +540,20 @@ export class Router {
                 onlyOldRoutes.push(route);
             }
 
-            onlyOldRoutes.reverse().forEach((route) => {
-                route.pageInstance.onExit();
-            });
+            for (let route of onlyOldRoutes.reverse()) {
+                await route.pageInstance.onExit();
+            };
         }
     }
 
-    private static whenRerenderIsRequested(page: Page): Promise<any> {
+    private static async whenRerenderIsRequested(page: Page): Promise<any> {
         if (this.state !== RouterEvent.RENDERING) {
 			let changingRouteInProgress = this.state === RouterEvent.STARTED_CHANGE;
 			
 			let routeToRender = (changingRouteInProgress && this.previous) ? this.previous : this.current;
 
-			this.setState(RouterEvent.STARTED_RERENDER, routeToRender);
-			this.setState(RouterEvent.FINISHED_RERENDER, this.current);
+			await this.setState(RouterEvent.STARTED_RERENDER, routeToRender);
+			await this.setState(RouterEvent.FINISHED_RERENDER, this.current);
 	
 			if (changingRouteInProgress)
 				this._state = RouterEvent.STARTED_CHANGE;
@@ -558,8 +561,6 @@ export class Router {
         else {
             console.warn(`The render() was requested and did not work because the page was being constructing.`);
         }
-
-        return new Promise<any>((resolve) => resolve());
     }
 
     public static getCommonParentOfTwoRoutes(routeA: Route, routeB: Route): Route {

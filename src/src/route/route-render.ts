@@ -20,7 +20,7 @@ export class RouteRender extends RenderAbstract {
      * Prepare a specific route to be compiled and rendered
      * @param route 
      */
-    public prepareRouteToCompileAndRender(route: Route) {
+    public async prepareRouteToCompileAndRender(route: Route) {
         let childRoutes = [route, ...route.getAllParents()];
         childRoutes.reverse();
 
@@ -30,7 +30,7 @@ export class RouteRender extends RenderAbstract {
             this.createElementFromStructure(route.structuredTemplate);
             
             if (!commonParentRoute || commonParentRoute.isChild(route, true))
-                route.pageInstance.onEnter();
+                await route.pageInstance.onEnter();
         }
     }
 
@@ -93,14 +93,14 @@ export class RouteRender extends RenderAbstract {
      * Notifies the "onDestroy()" methods of pages unrendereds and "onInit()" methods of pages already rendered
      * @param route 
      */
-    public notifyRoutesAfterRouteChanged(route: Route): { isRendered: boolean } {
+    public async notifyRoutesAfterRouteChanged(route: Route): Promise<{ isRendered: boolean }> {
         let previousRoute = Router.previous;
 
         let highestParentRoute = route.getHighestParentOrHimself();
         let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
 
-        this.notifyOldRoutesElementDestroyed(commonParentRoute, previousRoute);
-		let isRendered = this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route);
+        await this.notifyOldRoutesElementDestroyed(commonParentRoute, previousRoute);
+		let isRendered = await this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route);
 		
         return { isRendered };
     }
@@ -109,18 +109,18 @@ export class RouteRender extends RenderAbstract {
      * Notifies the "onInit()" methods of pages already rendered
      * @param route 
      */
-    public notifyRoutesAfterRerender(route: Route): { isRendered: boolean } {
+    public async notifyRoutesAfterRerender(route: Route): Promise<{ isRendered: boolean }> {
         let previousRoute = Router.previous;
 
         let highestParentRoute = route.getHighestParentOrHimself();
-        let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
+		let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
+		
+		let isRendered = await this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route, true);
 
-        return {
-			isRendered: this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route, true)
-		};
+        return { isRendered };
     }
 
-    private notifyOldRoutesElementDestroyed(commonParentRoute: Route, previousRoute: Route) {
+    private async notifyOldRoutesElementDestroyed(commonParentRoute: Route, previousRoute: Route) {
         if (previousRoute) {
             let onlyOldRoutesRemoved: Route[] = [];
 
@@ -130,12 +130,12 @@ export class RouteRender extends RenderAbstract {
                 onlyOldRoutesRemoved.push(route);
             }
 
-            onlyOldRoutesRemoved.reverse().forEach((route) => {
+			for (let route of onlyOldRoutesRemoved.reverse()) {
                 if (!route.pageInstance.isDestroyed) {
                     route.pageInstance.isDestroyed = true;
-                    route.pageInstance.onDestroy();
+                    await route.pageInstance.onDestroy();
                 } 
-            });
+			}
         }
     }
 
@@ -146,7 +146,7 @@ export class RouteRender extends RenderAbstract {
      * @param route 
      * @param inRerender 
      */
-    private notifyNewRoutesElementRendered(commonParentRoute: Route, highestParentRoute: Route, route: Route, inRerender: boolean = false): boolean {
+    private async notifyNewRoutesElementRendered(commonParentRoute: Route, highestParentRoute: Route, route: Route, inRerender: boolean = false): Promise<boolean> {
         let onlyNewRoutesRendered: Route[] = [];
 
         let allRoutes = [route, ...route.getAllParents()];
@@ -161,13 +161,13 @@ export class RouteRender extends RenderAbstract {
             onlyNewRoutesRendered = allRoutes;
 
 		let isRendered = true;
-        onlyNewRoutesRendered.reverse().forEach((route) => {
+        for (let route of onlyNewRoutesRendered.reverse()) {
 			isRendered = route.structuredTemplate.isRendered;
             if (!route.pageInstance.isInitialized && route.structuredTemplate.isRendered) {
-                route.pageInstance.isInitialized = true;
-                route.pageInstance.onInit();
+				route.pageInstance.isInitialized = true;
+				await route.pageInstance.onInit();
             }
-		});
+		};
 		
 		return isRendered;
     }

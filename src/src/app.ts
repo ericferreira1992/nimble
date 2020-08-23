@@ -151,24 +151,26 @@ export class NimbleApp {
 		this.changedRoute = false; 
 	}
 
-    private onRouteRendering(route: Route) {
+    private async onRouteRendering(route: Route) {
         if (route) {
             // if (Router.rerenderedBeforeFinishedRouteChange) {}
-            this.routeRender.prepareRouteToCompileAndRender(route);
+            await this.routeRender.prepareRouteToCompileAndRender(route);
             this.routeRender.compileAndRenderRoute(route);
         }
     }
 
-    private onRouteFinishedChange(route: Route) {
+    private async onRouteFinishedChange(route: Route) {
         if (route) {
-			document.dispatchEvent(new Event('render-event'));
+			this.state = NimbleAppState.RERENDERING;
 
-			let { isRendered } = this.routeRender.notifyRoutesAfterRouteChanged(route); 
+			let { isRendered } = await this.routeRender.notifyRoutesAfterRouteChanged(route); 
 			
 			this.changedRoute = true;
 			if (isRendered) {
-				this.checkHashLinkAfterRouteChanged();
+				await this.checkHashLinkAfterRouteChanged();
 			}
+
+			route.pageInstance?.render();
         }
     }
 
@@ -185,34 +187,40 @@ export class NimbleApp {
         this.routeRender.rerenderRoute(route);
     }
 
-    private onRouteFinishedRerender(route: Route) {
-        document.dispatchEvent(new Event('render-event'));
-        this.state = NimbleAppState.INITIALIZED;
-
-		let { isRendered } = this.routeRender.notifyRoutesAfterRerender(route);
+    private async onRouteFinishedRerender(route: Route) {
+		let { isRendered } = await this.routeRender.notifyRoutesAfterRerender(route);
 		
 		if (this.changedRoute && isRendered) {
-			this.checkHashLinkAfterRouteChanged();
+			await this.checkHashLinkAfterRouteChanged();
 		}
+
+        document.dispatchEvent(new Event('render-event'));
+        this.state = NimbleAppState.INITIALIZED;
 	}
 	
-	private checkHashLinkAfterRouteChanged() {
+	private async checkHashLinkAfterRouteChanged() {
 		this.changedRoute = false;
 		if (location.hash && !this.config.useHash) {
-			setTimeout(() => {
-				let currentHash = location.hash;
-				location.hash = '';
-				location.hash = currentHash;
-			}, 250);
+			await new Promise((resolve) => {
+				setTimeout(() => {
+					let currentHash = location.hash;
+					location.hash = '';
+					location.hash = currentHash;
+					resolve();
+				}, 250);
+			});
 		}
 		else {
 			document.body.style.scrollBehavior = 'initial';
 			(document.children.item(0) as HTMLElement).style.scrollBehavior = 'initial';
-			setTimeout(() => {
-				document.body.scrollTo({top: 0, left: 0});
-				document.children.item(0).scrollTo({top: 0, left: 0});
-				document.body.style.scrollBehavior = '';
-				(document.children.item(0) as HTMLElement).style.scrollBehavior = '';
+			await new Promise((resolve) => {
+				setTimeout(() => {
+					document.body.scrollTo({top: 0, left: 0});
+					document.children.item(0).scrollTo({top: 0, left: 0});
+					document.body.style.scrollBehavior = '';
+					(document.children.item(0) as HTMLElement).style.scrollBehavior = '';
+					resolve();
+				});
 			});
 		}
 	}
@@ -236,5 +244,6 @@ export enum NimbleAppState {
     INITIALIZING = 'INITIALIZING',
     INITIALIZED = 'INITIALIZED',
 
+    IN_ROUTING = 'RERENDERING',
     RERENDERING = 'RERENDERING'
 }

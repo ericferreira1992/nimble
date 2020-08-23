@@ -39,10 +39,10 @@ export class Page implements IScope {
     /**
      * Method to render and update current template
      */
-    public render(action?: () => void): Promise<any> {
+    public async render(action?: () => void): Promise<any> {
         if (action) action();
         if (this.onNeedRerender) {
-            return this.onNeedRerender(this);
+            return await this.onNeedRerender(this);
         }
         return new Promise<any>((resolve) => resolve());
     }
