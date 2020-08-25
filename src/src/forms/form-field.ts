@@ -1,7 +1,7 @@
-import { NimbleApp } from "../../app";
+import { NimbleApp } from "../app";
 import { Form } from "./form";
-import { ElementListenersCollector } from "../../providers/listeners-collector";
-import { Observer } from "../observer";
+import { ElementListenersCollector } from "../providers/listeners-collector";
+import { Observer } from "../core/observer";
 import { isObject } from "util";
 
 export class FormField {
@@ -65,7 +65,16 @@ export class FormField {
         }
         
         if (!options || !options.noValidate) {
-            this.validate();
+			if (this.parent) {
+				for(let fieldProp in this.parent.fields) {
+					if (this.parent.fields[fieldProp]?.touched) {
+						this.parent.fields[fieldProp]?.validate();
+					}
+				}
+			}
+            else {
+				this.validate();
+			}
             interacted = true;
         }
 
@@ -90,11 +99,11 @@ export class FormField {
     }
 
     public hasError(name: string) {
-        return this.errors && this.errors[name];
+        return !!(this.errors && this.errors[name]);
     }
 
     public hasErrors() {
-        return this.errors && Object.keys(this.errors).length > 0;
+        return !!(this.errors && Object.keys(this.errors).length > 0);
     }
 
     public setElement(element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) {
@@ -111,11 +120,13 @@ export class FormField {
     }
 
     public setValidators(validators: ((formField: FormField) => any)[]) {
-        if (validators)
+        if (validators) {
+			this._validators = [];
             for(let validator of validators) {
                 if (!this._validators.some(x => x === validator))
                     this._validators.push(validator);
             };
+		}
     }
 
     public setTouched() { this._touched = true; }

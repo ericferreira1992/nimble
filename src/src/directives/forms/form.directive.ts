@@ -1,6 +1,6 @@
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { Form } from '../../core';
+import { Form } from '../../forms';
 import { ElementListenersCollector } from '../../providers/listeners-collector';
 import { isNullOrUndefined } from 'util';
 import { ObserverListener } from '../../core/observer';

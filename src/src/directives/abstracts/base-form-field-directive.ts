@@ -1,6 +1,6 @@
 import { Directive } from "./directive";
-import { FormField } from "../../core/forms/form-field";
-import { Form } from "../../core/forms/form";
+import { FormField } from "../../forms/form-field";
+import { Form } from "../../forms/form";
 
 export abstract class BaseFormFieldDirective extends Directive {
 

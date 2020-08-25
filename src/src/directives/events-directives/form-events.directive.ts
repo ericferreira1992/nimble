@@ -1,7 +1,7 @@
 import { Directive } from '../abstracts/directive';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { ElementListener } from '../../render/listener';
-import { Form } from '../../core/forms/form';
+import { Form } from '../../forms/form';
 
 @PrepareDirective({
     selector: [

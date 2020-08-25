@@ -1,4 +1,4 @@
-import { Provider, HttpClient, enviroment } from '@nimble-ts/core';
+import { Injectable, HttpClient, enviroment } from '@nimble-ts/core';
 import { Task } from 'src/app/models/task.model';
 
 @Injectable({ single: true })

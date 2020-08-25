@@ -1,4 +1,5 @@
-import { RouteGuard, Route, Router, Injectable } from '@nimble-ts/core';
+import { Injectable } from '@nimble-ts/core/inject/injectable';
+import { RouteGuard, Route, Router } from '@nimble-ts/core/route';
 import { AuthService } from "./auth.service";
 
 @Injectable()

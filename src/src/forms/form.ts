@@ -1,9 +1,9 @@
 import { FormField } from "./form-field";
 import { FormFieldPrepare } from './form-field-prepare';
-import { NimbleApp } from "../../app";
-import { ElementListenersCollector } from "../../providers/listeners-collector";
-import { IScope } from "../../page/interfaces/scope.interface";
-import { Observer } from "../observer";
+import { NimbleApp } from "../app";
+import { ElementListenersCollector } from "../providers/listeners-collector";
+import { IScope } from "../page/interfaces/scope.interface";
+import { Observer } from "../core/observer";
 
 export class Form {
 
@@ -99,12 +99,12 @@ export class Form {
     }
 
     public has(fieldName: string): boolean {
-        return this.fields && Object.keys(this.fields).some(name => name === fieldName);
+        return !!(this.fields && Object.keys(this.fields).some(name => name === fieldName));
     }
 
     public hasErrors() {
         let errors = this.errors;
-        return errors && Object.keys(errors).length > 0;
+        return !!(errors && Object.keys(errors).length > 0);
     }
 
     /**Reset all fields value and clear touched and blurred properties. */

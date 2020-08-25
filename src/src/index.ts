@@ -1,33 +1,36 @@
-// APP
-export { NimbleApp } from './app';
-
-// CORE
-export * from './core';
-
-// ENVIROMENT
+// Enviroment
 export { enviroment } from './enviroment';
 
-// PAGE 
+// NimbleApp
+export { NimbleApp } from './app';
+
+// Core
+export * from './core';
+
+// Page
 export * from './page';
 
 // Directive
 export * from './directives';
 
+// Dialog
+export * from './dialog';
+
+// Router
+export * from './route';
+
+// Forms
+export * from './forms';
+
+// Render
+export * from './render';
+
+// Injectors Decorators
+export * from './inject';
+
 // Providers / Service
-export { Injectable } from './inject/injectable';
-export { Inject } from './inject/inject';
-export { ElementListener as Listener } from './render/listener';
 export * from './providers/http-client';
 export * from './providers/route-params';
 
-// ELEMENTS
-export { NimblePage } from './elements/nimble-page.element';
-export { NimbleRouter } from './elements/nimble-router.element';
-export { NimbleDialog } from './elements/nimble-dialog.element';
-export { NimbleDialogArea } from './elements/nimble-dialog-area.element';
-
-// DIALOG
-export * from './dialog';
-
-// ROUTER
-export * from './route';
+// Elements
+export * from './elements';

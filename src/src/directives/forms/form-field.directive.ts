@@ -1,5 +1,5 @@
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
-import { FormField } from '../../core/forms/form-field';
+import { FormField } from '../../forms/form-field';
 import { InternalObserversCollector } from '../../providers/internal-observers-collector';
 import { isArray, isBoolean, isUndefined } from 'util';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';
