@@ -1,4 +1,3 @@
-import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { FormField } from '../../core/forms/form-field';
 import { InternalObserversCollector } from '../../providers/internal-observers-collector';
@@ -37,7 +36,8 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                 if (this.elementIsValid() && this.formFieldNameSelectorIsValid(value)) {
                     this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                     if (this.canApplyFormField()) {
-                        this.resolveFormFieldSelector();
+						this.resolveFormFieldSelector();
+						this.resolveFormFieldSpecifications()
                     }
                 }
             }
@@ -60,7 +60,18 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         }
 
         return true;
-    }
+	}
+	
+	private resolveFormFieldSpecifications() {
+		if (this.formField) {
+			if (this.formField.isEnabled) {
+				this.element?.removeAttribute('disabled');
+			}
+			else {
+				this.element?.setAttribute('disabled', 'true');
+			}
+		}
+	}
 
     private resolveFormFieldSelector() {
         let field = this.formField;
@@ -71,7 +82,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                 input.checked = true;
 
             this.listenerCollector.subscribe(this.element, 'click', (e) => {
-                if (!input.disabled) {
+                if (this.formField.isEnabled) {
                     field.elements.forEach((el: HTMLInputElement) => {
                         if (el !== input)
                             el.checked = false;
@@ -90,7 +101,7 @@ export class FormFieldDirective extends BaseFormFieldDirective {
                 input.checked = field.value;
 
             this.listenerCollector.subscribe(this.element, 'click', (e) => {
-                if (!input.disabled) {
+                if (this.formField.isEnabled) {
                     if (field.elements.length === 1) {
                         if (!isBoolean(field.value))
                             field.setValue(input.checked ? value : '');
@@ -117,12 +128,14 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         else {
             input.value = !isUndefined(field.value) ? field.value : null;
             this.listenerCollector.subscribe(input, 'input', (e) => {
-                let value: any = input.value;
+                if (this.formField.isEnabled) {
+					let value: any = input.value;
 
-                if (input.type === 'number')
-                    value = !isNaN(parseInt(value)) ? parseInt(value) : null;
+					if (input.type === 'number')
+						value = !isNaN(parseInt(value)) ? parseInt(value) : null;
 
-                field.setValue(value, { noUpdateElement: true });
+					field.setValue(value, { noUpdateElement: true });
+				}
             }, true);
         }
     }
@@ -145,12 +158,11 @@ export class FormFieldDirective extends BaseFormFieldDirective {
     }
 
     private elementIsValid() {
-        let types = [
+        return [
             HTMLInputElement,
             HTMLTextAreaElement,
-            HTMLSelectElement,
-        ];
-        return types.some(type => this.element instanceof type);
+            HTMLSelectElement
+        ].some(type => this.element instanceof type);
     }
 
 }

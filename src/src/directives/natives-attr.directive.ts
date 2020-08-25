@@ -34,12 +34,15 @@ export class NativesAttrsDirective extends Directive {
         ];
 	}
 	
-	private previousValue: { [key: string]: any } = {
+	private previousValue = {
 		class: {
-			add: [],
-			remove: []
+			add: [] as string[],
+			remove: [] as string[]
 		},
-		style: '',
+		style: {
+			add: [] as string[],
+			remove: [] as string[]
+		},
 	};
 
     public onResolve(selector: string, value: any): void {
@@ -85,7 +88,9 @@ export class NativesAttrsDirective extends Directive {
             else if (value.startsWith('[') && value.endsWith(']')) {
                 value = this.scope.compile(value);
                 if (isArray(value))
-                    classesAdd = value;
+					classesAdd = value;
+				
+				classesRemove = this.previousValue.class.add.filter(x => classesAdd.indexOf(x) < 0);
             }
             else{
                 value = this.scope.compile(value);
@@ -94,7 +99,9 @@ export class NativesAttrsDirective extends Directive {
                     if(value.includes(' '))
                         classesAdd = value.split(' ');
                     else
-                        classesAdd = [value];
+						classesAdd = [value];
+						
+					classesRemove = this.previousValue.class.add.filter(x => classesAdd.indexOf(x) < 0);
                 }
             }
 
@@ -121,10 +128,7 @@ export class NativesAttrsDirective extends Directive {
                 let listExpressions = this.helper.splitStringJSONtoKeyValue(value);
                 listExpressions.forEach((keyValue) => {
                     try {
-                        let property = keyValue.key;
-                        let value = this.compile(keyValue.value);
-
-                        this.element.style[property] = value;
+						toAdd.push({ prop: keyValue.key, value: this.compile(keyValue.value) });
                     }
                     catch(e){
                         console.error(e.message);
@@ -136,11 +140,8 @@ export class NativesAttrsDirective extends Directive {
                 if (isArray(value))
                     value.forEach((style) => {
                         if(style.includes(':')) {
-                            try{
-                                let property = style.split(':')[0].trim();
-                                let value = style.split(':')[1].trim();
-        
-                                this.element.style[property] = value;
+                            try {
+								toAdd.push({ prop: style.split(':')[0].trim(), value: style.split(':')[1].trim() });
                             }
                             catch(e){
                                 console.error(e.message);
@@ -155,11 +156,8 @@ export class NativesAttrsDirective extends Directive {
                     if (value.includes(';')) {
                         value.split(';').forEach((style) => {
                             if(style.includes(':')) {
-                                try{
-                                    let property = style.split(':')[0].trim();
-                                    let value = style.split(':')[1].trim();
-            
-                                    this.element.style[property] = value;
+                                try {
+									toAdd.push({ prop: style.split(':')[0].trim(), value: style.split(':')[1].trim() });
                                 }
                                 catch(e){
                                     console.error(e.message);
@@ -169,17 +167,24 @@ export class NativesAttrsDirective extends Directive {
                     }
                     else if(value.includes(':')) {
                         try{
-                            let property = value.split(':')[0].trim();
-                            value = value.split(':')[1].trim();
-    
-                            this.element.style[property] = value;
+							toAdd.push({ prop: value.split(':')[0].trim(), value: value.split(':')[1].trim() });
                         }
                         catch(e){
                             console.error(e.message);
                         }
                     }
                 }
-            }
+			}
+
+			let toRemove = this.previousValue.style.add.filter(x => !toAdd.some(add => add.prop === x));
+			
+			toAdd.forEach(add => this.element.style[add.prop] = add.value);
+			toRemove.forEach(remove => this.element.style.removeProperty(remove));
+			
+			this.previousValue.style = {
+				add: toAdd.map(x => x.prop),
+				remove: toRemove
+			}
         }
     }
 

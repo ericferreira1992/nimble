@@ -22,6 +22,10 @@ export class FormField {
     private _validators: ((formField: FormField) => any)[] = [];
     public get validators() { return this._validators; }
 
+    private _isEnabled: boolean = true;
+    public get isEnabled() { return this._isEnabled; }
+    public get isDisabled() { return !this._isEnabled; }
+
     private _blurred: boolean = false;
     /** Indicates that you have already entered the field and left. */
     public get blurred() { return this._blurred; }
@@ -94,10 +98,12 @@ export class FormField {
     }
 
     public setElement(element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) {
-        if (this._elements.indexOf(element) < 0) {
-            this._elements.push(element);
-        }
-        this.setFieldElementListeners(element);
+		if (element) {
+			if (this._elements.indexOf(element) < 0) {
+				this._elements.push(element);
+			}
+			this.setFieldElementListeners(element);
+		}
     }
 
     public setErrors(errors: { [name: string]: boolean }) {
@@ -117,6 +123,9 @@ export class FormField {
 
     public setBlurred() { this._blurred = true; }
     public setUnblurred() { this._blurred = false; }
+
+    public disable() { this._isEnabled = false; }
+    public enable() { this._isEnabled = true; } 
 
     public removeValidators(validators: ((formField: FormField) => any)[]) {
         if (validators)

@@ -31,7 +31,10 @@ export class Form {
     public get submitted(){ return this._submitted; }
 
     private _isSubmitting: boolean = false;
-    public get isSubmitting(){ return this._isSubmitting; }
+	public get isSubmitting(){ return this._isSubmitting; }
+	
+    public get isEnabled() { return Object.keys(this._fields).every(x => this._fields[x].isEnabled); }
+    public get isDisabled() { return Object.keys(this._fields).every(x => this._fields[x].isDisabled); }
 
     /** Indicates that you have already entered at least one field and left. */
     public get blurred() { return Object.keys(this._fields).some(x => this._fields[x].blurred); }
@@ -149,6 +152,15 @@ export class Form {
         for(let fieldName in this.fields)
             this.fields[fieldName].setUnblurred();
     }
+
+    public disable() {
+        for(let fieldName in this.fields)
+            this.fields[fieldName].disable();
+	}
+    public enable() {
+        for(let fieldName in this.fields)
+            this.fields[fieldName].enable();
+	}
 
     private setFormListeners() {
         this.listenerCollector.subscribe(this.formElement, 'submit', (e: Event) => {

@@ -13,52 +13,73 @@ export class HeaderRender {
     public resolveTitleAndMetaTags(route: Route) {
         let page = route.pageInstance;
         
-        this.resolveTitle(page.title);
+        let titleElement = this.resolveTitle(page.title);
 
         if (page.meta) {
-            this.resolveMetaAndContent('name="description"', page.meta.description);
-            this.resolveMetaAndContent('name="keywords"', page.meta.keywords);
+            let element = this.resolveMetaAndContent('name="description"', page.meta.description, titleElement) ?? titleElement;
+            element = this.resolveMetaAndContent('name="keywords"', page.meta.keywords, element);
 
             if (page.meta.og) {
                 let og = page.meta.og;
-                let properties = Object.keys(page.meta.og).filter(x => !isNullOrUndefined(og[x]) && og[x] !== '');
-                for (let property of properties) {
-                    this.resolveMetaAndContent(`property="og:${property}"`, og[property]);
+				let ogProps = Object.keys(page.meta.og)
+					.filter(x => !isNullOrUndefined(og[x]) && og[x] !== '')
+					.map(x => x.replace(/([A-Z])/g, (v: string) => `_${v.toLowerCase()}`));
+
+				if (page.title) {
+					for (let prop of ['title', 'siteName'].filter(prop => !ogProps.some(p => p === prop))) {
+						ogProps.push(prop);
+						og[prop] = page.title;
+					}
+				}
+				if (!ogProps.some(p => p === 'description') && page.meta.description) {
+					ogProps.push('description');
+					og['description'] = page.meta.description;
+				}
+
+                for (let property of ogProps) {
+                    element = this.resolveMetaAndContent(`property="og:${property}"`, og[property], element);
                 }
             }
         }
     }
 
-    private resolveTitle(title: string) {
-        if (title) {
-            let titleEl = document.head.querySelector('title');
-            if (titleEl) {
-                titleEl.textContent = title;
-            }
-            else {
-                titleEl = document.createElement('title');
-                titleEl.textContent = title;
-                document.head.prepend(titleEl);
-            }
-        }
+    private resolveTitle(title: string): HTMLElement {
+		let titleEl = document.head.querySelector('title');
+		if (titleEl) {
+			titleEl.textContent = title ?? '';
+		}
+		else {
+			titleEl = document.createElement('title');
+			titleEl.textContent = title ?? '';
+			document.head.prepend(titleEl);
+		}
+		return titleEl;
     }
 
-    private resolveMetaAndContent(metaSelector: string, content: String) {
-        if (metaSelector) {
-            let metaEl = document.head.querySelector(`[${metaSelector}]`);
-            if (metaEl) {
-                metaEl.attributes['content'] = content;
-            }
-            else {
+    private resolveMetaAndContent(metaSelector: string, content: string, afterElement?: HTMLElement): HTMLElement {
+        if (metaSelector && content) {
+			let metaEl = document.head.querySelector(`[${metaSelector}]`);
+			
+            if (!metaEl) {
                 metaEl = document.createElement('meta');
 
                 let property = metaSelector.split('=')[0];
                 let value = metaSelector.split('=')[1].replace(/"/g, '');
 
-                metaEl.attributes[property] = value;
-                metaEl.attributes['content'] = content;
-                document.head.prepend(metaEl);
-            }
-        }
+				if (afterElement) {
+					afterElement.after(metaEl)
+				}
+				else {
+					document.head.prepend(metaEl);
+				}
+				
+                metaEl.setAttribute(property, value);
+			}
+			
+			metaEl.setAttribute('content', content);
+
+			return metaEl as HTMLElement;
+		}
+		return afterElement;
     }
 }
