@@ -7,7 +7,7 @@ export { NimbleApp } from './app';
 // Core
 export * from './core';
 
-// Page
+/* // Page
 export * from './page';
 
 // Directive
@@ -33,4 +33,4 @@ export * from './providers/http-client';
 export * from './providers/route-params';
 
 // Elements
-export * from './elements';
+export * from './elements'; */

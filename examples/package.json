@@ -11,7 +11,7 @@
     },
     "private": true,
     "dependencies": {
-        "@nimble-ts/core": "^1.2.18"
+        "@nimble-ts/core": "^1.2.19"
     },
     "devDependencies": {
         "@nimble-ts/cli": "^1.2.28",

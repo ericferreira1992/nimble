@@ -152,7 +152,27 @@ export class Router {
         return () => {
             this.listeners = this.listeners.filter(x => !listeners.some(y => x === y));
         };
-    }
+	}
+
+    /**
+     * Adds a listener for when the routing change start.
+     * Also it returns a void function to cancel listen when want. 
+     */
+	public static onStartChange(action: () => void): () => void {
+		return this.addListener('STARTED_CHANGE', async () => {
+			await action();
+		});
+	}
+
+    /**
+     * Adds a listener for when the routing change end.
+     * Also it returns a void function to cancel listen when want. 
+     */
+	public static onEndChange(action: () => void): () => void {
+		return this.addListener(['FINISHED_CHANGE', 'CHANGE_REJECTED', 'CHANGE_ERROR'], async () => {
+			await action();
+		});
+	}
 
     private static async notifyListeners(event: RouterEvent, sender?: any) {
         let listeners = this.listeners.filter(x => x.event === event);
