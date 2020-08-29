@@ -126,108 +126,120 @@ export class RenderAbstract {
     public recompileElementFromStructure(structured: ElementStructure): boolean {
         if (!structured.isText) {
 
-            if (!structured.compiledNode)
-                structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
-            let element = structured.compiledNode as HTMLElement;
+			try {
+				var initTime = null;
+				
+				if ((structured.rawNode as HTMLElement).tagName === 'TBODY') {
+					initTime = performance.now();
+				}
 
-            this.listenersCollector.unsubscribeAllFromElement(element);
+				if (!structured.compiledNode)
+					structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
+				let element = structured.compiledNode as HTMLElement;
 
-            // ITERATION DIRECTIVE
-            if (structured.hasIterationDirectivesToApply) {
-                let attr = structured.getIterationDirective();
-                let iterationResponses = (attr.directiveInstance as IterationDirective).onResolve(attr.name, attr.value);
+				this.listenersCollector.unsubscribeAllFromElement(element);
 
-                if (iterationResponses.length <= 0) {
-                    structured.removeCompiledNode();
+				// ITERATION DIRECTIVE
+				if (structured.hasIterationDirectivesToApply) {
+					let attr = structured.getIterationDirective();
+					let iterationResponses = (attr.directiveInstance as IterationDirective).onResolve(attr.name, attr.value);
 
-                    let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
-                    if (iterationChildren) {
-                        for(let iterationChild of iterationChildren) {
-                            this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-                            iterationChild.removeCompiledNode();
-                        }
-                        structured.parent.children = structured.parent.children.filter(x => !iterationChildren.some(y => y === x));
-					}
-					return;
-                }
-                else {
-					let currentIterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
-                
-					structured.compiledBeginFn = iterationResponses[0].beginFn;
-					structured.compiledEndFn = iterationResponses[0].endFn;
+					if (iterationResponses.length <= 0) {
+						structured.removeCompiledNode();
 
-					iterationResponses = iterationResponses.slice(1);
-
-					// REMOVE LEFTOVERS
-					if (currentIterationChildren.length > iterationResponses.length) {
-						let toRemove = currentIterationChildren.slice(iterationResponses.length);
-						currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
-						for(let iterationChild of toRemove) {
-							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-							iterationChild.removeCompiledNode();
+						let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
+						if (iterationChildren) {
+							for(let iterationChild of iterationChildren) {
+								this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
+								iterationChild.removeCompiledNode();
+							}
+							structured.parent.children = structured.parent.children.filter(x => !iterationChildren.some(y => y === x));
 						}
-						structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
+						return;
 					}
-					// ADD THE NEW ONES
-					else if (currentIterationChildren.length < iterationResponses.length) {
-						let childrenDiff = iterationResponses.length - currentIterationChildren.length;
-						let currentIndex = currentIterationChildren.length > 0
-							? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
-							: structured.parent.children.findIndex(x => x === structured);
+					else {
+						let currentIterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
+					
+						structured.compiledBeginFn = iterationResponses[0].beginFn;
+						structured.compiledEndFn = iterationResponses[0].endFn;
 
-						for(let i = 1; i <= childrenDiff; i++) {
-							let interation = iterationResponses[currentIterationChildren.length + i - 1];
-							let nextIndex = currentIndex + i;
-							let iterationEstructured = this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn);
-							structured.parent.children.splice(nextIndex, 0, iterationEstructured);
-							iterationEstructured.isRendered = false;
+						iterationResponses = iterationResponses.slice(1);
+
+						// REMOVE LEFTOVERS
+						if (currentIterationChildren.length > iterationResponses.length) {
+							let toRemove = currentIterationChildren.slice(iterationResponses.length);
+							currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
+							for(let iterationChild of toRemove) {
+								this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
+								iterationChild.removeCompiledNode();
+							}
+							structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
 						}
-					}
+						// ADD THE NEW ONES
+						else if (currentIterationChildren.length < iterationResponses.length) {
+							let childrenDiff = iterationResponses.length - currentIterationChildren.length;
+							let currentIndex = currentIterationChildren.length > 0
+								? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
+								: structured.parent.children.findIndex(x => x === structured);
 
-					for (let i = 0; i < currentIterationChildren.length; i++) {
-						let interationResponse = iterationResponses[i];
-						let iterationChild = currentIterationChildren[i];
-						iterationChild.compiledBeginFn = interationResponse.beginFn;
-						iterationChild.compiledEndFn = interationResponse.endFn;
+							for(let i = 1; i <= childrenDiff; i++) {
+								let interation = iterationResponses[currentIterationChildren.length + i - 1];
+								let nextIndex = currentIndex + i;
+								structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
+							}
+						}
+
+						for (let i = 0; i < currentIterationChildren.length; i++) {
+							let interationResponse = iterationResponses[i];
+							let iterationChild = currentIterationChildren[i];
+							iterationChild.compiledBeginFn = interationResponse.beginFn;
+							iterationChild.compiledEndFn = interationResponse.endFn;
+						}
 					}
 				}
-            }
-            
-            if (structured.compiledBeginFn)
-                structured.compiledBeginFn();
+				
+				if (structured.compiledBeginFn)
+					structured.compiledBeginFn();
 
-            // ATRIBUTES
-            structured.resolveAttrs();
+				// ATRIBUTES
+				structured.resolveAttrs();
 
-            // INSTANTIATE DIRECTIVES
-            structured.instantiateAttrDirectives();
+				// INSTANTIATE DIRECTIVES
+				structured.instantiateAttrDirectives();
 
-            // RENDER
-            structured.renderNodeIfNot();
+				// RENDER
+				structured.renderNodeIfNot();
 
-            // CHILDREN
-            for(let i = 0; i < structured.children.length; i++) {
-                let structChild = structured.children[i];
-                this.recompileElementFromStructure(structChild);
-            }
+				// CHILDREN
+				for(let i = 0; i < structured.children.length; i++) {
+					let structChild = structured.children[i];
+					this.recompileElementFromStructure(structChild);
+				}
 
-            // DIRECTIVES
-            structured.resolveAttrDirectives();
+				// DIRECTIVES
+				structured.resolveAttrDirectives();
 
-            // ACTIONS 
-            this.checkStructureNodeActions(structured);
+				// ACTIONS 
+				this.checkStructureNodeActions(structured);
 
-            if (structured.compiledEndFn)
-                structured.compiledEndFn();
+				if (structured.compiledEndFn)
+					structured.compiledEndFn();
+			}
+			finally {
+				if ((structured.rawNode as HTMLElement).tagName === 'TBODY' && initTime) {
+					console.log("TBODY processed in " + (initTime - performance.now()) + " milliseconds.");
+				}
+			}
         }
         else {
             if (!structured.compiledNode)
                 structured.compiledNode = structured.rawNode.cloneNode(true) as Node;
 
-            let textContent = RenderHelper.resolveInterpolationIfHave(structured.rawNode.textContent, structured.scope);
-            
-            if (textContent !== structured.compiledNode.textContent)
-                structured.compiledNode.textContent = textContent;
+            if (structured.rawNode.textContent) {
+				let textContent = RenderHelper.resolveInterpolationIfHave(structured.rawNode.textContent, structured.scope);
+				if (textContent !== structured.compiledNode.textContent)
+					structured.compiledNode.textContent = textContent;
+			}
 
             // RENDER
             structured.renderNodeIfNot();

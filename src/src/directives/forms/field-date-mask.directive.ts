@@ -1,5 +1,4 @@
 import { isNullOrUndefined } from 'util';
-import { IScope } from '../../page/interfaces/scope.interface';
 import { PrepareDirective } from '../decorators/prepare-directive.decor';
 import { Helper } from '../../providers/helper';
 import { BaseFormFieldDirective } from '../abstracts/base-form-field-directive';

@@ -34,6 +34,7 @@ export class TaskEditDialog extends Dialog {
             teste: { value: this.task.teste, validators: [ Validators.required ] },
             email: { value: this.task.email, validators: [ Validators.required, Validators.email ] },
             phone: { value: this.task.phone, validators: [ Validators.required ] },
+            amount: { value: '' },
         });
     }
 

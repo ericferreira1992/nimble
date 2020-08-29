@@ -1,4 +1,5 @@
-import { Page, PreparePage, RouteParams } from '@nimble-ts/core';
+import { Page, PreparePage } from '@nimble-ts/core/page';
+import { RouteParams } from '@nimble-ts/core/providers/route-params';
 import { AuthService } from 'src/app/services/auth/auth.service';
 
 @PreparePage({

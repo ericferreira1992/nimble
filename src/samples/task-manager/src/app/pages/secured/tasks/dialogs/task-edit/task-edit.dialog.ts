@@ -1,4 +1,6 @@
-import { Dialog, PrepareDialog, Inject, DIALOG_REF, DialogRef, Form, Validators } from '@nimble-ts/core';
+import { Dialog, PrepareDialog, DIALOG_REF, DialogRef } from '@nimble-ts/core/dialog';
+import { Form, Validators } from '@nimble-ts/core/forms';
+import { Inject } from '@nimble-ts/core/inject';
 
 @PrepareDialog({
     template: require('./task-edit.dialog.html'),
@@ -62,6 +64,7 @@ export class TaskEditDialog extends Dialog {
                 value: this.task.phone,
                 validators: [ Validators.required ]
             },
+            amount: { value: '' },
         });
     }
 

@@ -49,10 +49,11 @@ export class Page implements IScope {
 
     public compile(expression: string): any {
         try {
-            return (new Function(`with(this) { return ${expression} }`)).call(this);
+			return (new Function('with(this) { return ' + expression + ' }')).call(this);
         }
         catch(e) {
-            console.error(e.message);
+			console.error(e.message);
+			return null;
         }
     }
 }

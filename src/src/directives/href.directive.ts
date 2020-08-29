@@ -31,7 +31,7 @@ export class HrefDirective extends Directive {
                 else
                     console.error(`The link "#${href}" with "#" not work in useHash mode setted in NimbleApple.`);
             }
-            else if (!Router.useHash) {
+            else if (href) {
                 if (startsWithHash) {
                     href = `${location.pathname}#${href}`;
                 }
@@ -50,7 +50,10 @@ export class HrefDirective extends Directive {
 						e.preventDefault();
                     }
                 });
-            }
+			}
+			else {
+				href = value;
+			}
         }
 
         if (!this.element.hasAttribute(selector))

@@ -75,7 +75,6 @@ export abstract class ElementStructureAbstract {
             }
             else {
                 instance.element = this.compiledNode as HTMLElement;
-                // instance.onDestroy();
             }
 			instance.all = this.directivesInstance.filter(x => x !== instance);
         }
@@ -129,13 +128,10 @@ export abstract class ElementStructureAbstract {
             }
             else {
                 instance.element = this.compiledNode as HTMLElement;
-                // instance.onDestroy();
             }
 
-            instance.setValueOfSelector(attr.name, attr.getCompiledValue());
-        }
-
-        for (let attr of attrs) {
+			instance.setValueOfSelector(attr.name, attr.getCompiledValue());
+			
             if (attr.directiveInstance) {
                 attr.directiveInstance.all = this.directivesInstance.filter(x => {
                     return x !== attr.directiveInstance && !(x instanceof IterationDirective);

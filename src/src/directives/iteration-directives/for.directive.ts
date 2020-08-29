@@ -18,12 +18,6 @@ export class ForDirective extends IterationDirective {
         if (expression.startsWith('(') && expression.endsWith(')')) {
             expression = expression.substr(1, expression.length - 2);
         }
-
-        // if (!forExpression.startsWith('let ') && !forExpression.startsWith('var ')) {
-        //     this.element.remove();
-        //     console.error(`SyntaxError: Invalid expression: ${forExpression}: the expression should look similar to this: let item of items`);
-        //     return [];
-		// }
 		
 		const startWithVariable = expression.startsWith('let ') || expression.startsWith('var ') || expression.startsWith('const ');
         let iterationVarName = expression.split(' ')[startWithVariable ? 1 : 0];
@@ -38,15 +32,11 @@ export class ForDirective extends IterationDirective {
             return [];
         }
 
-        let response: IterateDirectiveResponse[] = [];
-        for(var i = 0; i < iterationArray.value.length; i++) {
-            let item = iterationArray.value[i];
-            let index = i;
-
+        let response: IterateDirectiveResponse[] = iterationArray.value.map((item, index) => {
             let existingVarNameBefore = iterationVarName in this.scope;
             let varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
             
-            response.push(new IterateDirectiveResponse({
+            return new IterateDirectiveResponse({
                 beginFn: () => {
                     this.scope[iterationVarName] = item;
                     this.scope['$index'] = index;
@@ -60,8 +50,8 @@ export class ForDirective extends IterationDirective {
                         delete this.scope[iterationVarName];
                     }
                 }
-            }));
-        }
+            });
+        });
 
         return response;
     }

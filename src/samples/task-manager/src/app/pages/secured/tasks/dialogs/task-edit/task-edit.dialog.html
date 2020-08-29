@@ -63,6 +63,13 @@
                         <span @if="form.get('date').hasError('required')" class="form-control-error">Campo obrigatório</span>
                     </div>
                 </div>
+                <div class="col-6 pt-3">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input form-field-name="amount" field-currency-mask class="form-control"/>
+                        <span @if="form.get('amount').hasError('required')" class="form-control-error">Campo obrigatório</span>
+                    </div>
+                </div>
             </div>
 
             <div class="row mt-3">

@@ -16,10 +16,10 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
         precision: 2,
     };
 
-    private get prefix(): string { return this.options.prefix; }
-    private get decimalSymbol(): string { return this.options.decimal; }
-    private get thousandsSymbol(): string { return this.options.thousands; }
-    private get precision(): number { return this.options.precision; }
+    private get prefix(): string { return this.options.prefix ?? ''; }
+    private get decimalSymbol(): string { return this.options.decimal ?? ','; }
+    private get thousandsSymbol(): string { return this.options.thousands ?? '.'; }
+    private get precision(): number { return this.options.precision ?? 2; }
 
     constructor(
         private helper: Helper,
@@ -42,9 +42,6 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
         }
     }
 
-    public onDestroy() {
-    }
-
     private defineOptions(value: any) {
         if (isObject(value))
             Object.assign(this.options, value);
@@ -55,7 +52,7 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
     private checkValueOnInitialize() {
         let element = this.element as HTMLInputElement;
         let value = (this.formField) ? this.formField.value : element.value.replace(/[^\d]/g, '');
-        value = this.applyMask(value);
+        value = this.applyMask(value, false);
 
         element.value = value;
 
@@ -101,67 +98,41 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
             this.formField.setValue(floatValue, { noUpdateElement: true });
     }
 
-    private applyMask(value: string | number) {
-        let integer = '';
-        let decimal = '';
+    private applyMask(value: string | number, fromTyping: boolean = true) {
+		value = value ? value : 0;
+		
+		if (typeof value === 'string') {
+			if (fromTyping) {
+				value = value.replace(/([^0-9]*)/g, '').replace(/^0+/g, '');
+			}
+			else  {
+				let expression = this.prefix ? `([${this.prefix}| ]*)` : '([ ]*)'
+				value = value.toString().replace(new RegExp(expression, 'g'), '');
+				value = this.parseFloat(value);
+			}
+		}
+		value = value.toString();
+		
+		let integer = '';
+		let decimal = '';
 
-        if (typeof value === 'number') {
-            value = value.toString();
-            if (value.includes('.')) {
-                integer = value.split('.')[0];
-                decimal = value.split('.')[1];
-            }
-            else {
-                integer = value;
-            }
-        }
-        else {
-            value = (value ? value : '').replace(new RegExp(`([^0-9]*)`, 'g'), '');
+		if (value.includes('.')) {
+			integer = value.split('.')[0];
+			decimal = this.helper.padRight(value.split('.')[1], this.precision);
+		}
+		else if (!fromTyping) {
+			integer = value;
+		}
+		else {
+			integer = value.substr(0, value.length - this.precision);
+			decimal = value.length > this.precision ? value.substr(decimal.length - this.precision) : value;
+		}
 
-            if (value !== '0')
-                value = value.replace(/^[0\.]+/, '');
-                                        
-            if (value.includes(this.decimalSymbol)) {
-                integer = value.split(this.decimalSymbol)[0];
-                decimal = value.split(this.decimalSymbol)[1];
-            }
-            else if(value !== ''){
-                if (value.length > this.precision) {
-                    integer = value.substr(0, value.length - this.precision); 
-                    decimal = value.substr(integer.length, this.precision); 
-                }
-                else
-                    decimal = value; 
-            }
-        }
+		integer = integer ? integer.replace(/(\d)(?=(?:[0-9]{3})+\b)/g, (v) => `${v}${this.thousandsSymbol}`) : '0';
+		decimal = this.helper.padLeft(decimal, this.precision);
 
-        if (integer !== '' || decimal !== '') {
-            if (integer !== '') {
-                let qttThousands = Math.floor(integer.length / 3);
-                if (qttThousands > 0) {
-                    let thousandsList = [];
-                    let startIndex = integer.length - (qttThousands * 3);
-                    value = (startIndex > 0) ? `${integer.substr(0, startIndex)}${this.thousandsSymbol}` : '';
-
-                    for (var i = startIndex; i < integer.length; i += 3) {
-                        let thousand = integer.substr(i, 3);
-                        thousandsList.push(thousand);
-                    }
-                    value += thousandsList.join(this.thousandsSymbol);
-                }
-                else
-                    value = integer;
-            }
-
-            if (decimal !== ''){
-                decimal = this.helper.padLeft(decimal.substr(0, this.precision), this.precision);
-                value = `${(integer === '') ? '0' : value}${this.decimalSymbol}${decimal}`;
-            }
-            else if (integer !== '')
-                value += `${this.decimalSymbol}${this.helper.padLeft('', this.precision)}`;
-
-            value = (this.prefix ? `${this.prefix} ` : '') + value;
-        }
+		value = `${integer}${this.decimalSymbol}${decimal}`;
+		value = (this.prefix ? `${this.prefix} ` : '') + value;
         
         return value;
     }
@@ -178,5 +149,8 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
         let floatValue = value !== '' ? parseFloat(value) : null;
 
         return floatValue;
+    }
+
+    public onDestroy() {
     }
 }

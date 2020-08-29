@@ -27,7 +27,7 @@ export class MouseEventsDirective extends Directive {
     public onResolve(selector: string, value: any): void {
         this.listener.listen(this.element, this.pureSelector(selector), (e) => {
             Object.assign(this.scope, { $event: e });
-            this.scope.compile(value);
+            this.compile(value);
             delete this.scope['$event'];
         });
     }
