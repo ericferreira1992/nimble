@@ -31,15 +31,12 @@ export class DialogRender extends RenderAbstract {
 
         this.applyCloseEvents(renderRef);
 
-        this.listenersCollector.applyAllListeners();
-
         return renderRef;
     }
 
     public rerenderDialog<T extends Dialog>(renderRef: DialogRenderRef<T>) {
         if (renderRef) {
             this.recompileElementFromStructure(renderRef.structuredTemplate);
-            this.listenersCollector.applyAllListeners();
         }
     }
 

@@ -28,11 +28,11 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
+    public onRender(): void {
         if (this.checkForm()) {
-            if (this.elementIsValid(selector, value)) {
+            if (this.elementIsValid()) {
                 try {
-                    this.defineOptions(value);
+                    this.defineOptions();
                     this.checkValueOnInitialize();
                     this.listenerCollector.subscribe(this.element, 'keypress', this.onKeypress.bind(this), true);
                     this.listenerCollector.subscribe(this.element, 'input', this.onInput.bind(this), true);
@@ -41,12 +41,17 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
             }
         }
     }
+	
+	public onChange(): void {
+		this.defineOptions();
+		this.checkValueOnInitialize();
+	}
 
-    private defineOptions(value: any) {
-        if (isObject(value))
-            Object.assign(this.options, value);
-        else if (!isNullOrUndefined(value))
-            this.options.prefix = value.toString();
+    private defineOptions() {
+        if (isObject(this.value))
+            Object.assign(this.options, this.value);
+        else if (!isNullOrUndefined(this.value))
+            this.options.prefix = this.value.toString();
     }
 
     private checkValueOnInitialize() {
@@ -62,9 +67,9 @@ export class FieldCurrencyMaskDirective extends BaseFormFieldDirective {
             this.formField.setValue(floatValue, { noNotify: true, noUpdateElement: true, noValidate: true });
     }
 
-    private elementIsValid(selector: string, value: any) {
+    private elementIsValid() {
         if (!(this.element instanceof HTMLInputElement) || this.element.type !== 'text') {
-            console.error(`The directive "${selector}" only applies in input with type="text".`);
+            console.error(`The directive "${this.selector}" only applies in input with type="text".`);
             return false;
         }
 

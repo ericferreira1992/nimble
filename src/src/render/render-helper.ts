@@ -2,6 +2,7 @@ import { IScope } from "../page/interfaces/scope.interface";
 import { ElementStructure } from "./element-structure";
 import { AttributeStructure } from "./element-structure-abstract";
 import { Directive } from "../directives/abstracts/directive";
+import { DirectiveHelper } from "../directives/directive.helper";
 
 export class RenderHelper {
     public static isPureElement(tag: string | HTMLElement): boolean {
@@ -61,6 +62,9 @@ export class RenderHelper {
                             });
                         }
                         else {
+							if (name === '(submit)') {
+								return;
+							}
                             element.setAttribute(name, value);
                         }
                     } 
@@ -86,8 +90,11 @@ export class RenderHelper {
             let checkNode = (node: ChildNode): ElementStructure => {
                 let structure = new ElementStructure(scope);
                 if (node.nodeType !== Node.TEXT_NODE) {
-                    structure.tagName = (node as HTMLElement).tagName.toLowerCase();
-                    structure.attritubes  = checkAttributes((node as HTMLElement).attributes, structure);
+					structure.tagName = (node as HTMLElement).tagName.toLowerCase();
+					let { attrs, directives } = checkAttributes((node as HTMLElement).attributes, structure);
+                    structure.attrs = attrs;
+                    structure.attrDirectives.default = directives.default;
+                    structure.attrDirectives.iterate = directives.iterate;
 
                     if (RenderHelper.isPureElement(structure.tagName)) {
                         let attributes = (node as HTMLElement).attributes;
@@ -127,8 +134,28 @@ export class RenderHelper {
                 return structures;
             };
 
-            let checkAttributes = (attrs: NamedNodeMap, strucutre: ElementStructure): AttributeStructure<Directive>[] => {
-                let attributes: AttributeStructure<Directive>[] = [];
+            let checkAttributes = (attrs: NamedNodeMap, strucutre: ElementStructure) => {
+                let all: AttributeStructure<Directive>[] = [];
+                let attrsDefault: AttributeStructure<Directive>[];
+                let attrsDirective: {
+					default: {
+						directive: AttributeStructure<Directive>,
+						props: { 
+							in: AttributeStructure<Directive>[],
+							out: AttributeStructure<Directive>[],
+						}
+					}[],
+					iterate: {
+						directive: AttributeStructure<Directive>,
+						props: { 
+							in: AttributeStructure<Directive>[],
+							out: AttributeStructure<Directive>[],
+						}
+					}
+				} = {
+					default: [],
+					iterate: { directive: null, props: { in: [], out: [] } }
+				};
 
                 if (attrs.length > 0) {
                     for(let i = 0; i < attrs.length; i++) {
@@ -136,12 +163,63 @@ export class RenderHelper {
                             attrs[i].name,
                             attrs[i].value,
                             strucutre
-                        );
-                        attributes.push(attr);
+						);
+						all.push(attr);
                     }
-                }
+				}
+				
+				let isDirectiveProps = [];
 
-                return attributes;
+				const checkHasInputOrOutput = (attrDirective: AttributeStructure<Directive>, attr: AttributeStructure<Directive>, type: string): boolean => {
+					if (attr.isNotDirective) {
+						let props = attrDirective.directiveType.prototype[`_${type}`] ?? [];
+						if (props.some(x => (type === 'outputs' ? `(${x})` : x) === attr.name)) {
+							if (!isDirectiveProps.indexOf(attr))
+								isDirectiveProps.push(attr);
+							return true;
+						}
+					}
+					return false;
+				};
+
+				all.forEach(attrDirective => {
+					if (attrDirective.isDefaultDirective) {
+						attrsDirective.default.push({
+							directive: attrDirective,
+							props: {
+								in: all.filter(attr => {
+									return checkHasInputOrOutput(attrDirective, attr, 'inputs');
+								}),
+								out: all.filter(attr => {
+									return checkHasInputOrOutput(attrDirective, attr, 'outputs');
+								}),
+							}
+						});
+					}
+					else if (attrDirective.isIterationDirective && !attrsDirective.iterate.directive) {
+						attrsDirective.iterate.directive = attrDirective;
+						attrsDirective.iterate.props = {
+							in: all.filter(attr => {
+								return checkHasInputOrOutput(attrDirective, attr, 'inputs');
+							}),
+							out: all.filter(attr => {
+								return checkHasInputOrOutput(attrDirective, attr, 'outputs');
+							}),
+						}
+					}
+				});
+				
+				attrsDirective.default = attrsDirective.default.sort((a,b) => {
+					if (DirectiveHelper.isNativeSelector(a.directive.name))
+						return -1;
+					else if (DirectiveHelper.isNativeSelector(b.directive.name))
+						return 1;
+		
+					return 0;
+				});
+				attrsDefault = all.filter(x => x.isNotDirective && isDirectiveProps.indexOf(x) < 0);
+
+                return { attrs: attrsDefault, directives: attrsDirective };
             };
 
             let structured = checkNode(element) as ElementStructure;

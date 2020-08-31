@@ -9,8 +9,9 @@ import { ElementListenersCollector } from '../../providers/listeners-collector';
 })
 export class FieldDateMaskDirective extends BaseFormFieldDirective {
 
-    private get format(): string { return this.getValueOfSelector('field-date-mask') as string; }
-    private set format(value: string) { this.setValueOfSelector('field-date-mask', value); }
+	private format: string = '';
+    // private get format(): string { return this.value as string; }
+    // private set format(value: string) { this.value = value; }
 
     private separator: string;
     private regex: RegExp;
@@ -24,10 +25,11 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
+    public onRender(): void {
         if (this.checkForm()) {
-            if (this.elementIsValid(selector, value)) {
+            if (this.elementIsValid()) {
                 try {
+					this.format = this.value;
                     this.prepareRegex();
                     this.checkValueOnInitialize();
                     this.listenerCollector.subscribe(this.element, 'keypress', this.onKeypress.bind(this), true);
@@ -38,6 +40,12 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
             }
         }
     }
+	
+	public onChange(): void {
+		this.format = this.value;
+		this.prepareRegex();
+		this.checkValueOnInitialize();
+	}
 
     public onDestroy() {
     }
@@ -59,14 +67,14 @@ export class FieldDateMaskDirective extends BaseFormFieldDirective {
             this.formField.setValue(element.value, { noNotify: true, noUpdateElement: true, noValidate: true });
     }
 
-    private elementIsValid(selector: string, value: any) {
+    private elementIsValid() {
         if (!(this.element instanceof HTMLInputElement) || this.element.type !== 'text') {
-            console.error(`The directive "${selector}" only applies in input with type="text".`);
+            console.error(`The directive "${this.selector}" only applies in input with type="text".`);
             return false;
         }
 
-        if (value === '' || isNullOrUndefined(value)) {
-            console.warn(`The directive "${selector}" cannot works with empty value.`);
+        if (this.value === '' || isNullOrUndefined(this.value)) {
+            console.warn(`The directive "${this.selector}" cannot works with empty value.`);
             return false;
         }
 

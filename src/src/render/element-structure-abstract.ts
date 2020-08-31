@@ -14,13 +14,29 @@ export abstract class ElementStructureAbstract {
     public scope: IScope;
     public tagName: string = '';
     public content: string = '';
-    public attritubes: AttributeStructure<Directive>[] = [];
     public children: ElementStructureAbstract[] = [];
     public directivesInstance: Directive[] = [];
     public rawNode: Node = null;
     public compiledNode: Node = null;
     public compiledBeginFn: () => void = null;
-    public compiledEndFn?: () => void = null;
+	public compiledEndFn?: () => void = null;
+    public attrs: AttributeStructure<Directive>[] = [];
+	public attrDirectives: {
+		default: {
+			directive: AttributeStructure<Directive>,
+			props: { 
+				in: AttributeStructure<Directive>[],
+				out: AttributeStructure<Directive>[],
+			}
+		}[],
+		iterate: {
+			directive: AttributeStructure<Directive>,
+			props: { 
+				in: AttributeStructure<Directive>[],
+				out: AttributeStructure<Directive>[],
+			}
+		}
+	} = { default: [], iterate: { directive: null, props: { in: [], out: [] } } };
     
     public isVoid: boolean = false;
     public isPureElement: boolean = false;
@@ -30,10 +46,10 @@ export abstract class ElementStructureAbstract {
 
     public get hasParent(): boolean { return !isNullOrUndefined(this.parent); }
     public get hasChildren(): boolean { return this.children.length > 0; }
-    public get hasAttritubes(): boolean { return this.attritubes.length > 0; }
+    public get hasAttritubes(): boolean { return this.attrs.length > 0; }
     public get isText(): boolean { return this.tagName ? false : true; }
-    public get hasNormalDirectivesToApply(): boolean { return this.attritubes.some(x => x.isNormalDirective); }
-    public get hasIterationDirectivesToApply(): boolean { return this.attritubes.some(x => x.isIterationDirective); }
+    public get hasNormalDirectivesToApply(): boolean { return this.attrDirectives.default.length > 0; }
+    public get hasIterationDirectivesToApply(): boolean { return !!this.attrDirectives.iterate.directive; }
     public get nodeIsRenderedInDOM(): boolean { return this.compiledNode && !isNullOrUndefined(this.compiledNode.parentNode); }
 
     constructor(scope: IScope) {
@@ -63,52 +79,52 @@ export abstract class ElementStructureAbstract {
 	}
 
     public getIterationDirective(): AttributeStructure<IterationDirective> {
-        let attr = this.attritubes.find(x => x.directiveType != null && x.directiveType.prototype.type === 'IterationDirective');
+		let attr = this.attrDirectives.iterate.directive;
+		let props = this.attrDirectives.iterate.props;
 
         if (attr) {
-            let instance = this.directivesInstance.find(x => x instanceof attr.directiveType);
+            let instance = this.directivesInstance.find(x => x.selector === attr.name);
             if (!instance) {
                 instance = NimbleApp.inject<Directive>(attr.directiveType);
                 instance.scope = this.scope;
-                instance.element = this.compiledNode as HTMLElement;
-                this.directivesInstance.push(instance);
+				instance.element = this.compiledNode as HTMLElement;
+				instance.selectorActive = attr.name;
+
+				instance.insertInput(instance.selector, () => attr.value);
+
+				props.in.forEach((attr) => {
+					instance.insertInput(
+						attr.name,
+						() => AttributeStructure.getCompiledValue(attr.name, attr.value, this.scope)
+					);
+				});
+				props.out.forEach((attr) => {
+					instance.insertOutput(
+						attr.name.replace(/\(|\)/g, ''),
+						() => attr.value
+					);
+				});
+				
+				this.directivesInstance.push(instance);
             }
             else {
                 instance.element = this.compiledNode as HTMLElement;
             }
-			instance.all = this.directivesInstance.filter(x => x !== instance);
+			instance.all = () => this.directivesInstance;
         }
 
-        return attr;
-    }
-
-    public getNormalDirectives(): AttributeStructure<Directive>[] {
-        return this.attritubes.filter(x => x.directiveType != null && x.directiveType.prototype.type !== 'IterationDirective');
-    }
-
-    public getAttributes(): AttributeStructure<Directive>[] {
-        return this.attritubes.filter(x => x.directiveType == null);
+        return attr as AttributeStructure<IterationDirective>;
     }
     
     public resolveAttrs() {
-        for (let attr of this.getAttributes()) {
+        for (let attr of this.attrs) {
             RenderHelper.resolveDefaultAttribute(this.compiledNode as HTMLElement, attr.name, attr.value, this.scope);
         }
     }
     
-    public resolveAttrDirectives() {
-        let attrs = this.getNormalDirectives();
-        
-        attrs = attrs.sort((a,b) => {
-            if (DirectiveHelper.isNativeSelector(a.name))
-                return -1;
-            else if (DirectiveHelper.isNativeSelector(b.name))
-                return 1;
-
-            return 0;
-        });
-        for (let attr of attrs) {
-            attr.resolveDirective();
+    public resolveAttrDirectivesIfNeeded() {
+        for (let attr of this.attrDirectives.default) {
+            attr.directive.resolveDirectiveIfNeeded();
         }
     }
 
@@ -117,25 +133,46 @@ export abstract class ElementStructureAbstract {
     }
 
     public instantiateAttrDirectives() {
-        let attrs = this.getNormalDirectives();
-        for (let attr of attrs) {
-            let instance = this.directivesInstance.find(x => x instanceof attr.directiveType);
+        for (let attrDefault of this.attrDirectives.default) {
+			let attr = attrDefault.directive;
+			let props = attrDefault.props;
+            let instance = this.directivesInstance.find(x => x.selector === attr.name.replace(/\[|\]/g, ''));
             if (!instance) {
                 instance = NimbleApp.inject<Directive>(attr.directiveType);
                 instance.element = this.compiledNode as HTMLElement;
-                instance.scope = this.scope;
+				instance.scope = this.scope;
+				instance.selectorActive = attr.name;
+				
+				let inputs = props.in.map(x => ({
+					name: x.name,
+					value: () => AttributeStructure.getCompiledValue(attr.name, attr.value, this.scope),
+				}));
+				let outputs = props.out.map(x => ({
+					name: x.name.replace(/\(|\)/g, ''),
+					value: () => x.value,
+				}));
+
+				if (instance.selectorIsInput) {
+					inputs.push({
+						name: instance.selector,
+						value: () => AttributeStructure.getCompiledValue(attr.name, attr.value, this.scope)
+					});
+				}
+				else {
+					outputs.push({ name: instance.selector, value: () => attr.value });
+				}
+
+				inputs.forEach((x) => instance.insertInput(x.name, x.value));
+				outputs.forEach((x) => instance.insertOutput(x.name, x.value));
+				
                 this.directivesInstance.push(instance);
             }
             else {
                 instance.element = this.compiledNode as HTMLElement;
             }
-
-			instance.setValueOfSelector(attr.name, attr.getCompiledValue());
 			
             if (attr.directiveInstance) {
-                attr.directiveInstance.all = this.directivesInstance.filter(x => {
-                    return x !== attr.directiveInstance && !(x instanceof IterationDirective);
-                });
+                attr.directiveInstance.all = () => this.directivesInstance;
             }
         }
     }
@@ -194,44 +231,43 @@ export abstract class ElementStructureAbstract {
 }
 
 export class AttributeStructure<T extends Directive> {
+    public get allDirectives() { return NimbleApp.instance.directives; }
+	
+	public isResolved: boolean = false;
     public structure: ElementStructureAbstract = null;
     public name: string = '';
     public value: string = '';
     public directiveType: Type<T> = null;
 
-    public get directiveInstance() { return this.structure.directivesInstance.find(x => this.directiveType != null && x instanceof this.directiveType); }
     public get isIterationDirective() { return this.directiveType != null && this.directiveType.prototype.type === 'IterationDirective'; }
-    public get isNormalDirective() { return this.directiveType != null && this.directiveType.prototype.type !== 'IterationDirective'; }
+    public get isDefaultDirective() { return this.directiveType != null && this.directiveType.prototype.type !== 'IterationDirective'; }
+    public get isNotDirective() { return !this.directiveType; }
+	public get directiveInstance() {
+		let instances = this.structure.directivesInstance;
+		return instances.find(x => {
+			if (x.selectorIsOutput) 
+				return `(${x.selector})` === this.name;
+			return x.selector === this.name.replace(/\[|\]/g, '');
+		});
+	}
 
-    constructor(name: string, value: string, strucutre: ElementStructureAbstract, directiveType: Type<T> = null) {
+    constructor(name: string, value: string, strucutre: ElementStructureAbstract, directiveType: Type<T> = null, fromClone: boolean = false) {
         this.name = name;
         this.value = value;
         this.structure = strucutre;
-        this.directiveType = directiveType;
+        this.directiveType = directiveType ?? (!fromClone ? this.getDirective() : null);
     }
 
-    public getCompiledValue() {
-        let value = this.value;
-        
-        if (!/^\(([^)]+)\)$/g.test(this.name)) {
-            if (/^\[([^)]+)\]$/g.test(this.name)) {
-                if (!DirectiveHelper.checkSelectorMustHavePureValue(this.name))
-                value = this.structure.scope.compile(value);
-            }
-            else {
-                value = RenderHelper.resolveInterpolationIfHave(value, this.structure.scope);
-                if (DirectiveHelper.checkSelectorMustHavePureValue(this.name)) {
-                    value = value;
-                }
-            }
-        }
-
-        return value;
-    }
-
-    public resolveDirective(){
-        this.checkDirectiveBeforeResolve();
-        this.directiveInstance.onResolve(this.name, this.getCompiledValue());
+    public resolveDirectiveIfNeeded(){
+		if (!this.isResolved) {
+			this.isResolved = true;
+			this.checkDirectiveBeforeResolve();
+			this.directiveInstance.onRender();
+		}
+		else {
+			this.checkDirectiveBeforeResolve();
+			this.directiveInstance.onChange();
+		}
     }
 
     private checkDirectiveBeforeResolve() {
@@ -239,13 +275,56 @@ export class AttributeStructure<T extends Directive> {
             let structure = this.structure.parent;
             let formDirective: FormDirective = null;
             while(!formDirective && structure) {
-                let attr = structure.attritubes.find(x => x.directiveInstance instanceof FormDirective);
-                if (attr) {
-                    formDirective = attr.directiveInstance as FormDirective;
-                }
+                formDirective = structure.directivesInstance.find(x => x instanceof FormDirective) as FormDirective;
                 structure = structure.parent;
             }
             this.directiveInstance.form = formDirective && formDirective.form;
         }
+	}
+	
+	private getDirective(): Type<T> {
+        let directive: Type<T> = null
+		let attrName = this.name.toLowerCase();
+        for(let directiveType of this.allDirectives) {
+            let selectors = directiveType.prototype.selectors as string[];
+            let selector = selectors.find(selector => {
+                if (selector) {
+                    selector = selector.toLowerCase();
+                    if (/^\[([^)]+)\]$/g.test(attrName) && /^(?!\(\/).*(?!\))$/g.test(selector))
+                        return attrName === `[${selector.replace(/\[|\]/g, '')}]`;
+                    else
+                        return attrName === selector;
+                }
+                return false;
+            });
+
+            if (selector) {
+				directive = directiveType as Type<T>;
+                break;
+            }
+        }
+
+        if (!/^\(([^)]+)\)$/g.test(attrName)) {
+            if (!/^\[([^)]+)\]$/g.test(attrName) && DirectiveHelper.checkSelectorMustHavePureValue(attrName)) {
+                return null;
+            }
+        }
+
+        return directive;
+    }
+
+    public static getCompiledValue(propName: string, propValue: string, scope: IScope) {        
+        if (!/^\(([^)]+)\)$/g.test(propName)) {
+            if (/^\[([^)]+)\]$/g.test(propName)) {
+                if (!DirectiveHelper.checkSelectorMustHavePureValue(propName)) {
+					propValue = scope.compile(propValue);
+				}
+            }
+            else {
+                propValue = RenderHelper.resolveInterpolationIfHave(propValue, scope);
+            }
+        }
+
+        return propValue;
     }
 }

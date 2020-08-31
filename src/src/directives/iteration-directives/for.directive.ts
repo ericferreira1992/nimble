@@ -10,10 +10,13 @@ export class ForDirective extends IterationDirective {
 
     constructor() {
         super();
+	}
+	
+    public onRender() {
     }
-
-    public onResolve(selector: string, value: any): IterateDirectiveResponse[] {
-        let expression = (value as string).trim();
+	
+	public onIterate(): IterateDirectiveResponse[] {
+        let expression = (this.value as string).trim();
 
         if (expression.startsWith('(') && expression.endsWith(')')) {
             expression = expression.substr(1, expression.length - 2);
@@ -54,7 +57,11 @@ export class ForDirective extends IterationDirective {
         });
 
         return response;
-    }
+	}
+	
+	public onChange(): void {
+
+	}
 
     public onDestroy() {
     }

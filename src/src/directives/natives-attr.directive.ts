@@ -1,21 +1,21 @@
 import { Directive } from './abstracts/directive';
 import { PrepareDirective } from './decorators/prepare-directive.decor';
 import { Helper } from '../providers/helper';
-import { isArray } from 'util';
+import { isArray, isNullOrUndefined } from 'util';
 
 export const NATIVE_SELECTORS: string[] = [
     '[disabled]',
-    'class',
-    'style',
-    'title',
-    'alt',
-    'type',
-    'target',
-    'src',
-    'width',
-    'height',
-    'maxlength',
-    'minlength',
+    '[class]',
+    '[style]',
+    '[title]',
+    '[alt]',
+    '[type]',
+    '[target]',
+    '[src]',
+    '[width]',
+    '[height]',
+    '[maxlength]',
+    '[minlength]',
 ];
 
 @PrepareDirective({
@@ -45,29 +45,31 @@ export class NativesAttrsDirective extends Directive {
 		},
 	};
 
-    public onResolve(selector: string, value: any): void {
-        selector = this.pureSelector(selector);
-
-        if (selector === 'class')
-            this.resolveClass(value);
-        else if (selector === 'style')
-            this.resolveStyle(value);
-        else if (selector === 'disabled')
-            this.resolveRequired(value);
+    public onRender(): void {
+		if (this.selector === 'class')
+			this.resolveClass();
+        else if (this.selector === 'style')
+            this.resolveStyle();
+        else if (this.selector === 'disabled')
+            this.resolveRequired();
         else {
-            if (!this.element.hasAttribute(selector))
-				this.element.setAttribute(selector, value);
-            else if (this.element.attributes[selector].value !== value)
-				this.element.attributes[selector].value = value;
+            if (!this.element.hasAttribute(this.selector))
+				this.element.setAttribute(this.selector, this.value);
+            else if (this.element.attributes[this.selector].value !== this.value)
+				this.element.attributes[this.selector].value = this.value;
         }
     }
+	
+	public onChange(): void {
+		this.onRender();
+	}
 
     public onDestroy() {
     }
 
-    private resolveClass(value: string) {
-        if (value) {
-            value = value.trim();
+    private resolveClass() {
+        if (this.value) {
+            let value = this.value.trim();
             let classesAdd: string[] = [];
             let classesRemove: string[] = [];
 
@@ -119,9 +121,9 @@ export class NativesAttrsDirective extends Directive {
         }
     }
 
-    private resolveStyle(value: string) {
-        if (value) {
-            value = value.trim();
+    private resolveStyle() {
+        if (this.value) {
+            let value = this.value.trim();
             let toAdd: { prop: string, value: string }[] = [];
 			
             if (value.startsWith('{') && value.endsWith('}')) {
@@ -188,8 +190,9 @@ export class NativesAttrsDirective extends Directive {
         }
     }
 
-    private resolveRequired(ok: boolean) {
-        if (ok)
+    private resolveRequired() {
+		let disabled = (typeof this.value === 'string') ? this.value === 'true' : !!this.value;
+        if (disabled)
 			this.element.setAttribute('disabled', '');
         else
 			this.element.removeAttribute('disabled');

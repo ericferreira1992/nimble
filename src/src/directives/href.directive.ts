@@ -18,9 +18,8 @@ export class HrefDirective extends Directive {
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
-		selector = this.pureSelector(selector);
-		value = value ?? '';
+    public onRender(): void {
+		let value = this.value ?? '';
         let startsWithHash = value.startsWith('#') || value.startsWith('/#');
         let href = value.replace(/^(#)/g, '');
 
@@ -41,7 +40,7 @@ export class HrefDirective extends Directive {
 				}
 
                 this.listenersCollector.subscribe(this.element, 'click', (e: MouseEvent) => {
-                    let attr = this.element.attributes[selector];
+                    let attr = this.element.attributes[this.selector];
 					let href = attr?.value as string;
                     if (!href || href.startsWith(this.baseHref)) {
                         setTimeout(() => {
@@ -56,11 +55,15 @@ export class HrefDirective extends Directive {
 			}
         }
 
-        if (!this.element.hasAttribute(selector))
-			this.element.setAttribute(selector, href);
+        if (!this.element.hasAttribute(this.selector))
+			this.element.setAttribute(this.selector, href);
         else
-			this.element.attributes[selector].value = href;
+			this.element.attributes[this.selector].value = href;
     }
+	
+	public onChange(): void {
+		this.onRender();
+	}
 
     public onDestroy() {
     }

@@ -13,29 +13,21 @@ import { Form } from '../../forms/form';
 })
 export class FormEventsDirective extends Directive {
 
-    private get form(): Form {
-        let directive = this.getDirectiveBySelector('[form]') || this;
-        if (directive) {
-            let applied = directive.selectorsApplied.find(x => x.selector === '[form]');
-            if (applied) return applied.content;
-        }
-        return null;
-    }
-
     constructor(
         private listener: ElementListener
     ){
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
-        selector = this.pureSelector(selector);
-        this.listener.listen(this.element, selector, (e) => {
-            Object.assign(this.scope, { $event: e });
-            this.scope.compile(value);
-            delete this.scope['$event'];
+    public onRender(): void {
+        this.listener.listen(this.element, this.selector.replace(/\(|\)/g, ''), (e) => {
+            this.outputs[this.selector](e);
         });
     }
+	
+	public onChange(): void {
+
+	}
 
     public onDestroy() {
     }

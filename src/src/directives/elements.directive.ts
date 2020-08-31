@@ -12,29 +12,30 @@ export const ELEMENT_SELECTORS: string[] = [
 })
 export class ElementsDirective extends Directive {
 
-    constructor(private helper: Helper) {
+    constructor() {
         super();ElementsDirective
     }
 
-    public onResolve(selector: string, value: any): void {
-        selector = this.pureSelector(selector);
-        let stringValue = value ? value.toString() : '';
-
-        if (selector === 'html')
-            this.resolveHtml(stringValue);
-        else if (selector === 'content')
-            this.resolveContent(stringValue);
+    public onRender(): void {
+        if (this.selector === 'html')
+            this.resolveHtml();
+        else if (this.selector === 'content')
+            this.resolveContent();
     }
+	
+	public onChange(): void {
+		this.onRender();
+	}
 
-    private resolveHtml(value: string) {
-        if (this.element.innerHTML.trim() !== value.trim()) {
-            this.element.innerHTML = value;
+    private resolveHtml() {
+        if (this.element.innerHTML.trim() !== (this.value ?? '').trim()) {
+            this.element.innerHTML = this.value;
         }
     }
 
-    private resolveContent(value: string) {
-        if (this.element?.textContent.trim() !== value.trim()) {
-            this.element.textContent = value;
+    private resolveContent() {
+        if (this.element?.textContent.trim() !== (this.value ?? '').trim()) {
+            this.element.textContent = this.value;
         }
     }
 

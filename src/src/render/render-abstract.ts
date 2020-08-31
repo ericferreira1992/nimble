@@ -1,11 +1,8 @@
 import { ElementStructure } from "./element-structure";
-import { Directive } from "../directives/abstracts/directive";
-import { Type } from "../inject/type.interface";
 import { NimbleApp } from "../app";
 import { IterationDirective } from "../directives/abstracts/iteration-directive";
 import { Injectable } from "../inject/injectable";
 import { ElementIterationStructure } from "./element-iteration-structure";
-import { DirectiveHelper } from "../directives/directive.helper";
 import { ElementListenersCollector } from "../providers/listeners-collector";
 import { RenderHelper } from "./render-helper";
 import { ElementStructureAbstract } from "./element-structure-abstract";
@@ -14,14 +11,6 @@ import { ElementStructureAbstract } from "./element-structure-abstract";
 export class RenderAbstract {
     
     protected get app() { return NimbleApp.instance; }
-
-    public get allDirectives() { return this.app.directives; }
-    public get iterationDirectives() {
-        return this.allDirectives.filter(x => x.prototype.type === 'IterationDirective') as Type<IterationDirective>[];
-    }
-    public get normalDirectives() {
-        return this.allDirectives.filter(x => x.prototype.type === 'Directive') as Type<Directive>[];
-    }
     
     constructor(
         protected listenersCollector: ElementListenersCollector
@@ -35,12 +24,7 @@ export class RenderAbstract {
             if (!structured.rawNode) {
                 let element = document.createElement(structured.tagName);
                 structured.rawNode = element;
-
-                for(let attr of structured.attritubes) {
-                    attr.directiveType = this.getDirectiveFromAttribute(attr.name);
-                }
             }
-
 
             for(let child of structured.children) {
                 this.createElementFromStructure(child);
@@ -55,15 +39,21 @@ export class RenderAbstract {
     }
 
     protected compileElementFromStructure(structured: ElementStructure): Node {
-
         if (!structured.isText) {
-            structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
+			structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
+			structured.attrDirectives.default.forEach(x => {
+				x.directive.isResolved = false;
+				x.props.in.forEach(y => y.isResolved = false);
+				x.props.out.forEach(y => y.isResolved = false);
+			});
+
             let element = structured.compiledNode as HTMLElement;
 
             // ITERATION DIRECTIVE
             if (structured.hasIterationDirectivesToApply) {
-                let attr = structured.getIterationDirective();
-                let iterationResponses = (attr.directiveInstance as IterationDirective).onResolve(attr.name, attr.value);
+				let attr = structured.getIterationDirective();
+				let directiveInstance = attr.directiveInstance as IterationDirective;
+				let iterationResponses = directiveInstance.onIterate();
 
                 if (iterationResponses.length <= 0)
                     return null;
@@ -104,7 +94,7 @@ export class RenderAbstract {
             }
 
             // DIRECTIVES
-            structured.resolveAttrDirectives();
+            structured.resolveAttrDirectivesIfNeeded();
 
             // ACTIONS 
             this.checkStructureNodeActions(structured);
@@ -125,111 +115,102 @@ export class RenderAbstract {
 
     public recompileElementFromStructure(structured: ElementStructure): boolean {
         if (!structured.isText) {
+			if (!structured.compiledNode)
+				structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
 
-			try {
-				var initTime = null;
-				
-				if ((structured.rawNode as HTMLElement).tagName === 'TBODY') {
-					initTime = performance.now();
-				}
+			// ITERATION DIRECTIVE
+			if (structured.hasIterationDirectivesToApply) {
+				let attr = structured.getIterationDirective();
+				let directiveInstance = attr.directiveInstance as IterationDirective;
 
-				if (!structured.compiledNode)
-					structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
-				let element = structured.compiledNode as HTMLElement;
+				let iterationResponses = directiveInstance.onIterate();
 
-				this.listenersCollector.unsubscribeAllFromElement(element);
+				if (iterationResponses.length <= 0) {
+					structured.removeCompiledNode();
 
-				// ITERATION DIRECTIVE
-				if (structured.hasIterationDirectivesToApply) {
-					let attr = structured.getIterationDirective();
-					let iterationResponses = (attr.directiveInstance as IterationDirective).onResolve(attr.name, attr.value);
-
-					if (iterationResponses.length <= 0) {
-						structured.removeCompiledNode();
-
-						let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
-						if (iterationChildren) {
-							for(let iterationChild of iterationChildren) {
-								this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-								iterationChild.removeCompiledNode();
-							}
-							structured.parent.children = structured.parent.children.filter(x => !iterationChildren.some(y => y === x));
+					let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
+					if (iterationChildren) {
+						for(let iterationChild of iterationChildren) {
+							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
+							iterationChild.removeCompiledNode();
 						}
-						return;
+						structured.parent.children = structured.parent.children.filter(x => !iterationChildren.some(y => y === x));
 					}
-					else {
-						let currentIterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
-					
-						structured.compiledBeginFn = iterationResponses[0].beginFn;
-						structured.compiledEndFn = iterationResponses[0].endFn;
+					return;
+				}
+				else {
+					directiveInstance.onRender();
 
-						iterationResponses = iterationResponses.slice(1);
+					if ((structured.compiledNode as HTMLElement).tagName === 'A') {
+						let teste = '';
+					}
 
-						// REMOVE LEFTOVERS
-						if (currentIterationChildren.length > iterationResponses.length) {
-							let toRemove = currentIterationChildren.slice(iterationResponses.length);
-							currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
-							for(let iterationChild of toRemove) {
-								this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-								iterationChild.removeCompiledNode();
-							}
-							structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
+					let currentIterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
+				
+					structured.compiledBeginFn = iterationResponses[0].beginFn;
+					structured.compiledEndFn = iterationResponses[0].endFn;
+
+					iterationResponses = iterationResponses.slice(1);
+
+					// REMOVE LEFTOVERS
+					if (currentIterationChildren.length > iterationResponses.length) {
+						let toRemove = currentIterationChildren.slice(iterationResponses.length);
+						currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
+						for(let iterationChild of toRemove) {
+							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
+							iterationChild.removeCompiledNode();
 						}
-						// ADD THE NEW ONES
-						else if (currentIterationChildren.length < iterationResponses.length) {
-							let childrenDiff = iterationResponses.length - currentIterationChildren.length;
-							let currentIndex = currentIterationChildren.length > 0
-								? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
-								: structured.parent.children.findIndex(x => x === structured);
+						structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
+					}
+					// ADD THE NEW ONES
+					else if (currentIterationChildren.length < iterationResponses.length) {
+						let childrenDiff = iterationResponses.length - currentIterationChildren.length;
+						let currentIndex = currentIterationChildren.length > 0
+							? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
+							: structured.parent.children.findIndex(x => x === structured);
 
-							for(let i = 1; i <= childrenDiff; i++) {
-								let interation = iterationResponses[currentIterationChildren.length + i - 1];
-								let nextIndex = currentIndex + i;
-								structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
-							}
-						}
-
-						for (let i = 0; i < currentIterationChildren.length; i++) {
-							let interationResponse = iterationResponses[i];
-							let iterationChild = currentIterationChildren[i];
-							iterationChild.compiledBeginFn = interationResponse.beginFn;
-							iterationChild.compiledEndFn = interationResponse.endFn;
+						for(let i = 1; i <= childrenDiff; i++) {
+							let interation = iterationResponses[currentIterationChildren.length + i - 1];
+							let nextIndex = currentIndex + i;
+							structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
 						}
 					}
-				}
-				
-				if (structured.compiledBeginFn)
-					structured.compiledBeginFn();
 
-				// ATRIBUTES
-				structured.resolveAttrs();
-
-				// INSTANTIATE DIRECTIVES
-				structured.instantiateAttrDirectives();
-
-				// RENDER
-				structured.renderNodeIfNot();
-
-				// CHILDREN
-				for(let i = 0; i < structured.children.length; i++) {
-					let structChild = structured.children[i];
-					this.recompileElementFromStructure(structChild);
-				}
-
-				// DIRECTIVES
-				structured.resolveAttrDirectives();
-
-				// ACTIONS 
-				this.checkStructureNodeActions(structured);
-
-				if (structured.compiledEndFn)
-					structured.compiledEndFn();
-			}
-			finally {
-				if ((structured.rawNode as HTMLElement).tagName === 'TBODY' && initTime) {
-					console.log("TBODY processed in " + (initTime - performance.now()) + " milliseconds.");
+					for (let i = 0; i < currentIterationChildren.length; i++) {
+						let interationResponse = iterationResponses[i];
+						let iterationChild = currentIterationChildren[i];
+						iterationChild.compiledBeginFn = interationResponse.beginFn;
+						iterationChild.compiledEndFn = interationResponse.endFn;
+					}
 				}
 			}
+			
+			if (structured.compiledBeginFn)
+				structured.compiledBeginFn();
+
+			// ATRIBUTES
+			structured.resolveAttrs();
+
+			// INSTANTIATE DIRECTIVES
+			structured.instantiateAttrDirectives();
+
+			// RENDER
+			structured.renderNodeIfNot();
+
+			// CHILDREN
+			for(let i = 0; i < structured.children.length; i++) {
+				let structChild = structured.children[i];
+				this.recompileElementFromStructure(structChild);
+			}
+
+			// DIRECTIVES
+			structured.resolveAttrDirectivesIfNeeded();
+
+			// ACTIONS 
+			this.checkStructureNodeActions(structured);
+
+			if (structured.compiledEndFn)
+				structured.compiledEndFn();
         }
         else {
             if (!structured.compiledNode)
@@ -267,37 +248,6 @@ export class RenderAbstract {
         iterationStructure.compiledEndFn = endFn;
 
         return iterationStructure;
-    }
-
-    private getDirectiveFromAttribute(attrName: string): Type<Directive> {
-        let directive: Type<Directive> = null
-        for(let directiveType of this.allDirectives) {
-            let selectors = directiveType.prototype.selectors as string[];
-            attrName = attrName.toLowerCase();
-            let selector = selectors.find(selector => {
-                if (selector) {
-                    selector = selector.toLowerCase();
-                    if (/^\[([^)]+)\]$/g.test(attrName) && /^(?!\(\/).*(?!\))$/g.test(selector))
-                        return attrName === `[${selector.replace(/\[|\]/g, '')}]`;
-                    else
-                        return attrName === selector;
-                }
-                return false;
-            });
-
-            if (selector) {
-                directive = directiveType;
-                break;
-            }
-        }
-
-        if (!/^\(([^)]+)\)$/g.test(attrName)) {
-            if (!/^\[([^)]+)\]$/g.test(attrName) && DirectiveHelper.checkSelectorMustHavePureValue(attrName)) {
-                return null;
-            }
-        }
-
-        return directive;
     }
 }
 

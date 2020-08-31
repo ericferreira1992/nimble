@@ -22,14 +22,15 @@ export class DragEventsDirective extends Directive {
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
-        this.listener.listen(this.element, this.pureSelector(selector), (e) => {
-            Object.assign(this.scope, { $event: e });
-            this.scope.compile(value);
-            delete this.scope['$event'];
+    public onRender(): void {
+        this.listener.listen(this.element, this.selector.replace(/\(|\)/g, ''), (e) => {
+            this.outputs[this.selector](e);
         });
     }
+	
+	public onChange(): void {
 
+	}
 
     public onDestroy() {
     }

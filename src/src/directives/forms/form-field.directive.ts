@@ -16,46 +16,45 @@ export class FormFieldDirective extends BaseFormFieldDirective {
 
     constructor(
         private listenerCollector: ElementListenersCollector,
-        private intervalEventsCollector: InternalObserversCollector
-
+        private internalEventsCollector: InternalObserversCollector
     ) {
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
+    public onRender(): void {
         if (this.checkForm()) {
-            if (selector === '[form-field]') {
-                if (this.elementIsValid() && value instanceof FormField) {
+			if (['form-field', 'form-field-name'].some(x => x === this.selector)) {
+                if (this.elementIsValid() && (this.value instanceof FormField || this.formFieldNameSelectorIsValid())) {
                     this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
                     if (this.canApplyFormField()) {
                         this.resolveFormFieldSelector();
-                    }
-                }
-            }
-            else if (selector === 'form-field-name') {
-                if (this.elementIsValid() && this.formFieldNameSelectorIsValid(value)) {
-                    this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
-                    if (this.canApplyFormField()) {
-						this.resolveFormFieldSelector();
 						this.resolveFormFieldSpecifications()
                     }
                 }
-            }
-            else if (selector === '(valueChange)')
-                this.resolveValueChangeSelector(value);
+			}
+            else if (this.selector === '(valueChange)')
+                this.resolveValueChangeSelector();
         }
     }
+	
+	public onChange(): void {
+		if (['form-field', 'form-field-name'].some(x => x === this.selector)) {
+			if (this.elementIsValid() && (this.value instanceof FormField || this.formFieldNameSelectorIsValid())) {
+				this.resolveFormFieldSpecifications();
+			}
+		}
+	}
 
     public onDestroy() {
     }
 
-    private formFieldNameSelectorIsValid(value: any) {
-        if(typeof value !== 'string') {
+    private formFieldNameSelectorIsValid() {
+        if(typeof this.value !== 'string') {
             console.error('Some form-field-name directive cannot be appplied, because the it value must be a string.');
             return false;
         }
-        if(!this.form.has(value)) {
-            console.error(`The form-field-name directive cannot be appplied, because the "${value}" field not exists in the form.`);
+        if(!this.form.has(this.value)) {
+            console.error(`The form-field-name directive cannot be appplied, because the "${this.value}" field not exists in the form.`);
             return false;
         }
 
@@ -140,12 +139,10 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         }
     }
 
-    private resolveValueChangeSelector(expression: any) {
+    private resolveValueChangeSelector() {
         if (this.formField) {
-            this.intervalEventsCollector.add(this.scope, '(valueChanges)', this.formField.valueChanges.subscribe((value) => {
-                Object.assign(this.scope, { $event: value });
-                this.scope.compile(expression);
-                delete this.scope['$event'];
+            this.internalEventsCollector.add(this.scope, '(valueChanges)', this.formField.valueChanges.subscribe((value) => {
+                this.outputs.valueChanges(value);
             }));
         }
         else {

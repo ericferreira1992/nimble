@@ -11,21 +11,24 @@ export class ElementListenersCollector {
                 target,
                 eventName,
                 realCallback: callback,
-                options
+				options,
+				applied: true
             });
             subscribed.callback = (e) => {
                 if (subscribed.beforeListen) subscribed.beforeListen.forEach(x => x());
 				callback(e);
                 if (subscribed.afterListen) subscribed.afterListen.forEach(x => x());
             }
-            this.listenersSubscribed.push(subscribed);
+			this.listenersSubscribed.push(subscribed);
+			
+            subscribed.target.addEventListener(subscribed.eventName, subscribed.callback, subscribed.options);
             
             return () => this.unsubscribe(subscribed);
         }
         return () => {};
     }
 
-    public getSubscribersByTarget(target: HTMLElement) {
+    private getSubscribersByTarget(target: HTMLElement) {
         return this.listenersSubscribed.filter(x => x.target === target);
     }
 
@@ -33,15 +36,15 @@ export class ElementListenersCollector {
         return this.listenersSubscribed.filter(x => x.target === target && x.eventName === eventName);
     }
 
-    public applyAllListeners() {
-        let subscribeds = this.listenersSubscribed.filter(x => !x.applied);
-        subscribeds.sort((a, b) => (a.internal === b.internal) ? 0 : (a.internal ? -1 : 1));
+    // public applyAllListeners() {
+    //     let subscribeds = this.listenersSubscribed.filter(x => !x.applied);
+    //     subscribeds.sort((a, b) => (a.internal === b.internal) ? 0 : (a.internal ? -1 : 1));
 
-        for(let subscribed of subscribeds) {
-            subscribed.applied = true;
-            subscribed.target.addEventListener(subscribed.eventName, subscribed.callback, subscribed.options);
-        }
-    }
+    //     for(let subscribed of subscribeds) {
+    //         subscribed.applied = true;
+    //         subscribed.target.addEventListener(subscribed.eventName, subscribed.callback, subscribed.options);
+    //     }
+    // }
 
     public unsubscribe(subscribed: ListenerSubscribed) {
         if (subscribed && subscribed.applied) {

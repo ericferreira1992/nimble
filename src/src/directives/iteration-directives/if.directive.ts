@@ -8,16 +8,16 @@ import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive
 })
 export class IfDirective extends IterationDirective {
 
-    public onResolve(selector: string, value: any): IterateDirectiveResponse[] {
-        let success = this.scope.compile(value as string);
-
-        if (!success)
-            return [];
-        else
-            return [
-                new IterateDirectiveResponse()
-            ];
+    public onRender() {
     }
+	
+	public onIterate(): IterateDirectiveResponse[] {
+        let success = this.scope.compile(this.value as string);
+        return success ? [new IterateDirectiveResponse()] : [];
+	}
+	
+	public onChange(): void {
+	}
 
     public onDestroy() {
     }

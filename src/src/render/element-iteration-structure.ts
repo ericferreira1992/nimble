@@ -16,9 +16,19 @@ export class ElementIterationStructure extends ElementStructureAbstract {
         this.isPureElement = from.isPureElement;
         this.isRendered = false;
         this.compiledNode = null;
-        this.attritubes = from.attritubes.filter(x => !x.isIterationDirective).map(x => new AttributeStructure(
-            x.name, x.value, this, x.directiveType
+        this.attrs = from.attrs.map(x => new AttributeStructure(
+            x.name, x.value, this, x.directiveType, true
         ));
+        this.attrDirectives = {
+			default: from.attrDirectives.default.map(x => ({
+				directive: new AttributeStructure(x.directive.name, x.directive.value, this, x.directive.directiveType, true),
+				props: {
+					in: x.props.in.map(y => new AttributeStructure(y.name, y.value, this, y.directiveType, true)),
+					out: x.props.out.map(y => new AttributeStructure(y.name, y.value, this, y.directiveType, true)),
+				}
+			})),
+			iterate: { directive: null, props: { in: [], out: [] } },
+		};
         this.compiledBeginFn = null;
         this.compiledEndFn = null;
 
@@ -34,10 +44,30 @@ export class ElementIterationStructure extends ElementStructureAbstract {
             child.directivesInstance = [];
             child.rawNode = x.rawNode.cloneNode(x.isPureElement);
             child.isVoid = x.isVoid;
-            child.isPureElement = x.isPureElement;
-            child.attritubes = x.attritubes.map(x => new AttributeStructure(
-                x.name, x.value, child, x.directiveType
-            ));
+			child.isPureElement = x.isPureElement;
+			
+			child.attrs = x.attrs.map(a => new AttributeStructure(
+				a.name, a.value, child, a.directiveType, true
+			));
+			child.attrDirectives = {
+				default: x.attrDirectives.default.map(a => ({
+					directive: new AttributeStructure(a.directive.name, a.directive.value, child, a.directive.directiveType, true),
+					props: {
+						in: a.props.in.map(y => new AttributeStructure(y.name, y.value, child, y.directiveType, true)),
+						out: a.props.out.map(y => new AttributeStructure(y.name, y.value, child, y.directiveType, true)),
+					}
+				})),
+				iterate: {
+					directive: x.attrDirectives.iterate.directive
+						? new AttributeStructure(x.attrDirectives.iterate.directive.name, x.attrDirectives.iterate.directive.value, child, x.attrDirectives.iterate.directive.directiveType, true)
+						: null,
+					props: {
+						in: x.attrDirectives.iterate.props.in.map(y => new AttributeStructure(y.name, y.value, child, y.directiveType, true)),
+						out: x.attrDirectives.iterate.props.out.map(y => new AttributeStructure(y.name, y.value, child, y.directiveType, true)),
+					}
+				},
+			};
+			
             child.children = (x.children.length > 0) ? this.cloneChildrensRecursive(x.children, child) : [];
             return child;
         });

@@ -60,7 +60,7 @@ export class RouteRender extends RenderAbstract {
         RenderHelper.removeAllChildrenOfElement(this.app.rootElement);
         this.app.rootElement.appendChild(routeRootElement);
 
-        this.listenersCollector.applyAllListeners();
+        // this.listenersCollector.applyAllListeners();
     }
 
     /**
@@ -87,7 +87,7 @@ export class RouteRender extends RenderAbstract {
 			parent = child.structuredTemplate.compiledNode as HTMLElement;
 		}
 
-		this.listenersCollector.applyAllListeners();
+		// this.listenersCollector.applyAllListeners();
     }
 
     /**

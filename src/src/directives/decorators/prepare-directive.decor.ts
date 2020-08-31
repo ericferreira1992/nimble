@@ -1,26 +1,22 @@
+import 'reflect-metadata';
+import { isArray } from 'util';
 import { DirectiveConfig } from './classes/directive-config';
 import { Directive } from '../abstracts/directive';
 import { IterationDirective } from "../../directives/abstracts/iteration-directive";
 import { Type } from "../../inject/type.interface";
 import { INJECTABLE_METADATA_KEY } from '../../inject/injectable';
-import 'reflect-metadata';
-import { isArray } from 'util';
 
 export function PrepareDirective(config: DirectiveConfig) {
 
     return function <T extends { new(...args: any[]): Directive }>(constructor: T) {
         config = new DirectiveConfig(config);
         constructor.prototype.type = 'Directive';
-        constructor.prototype.selectors = (isArray(config.selector) ? config.selector : [config.selector]) as string[];
-
-        if (constructor.prototype.selectors.length > 0) {
-            let selectors = constructor.prototype.selectors as string[];
-            selectors = selectors.filter((selector, i) => selectors.indexOf(selector) === i);
-            constructor.prototype.selectors = selectors.reduce((unique, selector) => unique.includes(selector) ? unique : [...unique, selector], []);
-        }
+        constructor.prototype._selectors = isArray(config.selector) ? Array.from(new Set(config.selector)) : (config.selector ? [config.selector] : []);
+        constructor.prototype._inputs = config.inputs ?? [];
+        constructor.prototype._outputs = config.outputs ?? [];
 
         constructor.prototype.validate = (addedDirectives: (Type<Directive | IterationDirective>)[]) => {
-            let selectors = constructor.prototype.selectors as string[];
+            let selectors = constructor.prototype._selectors as string[];
             let name = constructor.name;
             if (selectors && selectors.length) {
                 let regexValidates = [
@@ -35,7 +31,7 @@ export function PrepareDirective(config: DirectiveConfig) {
                     else if (addedDirectives.some(added => added === constructor))
                         throw Error(`The ${name} is already added.`);
                     else {
-                        let equalSelector = addedDirectives.find(added => added.prototype.selectors.some(x => x === selector));
+                        let equalSelector = addedDirectives.find(added => added.prototype._selectors.some(x => x === selector));
                         if (equalSelector)
                             throw Error(`The ${name} has selector equals another directive already added. The another directive is: ${equalSelector.name}`);
                     }

@@ -159,7 +159,7 @@ export class FormField {
                 this.validate();
 
             this.renderIfNeed()
-        }, true, { once: true });
+        }, true);
         
         this.listenerCollector.subscribe(element, 'blur', () => {
 
@@ -167,7 +167,7 @@ export class FormField {
             this.validate();
 
             this.renderIfNeed();
-        }, true, { once: true });
+        }, true);
     }
 
     private renderIfNeed() {

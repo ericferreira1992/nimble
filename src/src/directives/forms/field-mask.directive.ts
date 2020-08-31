@@ -19,7 +19,7 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         }
     };
 
-    private get mask(): string { return this.getValueOfSelector('field-mask') as string; }
+    private get mask(): string { return this.value as string; }
 
     constructor(
         private listenerCollector: ElementListenersCollector,
@@ -27,9 +27,9 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
         super();
     }
 
-    public onResolve(selector: string, value: any): void {
+    public onRender(): void {
         if (this.checkForm()) {
-            if (this.elementIsValid(selector, value)) {
+            if (this.elementIsValid()) {
                 try {
                     this.checkValueOnInitialize();
                     this.listenerCollector.subscribe(this.element, 'keypress', this.onKeypress.bind(this), true);
@@ -39,18 +39,24 @@ export class FieldMaskDirective extends BaseFormFieldDirective {
             }
         }
     }
+	
+	public onChange(): void {
+        if (this.checkForm()) {
+			this.checkValueOnInitialize();
+		}
+	}
 
     public onDestroy() {
     }
 
-    private elementIsValid(selector: string, value: any) {
+    private elementIsValid() {
         if (!(this.element instanceof HTMLInputElement) || (this.element.type !== 'text' && this.element.type !== 'password')) {
-            console.error(`The directive "${selector}" only applies in input with type="text".`);
+            console.error(`The directive "${this.selector}" only applies in input with type="text".`);
             return false;
         }
 
-        if (value === '' || isNullOrUndefined(value)) {
-            console.warn(`The directive "${selector}" cannot works with empty value.`);
+        if (this.value === '' || isNullOrUndefined(this.value)) {
+            console.warn(`The directive "${this.selector}" cannot works with empty value.`);
             return false;
         }
 

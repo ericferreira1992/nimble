@@ -504,7 +504,9 @@ export class Router {
 
         this.nextRejectedAndRedirectAfter = (!isNullOrUndefined(this.nextPath) || !this.current) ? true : false;
         if (this.nextRejectedAndRedirectAfter && isNullOrUndefined(this.current)) {
-            this.updateURLPath(path);
+			this._next = null;
+			this.updateURLPath(path, { pathRedirect: true });
+			this._nextPath = path;
         }
 
         if (!this.pathIsHashLink(path) || !this.pathIsHashLink(path, { checkIsCurrent: true })) {
