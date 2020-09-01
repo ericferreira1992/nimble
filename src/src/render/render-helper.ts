@@ -25,11 +25,13 @@ export class RenderHelper {
 
     public static resolveInterpolationIfHave(value: any, scope: IScope) {
         if (value) {
-            value = value.toString();
+            value = value.toString().trim();
             let regex = /{{(.|\n)*?}}/g;
             if (regex.test(value)) {
                 value = value.replace(regex, (expression) => {
-                    expression = expression.replace(/(^{{)|(}}$)/g, '');
+					expression = expression.replace(/(^{{)|(}}$)/g, '')
+						.replace(/[]/g, '')
+						.trim();
                     if (expression !== '')
                         return scope.compile(expression);
 
@@ -62,9 +64,6 @@ export class RenderHelper {
                             });
                         }
                         else {
-							if (name === '(submit)') {
-								return;
-							}
                             element.setAttribute(name, value);
                         }
                     } 

@@ -133,12 +133,13 @@ export abstract class ElementStructureAbstract {
     }
 
     public instantiateAttrDirectives() {
-        for (let attrDefault of this.attrDirectives.default) {
+		let attrsDefaults = this.attrDirectives.default.filter(x => !x.directive.isResolved);
+        for (let attrDefault of attrsDefaults) {
 			let attr = attrDefault.directive;
 			let props = attrDefault.props;
             let instance = this.directivesInstance.find(x => x.selector === attr.name.replace(/\[|\]/g, ''));
             if (!instance) {
-                instance = NimbleApp.inject<Directive>(attr.directiveType);
+				instance = NimbleApp.inject<Directive>(attr.directiveType);
                 instance.element = this.compiledNode as HTMLElement;
 				instance.scope = this.scope;
 				instance.selectorActive = attr.name;
@@ -164,15 +165,12 @@ export abstract class ElementStructureAbstract {
 
 				inputs.forEach((x) => instance.insertInput(x.name, x.value));
 				outputs.forEach((x) => instance.insertOutput(x.name, x.value));
+			
+				if (attr.directiveInstance) {
+					attr.directiveInstance.all = () => this.directivesInstance;
+				}
 				
                 this.directivesInstance.push(instance);
-            }
-            else {
-                instance.element = this.compiledNode as HTMLElement;
-            }
-			
-            if (attr.directiveInstance) {
-                attr.directiveInstance.all = () => this.directivesInstance;
             }
         }
     }
@@ -262,7 +260,12 @@ export class AttributeStructure<T extends Directive> {
 		if (!this.isResolved) {
 			this.isResolved = true;
 			this.checkDirectiveBeforeResolve();
+
+			// let timeBegin = performance.now();
 			this.directiveInstance.onRender();
+			// if (this.structure.tagName === 'tr' && this.structure.hasIterationDirectivesToApply) {
+			// 	console.log(`${this.name} ${(performance.now() - timeBegin)} ms`);
+			// }
 		}
 		else {
 			this.checkDirectiveBeforeResolve();
