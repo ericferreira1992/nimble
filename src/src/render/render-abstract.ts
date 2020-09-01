@@ -78,7 +78,7 @@ export class RenderAbstract {
             if (structured.compiledBeginFn)
                 structured.compiledBeginFn();
 
-            // ATRIBUTES
+			// ATRIBUTES
             structured.resolveAttrs();
 
             // INSTANTIATE DIRECTIVES
@@ -185,30 +185,14 @@ export class RenderAbstract {
 			if (structured.compiledBeginFn)
 				structured.compiledBeginFn();
 
-			if (structured.tagName === 'tr' && structured.hasIterationDirectivesToApply) {
-				let teste = '';
-			}
-
 			// ATRIBUTES
-			let timeBegin = performance.now();
 			structured.resolveAttrs();
-			if (structured.tagName === 'tr' && structured.hasIterationDirectivesToApply) {
-				console.log(`ATTRIBU ${(performance.now() - timeBegin)} ms`);
-			}
 
 			// INSTANTIATE DIRECTIVES
-			timeBegin = performance.now();
 			structured.instantiateAttrDirectives();
-			if (structured.tagName === 'tr' && structured.hasIterationDirectivesToApply) {
-				console.log(`INSTANCE ${(performance.now() - timeBegin)} ms`);
-			}
 
 			// RENDER
-			timeBegin = performance.now();
 			structured.renderNodeIfNot();
-			if (structured.tagName === 'tr' && structured.hasIterationDirectivesToApply) {
-				console.log(`RENDER ${(performance.now() - timeBegin)} ms`);
-			}
 
 			// CHILDREN
 			for(let i = 0; i < structured.children.length; i++) {
@@ -217,18 +201,10 @@ export class RenderAbstract {
 			}
 
 			// DIRECTIVES
-			timeBegin = performance.now();
 			structured.resolveAttrDirectivesIfNeeded();
-			if (structured.tagName === 'tr' && structured.hasIterationDirectivesToApply) {
-				console.log(`RESOLVE ${(performance.now() - timeBegin)} ms`);
-			}
 
 			// ACTIONS 
-			timeBegin = performance.now();
 			this.checkStructureNodeActions(structured);
-			if (structured.tagName === 'tr' && structured.hasIterationDirectivesToApply) {
-				console.log(`ACTIONS ${(performance.now() - timeBegin)} ms`);
-			}
 
 			if (structured.compiledEndFn)
 				structured.compiledEndFn();

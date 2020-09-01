@@ -12,6 +12,9 @@ export class HrefDirective extends Directive {
 	private get baseHref() { return NimbleApp.instance.baseHref; }
 	private get hasBaseHref() { return NimbleApp.instance.hasBaseHref; }
 
+	private isListening: boolean = false;
+	private canClick: boolean = true;
+
     constructor(
         private listenersCollector: ElementListenersCollector
     ){
@@ -19,18 +22,22 @@ export class HrefDirective extends Directive {
     }
 
     public onRender(): void {
+		this.canClick = false;
+
 		let value = this.value ?? '';
         let startsWithHash = value.startsWith('#') || value.startsWith('/#');
-        let href = value.replace(/^(#)/g, '');
+		let href = value.replace(/^(#)/g, '');
 
         if (!value.startsWith('http:') && !value.startsWith('https:')) {
             if (Router.useHash) {
                 if (!startsWithHash)
                     href = '#/' + href.replace(/^(\/)/g, '');
                 else
-                    console.error(`The link "#${href}" with "#" not work in useHash mode setted in NimbleApple.`);
+					console.error(`The link "#${href}" with "#" not work in useHash mode setted in NimbleApple.`);
             }
-            else if (href) {
+            else {
+				this.canClick = true;
+				
                 if (startsWithHash) {
                     href = `${location.pathname}#${href}`;
                 }
@@ -39,21 +46,23 @@ export class HrefDirective extends Directive {
                     href = `${prefix.replace(/(\/)$/g, '')}/${href}`;
 				}
 
-                this.listenersCollector.subscribe(this.element, 'click', (e: MouseEvent) => {
-                    let attr = this.element.attributes[this.selector];
-					let href = attr?.value as string;
-                    if (!href || href.startsWith(this.baseHref)) {
-                        setTimeout(() => {
-                            Router.redirect(href);
-                        });
-						e.preventDefault();
-                    }
-                });
+				if (!this.isListening) {
+					this.isListening = true;
+					this.listenersCollector.subscribe(this.element, 'click', (e: MouseEvent) => {
+						if (this.canClick) {
+							let attr = this.element.attributes[this.selector];
+							let href = attr?.value as string;
+							if (!href || href.startsWith(this.baseHref)) {
+								setTimeout(() => {
+									Router.redirect(href);
+								});
+								e.preventDefault();
+							}
+						}
+					}, true);
+				}
 			}
-			else {
-				href = value;
-			}
-        }
+		}
 
         if (!this.element.hasAttribute(this.selector))
 			this.element.setAttribute(this.selector, href);

@@ -36,16 +36,6 @@ export class ElementListenersCollector {
         return this.listenersSubscribed.filter(x => x.target === target && x.eventName === eventName);
     }
 
-    // public applyAllListeners() {
-    //     let subscribeds = this.listenersSubscribed.filter(x => !x.applied);
-    //     subscribeds.sort((a, b) => (a.internal === b.internal) ? 0 : (a.internal ? -1 : 1));
-
-    //     for(let subscribed of subscribeds) {
-    //         subscribed.applied = true;
-    //         subscribed.target.addEventListener(subscribed.eventName, subscribed.callback, subscribed.options);
-    //     }
-    // }
-
     public unsubscribe(subscribed: ListenerSubscribed) {
         if (subscribed && subscribed.applied) {
             subscribed.target.removeEventListener(subscribed.eventName, subscribed.callback);

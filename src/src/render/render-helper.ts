@@ -173,7 +173,7 @@ export class RenderHelper {
 					if (attr.isNotDirective) {
 						let props = attrDirective.directiveType.prototype[`_${type}`] ?? [];
 						if (props.some(x => (type === 'outputs' ? `(${x})` : x) === attr.name)) {
-							if (!isDirectiveProps.indexOf(attr))
+							if (isDirectiveProps.indexOf(attr) < 0)
 								isDirectiveProps.push(attr);
 							return true;
 						}

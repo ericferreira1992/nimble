@@ -12,7 +12,6 @@ export class AuthRouteActivate extends RouteGuard {
     }
 
     public doActivate(currentPath: string, nextPath: string, route: Route): boolean {
-		let teste = '';
         if (!this.authService.isLogged && nextPath !== '/login') {
             console.log('UNLOGGED');
             Router.redirect('/login');
