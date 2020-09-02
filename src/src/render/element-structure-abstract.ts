@@ -56,10 +56,10 @@ export abstract class ElementStructureAbstract {
         this.scope = scope;
     }
 
-    public removeCompiledNode() {
+    public removeCompiledNode(onRemoveNode?: (structure: ElementStructureAbstract) => void) {
         if (this.hasChildren) {
             for(let child of this.children) {
-                child.removeCompiledNode();
+                child.removeCompiledNode(onRemoveNode);
             }
         }
 
@@ -68,14 +68,17 @@ export abstract class ElementStructureAbstract {
             this.isRendered = false;
 		}
 		this.destroyAllDirectives();
+		if (onRemoveNode) onRemoveNode(this);
 	}
 	
 	public destroyAllDirectives() {
-		for (let directiveInstance of this.directivesInstance) {
-			directiveInstance.onDestroy();
+		for(let attr of this.attrDirectives.default) {
+			attr.directive.destroyDirective();
 		}
 
-		this.directivesInstance = [];
+		if (this.attrDirectives.iterate.directive) {
+			this.attrDirectives.iterate.directive.destroyDirective();
+		}
 	}
 
     public getIterationDirective(): AttributeStructure<IterationDirective> {
@@ -269,9 +272,19 @@ export class AttributeStructure<T extends Directive> {
 		}
 		else {
 			this.checkDirectiveBeforeResolve();
+			if (!this.directiveInstance) {
+				let teste = '';
+			}
 			this.directiveInstance.onChange();
 		}
-    }
+	}
+	
+	public destroyDirective() {
+		if (this.directiveInstance) {
+			this.directiveInstance.onDestroy();
+		}
+		this.isResolved = false;
+	}
 
     private checkDirectiveBeforeResolve() {
         if (this.directiveInstance instanceof BaseFormFieldDirective) {

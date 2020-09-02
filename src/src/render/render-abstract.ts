@@ -40,14 +40,13 @@ export class RenderAbstract {
 
     protected compileElementFromStructure(structured: ElementStructure): Node {
         if (!structured.isText) {
-			structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
+			if (!structured.compiledNode)
+				structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
 			structured.attrDirectives.default.forEach(x => {
 				x.directive.isResolved = false;
 				x.props.in.forEach(y => y.isResolved = false);
 				x.props.out.forEach(y => y.isResolved = false);
 			});
-
-            let element = structured.compiledNode as HTMLElement;
 
             // ITERATION DIRECTIVE
             if (structured.hasIterationDirectivesToApply) {
@@ -103,7 +102,9 @@ export class RenderAbstract {
                 structured.compiledEndFn();
         }
         else {
-            structured.compiledNode = structured.rawNode.cloneNode(true) as Node;
+			if (!structured.compiledNode)
+				structured.compiledNode = structured.rawNode.cloneNode(true) as Node;
+				
             structured.compiledNode.textContent = RenderHelper.resolveInterpolationIfHave(structured.compiledNode.textContent, structured.scope);
         }
 
@@ -126,13 +127,16 @@ export class RenderAbstract {
 				let iterationResponses = directiveInstance.onIterate();
 
 				if (iterationResponses.length <= 0) {
-					structured.removeCompiledNode();
+					structured.removeCompiledNode((structure) => {
+						this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
+					});
 
 					let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
 					if (iterationChildren) {
 						for(let iterationChild of iterationChildren) {
-							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-							iterationChild.removeCompiledNode();
+							iterationChild.removeCompiledNode((structure) => {
+								this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
+							});
 						}
 						structured.parent.children = structured.parent.children.filter(x => !iterationChildren.some(y => y === x));
 					}
@@ -154,7 +158,9 @@ export class RenderAbstract {
 						currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
 						for(let iterationChild of toRemove) {
 							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
-							iterationChild.removeCompiledNode();
+							iterationChild.removeCompiledNode((structure) => {
+								this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
+							});
 						}
 						structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
 					}

@@ -44,12 +44,15 @@ export class RouteRender extends RenderAbstract {
 		
         this.headerRender.resolveTitleAndMetaTags(tallestRoute);
 
+		RenderHelper.removeAllChildrenOfElement(this.app.rootElement);
+		
         let routeRootElement: Node = this.compileElementFromStructure(tallestRoute.structuredTemplate);
 
         let parent = routeRootElement;
         for(let route of childRoutes.slice(1)) {
             let routerElement = this.getRouterElement(parent as HTMLElement);
             if (routerElement) {
+				RenderHelper.removeAllChildrenOfElement(routerElement);
                 let child = this.compileElementFromStructure(route.structuredTemplate);
                 routerElement.appendChild(child);
                 parent = child;
@@ -57,10 +60,7 @@ export class RouteRender extends RenderAbstract {
 			this.headerRender.resolveTitleAndMetaTags(route);
         }
 
-        RenderHelper.removeAllChildrenOfElement(this.app.rootElement);
         this.app.rootElement.appendChild(routeRootElement);
-
-        // this.listenersCollector.applyAllListeners();
     }
 
     /**

@@ -416,7 +416,7 @@ export class Router {
             return false;
         };
 
-        path = path.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
+        // path = path.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
 
         let pathWithoutHash = (!this.useHash && path.includes('#')) ? path.split('#')[0] : path;
         let currentPathWithoutHash = (!this.useHash && this.realCurrentPath.includes('#')) ? this.realCurrentPath.split('#')[0] : path;
@@ -518,8 +518,8 @@ export class Router {
                 this.updateURLPath(path, { pathRedirect: currentPageIsThisPath });
 
                 if (currentPageIsThisPath) {
-					await this.setState(RouterEvent.STARTED_CHANGE, this.current);
-					await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+					// await this.setState(RouterEvent.STARTED_CHANGE, this.current);
+					// await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
                     return;
                 }
             }
