@@ -13,7 +13,6 @@ export class Router {
     private static _current: Route;
     private static _next: Route;
     private static _previous: Route;
-    private static _redirecting: boolean = false;
 
     private static _state: RouterEvent;
     public static get state() { return this._state; };
@@ -402,42 +401,31 @@ export class Router {
 
     private static async updateURLPath(path: string, options: { pathRedirect: boolean } = {} as any) {
 
-        let isChangingHashLink = (path: string): boolean =>  {
+        let isChangingHashLink = (): boolean =>  {
             return path.includes('#') && this.realCurrentPath.includes('#');
         };
-        let isAddingHashLink = (path: string): boolean =>  {
-            if (path.includes('#'))
-                return path.split('#')[0].replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '') === this.realCurrentPath;
-            return false;
+        let isAddingHashLink = (): boolean =>  {
+			return path.includes('#') &&
+				path.split('#')[0].replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '') === this.realCurrentPath.replace(/^(\/)/g, '');
         };
-        let isRemovingHashLink = (path: string): boolean =>  {
-            if (this.realCurrentPath.includes('#'))
-                return this.realCurrentPath.split('#')[0].replace(/\/$/g, '') === path;
-            return false;
+        let isRemovingHashLink = (): boolean =>  {
+			return this.realCurrentPath.includes('#') &&
+				this.realCurrentPath.split('#')[0].replace(/\/$/g, '') === path.replace(/^(\/)/g, '');
         };
 
-        // path = path.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
-
-        let pathWithoutHash = (!this.useHash && path.includes('#')) ? path.split('#')[0] : path;
-        let currentPathWithoutHash = (!this.useHash && this.realCurrentPath.includes('#')) ? this.realCurrentPath.split('#')[0] : path;
+        let pathWithoutHash = ((!this.useHash && path.includes('#')) ? path.split('#')[0] : path).replace(/^(\/)/g, '');
+        let currentPathWithoutHash = ((!this.useHash && this.realCurrentPath.includes('#')) ? this.realCurrentPath.split('#')[0] : path).replace(/^(\/)/g, '');;
+        if (currentPathWithoutHash.includes('#')) {
+			currentPathWithoutHash = currentPathWithoutHash.split('#')[0];
+		}
 
         if ((path.includes('#') || this.realCurrentPath.includes('#')) && pathWithoutHash === currentPathWithoutHash) {
-            if (isChangingHashLink(path)) {
-                location.hash = path.replace(this.currentPath, '').replace(/#/g, '');
-                await this.setState(RouterEvent.STARTED_CHANGE, null);
-                await this.setState(RouterEvent.FINISHED_CHANGE, null);
+            if (isChangingHashLink() || isAddingHashLink()) {
+                location.hash = path.split('#')[1];
                 return;
             }
-            else if (isAddingHashLink(path)) {
-                location.hash = path.replace(this.realCurrentPath, '').replace(/#/g, '');
-                await this.setState(RouterEvent.STARTED_CHANGE, null);
-                await this.setState(RouterEvent.FINISHED_CHANGE, null);
-                return;
-            }
-            else if (isRemovingHashLink(path)) {
+            else if (isRemovingHashLink()) {
                 location.hash = '';
-                await this.setState(RouterEvent.STARTED_CHANGE, null);
-                await this.setState(RouterEvent.FINISHED_CHANGE, null);
                 return;
             }
         }

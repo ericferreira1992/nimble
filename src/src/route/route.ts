@@ -8,7 +8,6 @@ import { NimbleApp } from '../app';
 import { RouteParams } from '../providers/route-params/route-params';
 import { ElementStructure } from '../render/element-structure';
 import { RenderHelper } from '../render/render-helper';
-import { ElementStructureAbstract } from '../render/element-structure-abstract';
 
 export class Route extends RouteBase {
     public parent?: Route;
@@ -57,7 +56,7 @@ export class Route extends RouteBase {
 					this.structureTemplate();
 				}
 				else {
-					this.destroyDirectiveOfStructure();
+					// this.destroyIterateDirectivesOfStructure();
 				}
 				success(this);
 				complete();
@@ -76,7 +75,7 @@ export class Route extends RouteBase {
 								this.instancePage(pageType)
 							}
 							else {
-								this.destroyDirectiveOfStructure();
+								// this.destroyIterateDirectivesOfStructure();
 							}
 							success(this);
 						}
@@ -99,7 +98,7 @@ export class Route extends RouteBase {
 					this.instancePage(this.page as Type<Page>);
 				}
 				else {
-					this.destroyDirectiveOfStructure();
+					// this.destroyIterateDirectivesOfStructure();
 				}
 				success(this);
 				complete();
@@ -257,19 +256,13 @@ export class Route extends RouteBase {
             return this;
 	}
 	
-	private destroyDirectiveOfStructure() {
-		this.destroyRecursiveDirectiveOfStructure(this.structuredTemplate);
-	}
+	// private destroyDirectiveOfStructure() {
+	// 	this.destroyRecursiveDirectiveOfStructure(this.structuredTemplate);
+	// }
 
-	private destroyRecursiveDirectiveOfStructure(structure: ElementStructureAbstract) {
-		if (structure) {
-			if (structure.children && isArray(structure.children)) {
-				for (let child of structure.children) {
-					this.destroyRecursiveDirectiveOfStructure(child);
-				}
-			}
-	
-			structure.destroyAllDirectives();
-		}
-	}
+	// private destroyRecursiveDirectiveOfStructure(structure: ElementStructureAbstract) {
+	// 	if (structure) {
+	// 		structure.removeCompiledNode();
+	// 	}
+	// }
 }

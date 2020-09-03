@@ -36,7 +36,7 @@ export class ElementIterationStructure extends ElementStructureAbstract {
     }
 
     private cloneChildrensRecursive(children: ElementStructureAbstract[], parent: ElementStructureAbstract) {
-        return children.map(x => {
+        return children.filter(x => !(x instanceof ElementIterationStructure)).map(x => {
             let child = new ElementStructure(this.scope);
             child.parent = parent;
             child.tagName = x.tagName;

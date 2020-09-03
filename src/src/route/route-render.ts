@@ -27,10 +27,11 @@ export class RouteRender extends RenderAbstract {
         let commonParentRoute = Router.previous ? Router.getCommonParentOfTwoRoutes(route, Router.previous) : null;
 
         for(let route of childRoutes) {
-            this.createElementFromStructure(route.structuredTemplate);
-            
-            if (!commonParentRoute || commonParentRoute.isChild(route, true))
-                await route.pageInstance.onEnter();
+			const isChildOfCommonParent = commonParentRoute?.isChild(route, true) ?? true;
+            if (!commonParentRoute || isChildOfCommonParent) {
+				this.createElementFromStructure(route.structuredTemplate);
+				await route.pageInstance.onEnter();
+			}
         }
     }
 
@@ -40,24 +41,41 @@ export class RouteRender extends RenderAbstract {
      */
     public compileAndRenderRoute(route: Route) {
         let childRoutes = [route, ...route.getAllParents()].reverse();
-		let tallestRoute = childRoutes[0];
+		let tallestRoute = childRoutes.shift();
+		let commonParentRoute = Router.previous ? Router.getCommonParentOfTwoRoutes(route, Router.previous) : null;
+		
+		if (commonParentRoute && Router.previous) {
+			const fromPreviousToHighestParent = [Router.previous, ...Router.previous.getAllParents()];
+			for (let child of fromPreviousToHighestParent) {
+				if (child !== commonParentRoute) {
+					(child.structuredTemplate?.compiledNode as HTMLElement)?.remove();
+				}
+				else {
+					break;
+				}
+			};
+		}
+		
+		if (commonParentRoute?.structuredTemplate?.nodeIsRenderedInDOM) {
+			commonParentRoute.structuredTemplate.removeCompiledNode();
+		}
 		
         this.headerRender.resolveTitleAndMetaTags(tallestRoute);
 
+		this.listenersCollector.unsubscribeAll();
 		RenderHelper.removeAllChildrenOfElement(this.app.rootElement);
 		
         let routeRootElement: Node = this.compileElementFromStructure(tallestRoute.structuredTemplate);
 
         let parent = routeRootElement;
-        for(let route of childRoutes.slice(1)) {
+        for(let childRoute of childRoutes) {
             let routerElement = this.getRouterElement(parent as HTMLElement);
             if (routerElement) {
-				RenderHelper.removeAllChildrenOfElement(routerElement);
-                let child = this.compileElementFromStructure(route.structuredTemplate);
-                routerElement.appendChild(child);
+				let child = this.compileElementFromStructure(childRoute.structuredTemplate);
+				routerElement.appendChild(child);
                 parent = child;
             }
-			this.headerRender.resolveTitleAndMetaTags(route);
+			this.headerRender.resolveTitleAndMetaTags(childRoute);
         }
 
         this.app.rootElement.appendChild(routeRootElement);

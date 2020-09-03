@@ -19,8 +19,6 @@ export class RenderAbstract {
 
     protected createElementFromStructure(structured: ElementStructure) {
         if (!structured.isText) {
-            structured.children = structured.children.filter(x => !(x instanceof ElementIterationStructure));
-
             if (!structured.rawNode) {
                 let element = document.createElement(structured.tagName);
                 structured.rawNode = element;
@@ -42,64 +40,82 @@ export class RenderAbstract {
         if (!structured.isText) {
 			if (!structured.compiledNode)
 				structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
+
 			structured.attrDirectives.default.forEach(x => {
 				x.directive.isResolved = false;
 				x.props.in.forEach(y => y.isResolved = false);
 				x.props.out.forEach(y => y.isResolved = false);
 			});
 
+			let iterationResponses: IterateDirectiveResponse[] = [];
+
             // ITERATION DIRECTIVE
             if (structured.hasIterationDirectivesToApply) {
+
+				structured.attrDirectives.iterate.directive.isResolved = false;
+				structured.attrDirectives.iterate.props.in.forEach(y => y.isResolved = false);
+				structured.attrDirectives.iterate.props.out.forEach(y => y.isResolved = false);
+
 				let attr = structured.getIterationDirective();
 				let directiveInstance = attr.directiveInstance as IterationDirective;
-				let iterationResponses = directiveInstance.onIterate();
 
-                if (iterationResponses.length <= 0)
-                    return null;
-                
+				iterationResponses = directiveInstance.onIterate();
+
+                if (iterationResponses.length <= 0) {
+					structured.removeCompiledNode();
+					return null;
+				}
+				
                 structured.compiledBeginFn = iterationResponses[0].beginFn;
                 structured.compiledEndFn = iterationResponses[0].endFn;
 
                 iterationResponses = iterationResponses.slice(1);
-                
-                if (iterationResponses.length > 0) {
-                    let currentIndex = structured.parent.children.findIndex(x => x === structured);
-
-                    for(let i = 1; i <= iterationResponses.length; i++) {
-                        let interation = iterationResponses[i - 1];
-                        let nextIndex = currentIndex + i;
-                        let iterationEstructured = this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn);
-                        structured.parent.children.splice(nextIndex, 0, iterationEstructured);
-                    }
-                }
             }
-            
-            if (structured.compiledBeginFn)
-                structured.compiledBeginFn();
+			
+			if (structured.compiledBeginFn)
+				structured.compiledBeginFn();
 
 			// ATRIBUTES
-            structured.resolveAttrs();
+			structured.resolveAttrs();
 
-            // INSTANTIATE DIRECTIVES
-            structured.instantiateAttrDirectives();
+			// INSTANTIATE DIRECTIVES
+			structured.instantiateAttrDirectives();
 
             // CHILDREN
+			structured.children = structured.children.filter(child => {
+				if ((child instanceof ElementIterationStructure)) {
+					child.removeCompiledNode();
+					return false;
+				}
+				return true
+			});
             for(let structChild of structured.children) {
                 let node = this.compileElementFromStructure(structChild);
-                if (node) {
+                if (node && !structured.isRendered) {
                     structured.compiledNode.appendChild(node);
                     structChild.isRendered = true;
                 }
             }
 
-            // DIRECTIVES
-            structured.resolveAttrDirectivesIfNeeded();
+			// DIRECTIVES
+			structured.resolveAttrDirectivesIfNeeded();
 
-            // ACTIONS 
-            this.checkStructureNodeActions(structured);
+			// ACTIONS 
+			this.checkStructureNodeActions(structured);
 
-            if (structured.compiledEndFn)
-                structured.compiledEndFn();
+			if (structured.compiledEndFn)
+				structured.compiledEndFn();
+				
+                
+			if (iterationResponses.length > 0) {
+				let currentIndex = structured.parent.children.findIndex(x => x === structured);
+
+				for(let i = 1; i <= iterationResponses.length; i++) {
+					let interation = iterationResponses[iterationResponses.length - 1];
+					let nextIndex = currentIndex + i;
+					structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
+				}
+			}
         }
         else {
 			if (!structured.compiledNode)
@@ -162,7 +178,7 @@ export class RenderAbstract {
 								this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
 							});
 						}
-						structured.parent.children = structured.parent.children.filter(x => !toRemove.some(y => y === x));
+						structured.parent.children = structured.parent.children.filter(x => toRemove.indexOf(x as ElementIterationStructure) < 0);
 					}
 					// ADD THE NEW ONES
 					else if (currentIterationChildren.length < iterationResponses.length) {
