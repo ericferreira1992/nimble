@@ -5,11 +5,9 @@
 	<img align="center" src="nimble_icon.png" alt="nimble" width="80px"/>
 </p>
 
-<p align="center">
+<p align="center" style="color: #777">
 	<img align="center" src="logo.png" alt="nimble"/>
-</p>
-<p align="center">
-	Core package
+	<p align="center">Framework</p>
 </p>
 <br>
 
