@@ -1,5 +1,4 @@
 import { IterationDirective } from '../abstracts/iteration-directive';
-import { IScope } from '../../page/interfaces/scope.interface';
 import { IterateDirectiveResponse } from "../../render/render-abstract";
 import { PrepareIterateDirective } from '../decorators/prepare-iterate-directive.decor';
 
@@ -12,7 +11,7 @@ export class IfDirective extends IterationDirective {
     }
 	
 	public onIterate(): IterateDirectiveResponse[] {
-        let success = this.scope.compile(this.value as string);
+        let success = !!(this.compile(this.value as string));
         return success ? [new IterateDirectiveResponse()] : [];
 	}
 	

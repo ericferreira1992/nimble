@@ -170,9 +170,9 @@ export class FormField {
         }, true);
     }
 
-    private renderIfNeed() {
+    private async renderIfNeed() {
         if (this.parent && this.parent.renderOnInteract && this.parent.scope && !this.parent.isSubmitting) {
-            this.parent.scope.onNeedRerender && this.parent.scope.onNeedRerender(this.parent.scope);
+            this.parent.scope.onNeedRerender && await this.parent.scope.onNeedRerender(this.parent.scope);
         }
     }
 }

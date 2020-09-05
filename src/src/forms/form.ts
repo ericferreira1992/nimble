@@ -175,9 +175,9 @@ export class Form {
         }, true);
     }
 
-    private renderIfNeed() {
+    private async renderIfNeed() {
         if (this.renderOnInteract && this.scope) {
-            this.scope.onNeedRerender && this.scope.onNeedRerender(this.scope);
+            this.scope.onNeedRerender && await this.scope.onNeedRerender(this.scope);
         }
     }
 }

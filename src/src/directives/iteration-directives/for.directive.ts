@@ -37,27 +37,26 @@ export class ForDirective extends IterationDirective {
             return [];
 		}
 
+		let existingVarNameBefore = false;
+		let varValueBefore = null;
+
 		if (this.lastData.length !== iterationArray.value.length) {
-			this.lastData = iterationArray.value.map((item, index) => {
-				let existingVarNameBefore = iterationVarName in this.scope;
-				let varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
-				
-				return new IterateDirectiveResponse({
-					beginFn: () => {
-						this.scope[iterationVarName] = iterationArray.value[index];
-						this.scope['$index'] = index;
-					},
-					endFn: () => {
-						delete this.scope['$index'];
-						if (existingVarNameBefore) {
-							this.scope[iterationVarName] = varValueBefore;
-						}
-						else {
-							delete this.scope[iterationVarName];
-						}
-					}
-				});
-			});
+			this.lastData = iterationArray.value.map((_, i) => new IterateDirectiveResponse({
+				beginFn: () => {
+					existingVarNameBefore = iterationVarName in this.scope;
+					varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
+					
+					this.scope[iterationVarName] = iterationArray.value[i];
+					this.scope['$index'] = i;
+				},
+				endFn: () => {
+					delete this.scope['$index'];
+					if (existingVarNameBefore)
+						this.scope[iterationVarName] = varValueBefore;
+					else
+						delete this.scope[iterationVarName];
+				}
+			}));
 		}
 
         return this.lastData;

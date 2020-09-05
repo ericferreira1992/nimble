@@ -205,33 +205,33 @@ export class RenderAbstract {
 				structured.compiledBeginFn();
 
 			// ATRIBUTES
-			time = performance.now();
+			// time = performance.now();
 			structured.resolveAttrs();
-			if (structured.tagName === 'tr') console.log(`ATTR ${performance.now() - time}\n`);
+			// if (structured.tagName === 'tr') console.log(`ATTR ${performance.now() - time}\n`);
 
 			// INSTANTIATE DIRECTIVES
-			time = performance.now();
+			// time = performance.now();
 			structured.instantiateAttrDirectives();
-			if (structured.tagName === 'tr') console.log(`INSTANC ${performance.now() - time}\n`);
+			// if (structured.tagName === 'tr') console.log(`INSTANC ${performance.now() - time}\n`);
 
 			// RENDER
-			time = performance.now();
+			// time = performance.now();
 			structured.renderNodeIfNot();
-			if (structured.tagName === 'tr') console.log(`RENDER ${performance.now() - time}\n`);
+			// if (structured.tagName === 'tr') console.log(`RENDER ${performance.now() - time}\n`);
 
 			// CHILDREN
-			time = performance.now();
+			// time = performance.now();
 			for(let i = 0; i < structured.children.length; i++) {
 				let structChild = structured.children[i];
 				this.recompileElementFromStructure(structChild);
 			}
-			if (structured.tagName === 'tr') console.log(`CHILDRENS ${performance.now() - time}\n`);
+			// if (structured.tagName === 'tr') console.log(`CHILDRENS ${performance.now() - time}\n`);
 
 			// DIRECTIVES
-			time = performance.now();
+			// time = performance.now();
 			structured.resolveAttrDirectivesIfNeeded();
-			if (structured.tagName === 'tr') console.log(`RESOLVES ${performance.now() - time}\n`);
-			if (structured.tagName === 'tr') console.log('');
+			// if (structured.tagName === 'tr') console.log(`RESOLVES ${performance.now() - time}\n`);
+			// if (structured.tagName === 'tr') console.log('');
 
 			// ACTIONS 
 			this.checkStructureNodeActions(structured);
