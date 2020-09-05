@@ -25,7 +25,7 @@ export class RenderHelper {
 
     public static resolveInterpolationIfHave(value: any, scope: IScope) {
         if (value) {
-            value = value.toString().trim();
+			value = value.toString();
             let regex = /{{(.|\n)*?}}/g;
             if (regex.test(value)) {
                 value = value.replace(regex, (expression) => {
@@ -113,7 +113,8 @@ export class RenderHelper {
                     }
                 }
                 else {
-                    structure.isVoid = true;
+					structure.isVoid = true;
+					structure.hasInterpolationInText = /{{(.|\n)*?}}/g.test(node.textContent);
                     structure.content = node.textContent;
                 }
 
@@ -216,7 +217,13 @@ export class RenderHelper {
 		
 					return 0;
 				});
-				attrsDefault = all.filter(x => x.isNotDirective && isDirectiveProps.indexOf(x) < 0);
+				attrsDefault = all.filter(x => {
+					if (x.isNotDirective && isDirectiveProps.indexOf(x) < 0) {
+						x.hasInterpolationInText = /{{(.|\n)*?}}/g.test(x.value);
+						return true;
+					}
+					return false;
+				});
 
                 return { attrs: attrsDefault, directives: attrsDirective };
             };

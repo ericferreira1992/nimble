@@ -18,8 +18,6 @@ export class Route extends RouteBase {
 
     public pageType: Type<Page>;
 
-    // public loadPage?: (success: (data: any) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean) => void;
-
     public pageInstance?: Page;
     public prevPageInstance?: Page;
 
@@ -36,7 +34,6 @@ export class Route extends RouteBase {
     constructor(route?: Partial<RouteBase>) {
         super(route);
         this.trimRoutePath();
-        // this.checkRoutePage();
         this.checkChildren();
         this.checkRoutesParent();
     }
@@ -55,9 +52,6 @@ export class Route extends RouteBase {
 					this.pageInstance = new TemplatedPage(this.page);
 					this.structureTemplate();
 				}
-				else {
-					// this.destroyIterateDirectivesOfStructure();
-				}
 				success(this);
 				complete();
 			}
@@ -73,9 +67,6 @@ export class Route extends RouteBase {
 						try {
 							if (makeNewInstancePage || !this.pageInstance) {
 								this.instancePage(pageType)
-							}
-							else {
-								// this.destroyIterateDirectivesOfStructure();
 							}
 							success(this);
 						}
@@ -97,9 +88,6 @@ export class Route extends RouteBase {
 				if (makeNewInstancePage || !this.pageInstance) {
 					this.instancePage(this.page as Type<Page>);
 				}
-				else {
-					// this.destroyIterateDirectivesOfStructure();
-				}
 				success(this);
 				complete();
 			}
@@ -111,8 +99,7 @@ export class Route extends RouteBase {
 	}
 
     private trimRoutePath() {
-        this.path = (this.path ? this.path : '').trim();
-        this.path = this.path.replace(/(^\/)|(\/$)/g, '');
+        this.path = (this.path ?? '').trim().replace(/(^\/)|(\/$)/g, '');
     }
 
     private instancePage(pageType: Type<Page>) {
@@ -128,8 +115,10 @@ export class Route extends RouteBase {
             }
         });
 
-        this._pageTemplate = this.pageInstance.template;
-		delete this.pageInstance.template;
+		if (this.pageInstance.template) {
+			this._pageTemplate = this.pageInstance.template;
+			delete this.pageInstance.template;
+		}
 		
         if (this.pageInstance) {
             this.structureTemplate();
@@ -250,19 +239,6 @@ export class Route extends RouteBase {
     }
 
     public getHighestParentOrHimself() {
-        if (this.hasParent)
-            return this.getAllParents().pop();
-        else
-            return this;
+        return this.hasParent ? this.getAllParents().pop() : this;
 	}
-	
-	// private destroyDirectiveOfStructure() {
-	// 	this.destroyRecursiveDirectiveOfStructure(this.structuredTemplate);
-	// }
-
-	// private destroyRecursiveDirectiveOfStructure(structure: ElementStructureAbstract) {
-	// 	if (structure) {
-	// 		structure.removeCompiledNode();
-	// 	}
-	// }
 }

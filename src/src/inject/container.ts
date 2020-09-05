@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import {
     Provider,
     isClassProvider,
@@ -12,7 +13,6 @@ import {
 } from './provider';
 import { Type } from './type.interface';
 import { isInjectable } from "./injectable";
-import "reflect-metadata";
 import { getInjectionToken } from "./inject";
 
 type InjectableParam = Type<any>;

@@ -20,17 +20,16 @@ export class RenderAbstract {
     protected createElementFromStructure(structured: ElementStructure) {
         if (!structured.isText) {
             if (!structured.rawNode) {
-                let element = document.createElement(structured.tagName);
-                structured.rawNode = element;
+                structured.rawNode = document.createElement(structured.tagName);
             }
 
-            for(let child of structured.children) {
+            for(const child of structured.children) {
                 this.createElementFromStructure(child);
             }
         }
         else {
             if (!structured.rawNode) {
-                let node = document.createTextNode(structured.content);
+                const node = document.createTextNode(structured.content);
                 structured.rawNode = node;
             }
         }
@@ -56,8 +55,8 @@ export class RenderAbstract {
 				structured.attrDirectives.iterate.props.in.forEach(y => y.isResolved = false);
 				structured.attrDirectives.iterate.props.out.forEach(y => y.isResolved = false);
 
-				let attr = structured.getIterationDirective();
-				let directiveInstance = attr.directiveInstance as IterationDirective;
+				const attr = structured.getIterationDirective();
+				const directiveInstance = attr.directiveInstance as IterationDirective;
 
 				iterationResponses = directiveInstance.onIterate();
 
@@ -89,8 +88,8 @@ export class RenderAbstract {
 				}
 				return true
 			});
-            for(let structChild of structured.children) {
-                let node = this.compileElementFromStructure(structChild);
+            for(const structChild of structured.children) {
+                const node = this.compileElementFromStructure(structChild);
                 if (node && !structured.isRendered) {
                     structured.compiledNode.appendChild(node);
                     structChild.isRendered = true;
@@ -108,11 +107,11 @@ export class RenderAbstract {
 				
                 
 			if (iterationResponses.length > 0) {
-				let currentIndex = structured.parent.children.findIndex(x => x === structured);
+				const currentIndex = structured.parent.children.findIndex(x => x === structured);
 
 				for(let i = 1; i <= iterationResponses.length; i++) {
-					let interation = iterationResponses[iterationResponses.length - 1];
-					let nextIndex = currentIndex + i;
+					const interation = iterationResponses[iterationResponses.length - 1];
+					const nextIndex = currentIndex + i;
 					structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
 				}
 			}
@@ -120,8 +119,11 @@ export class RenderAbstract {
         else {
 			if (!structured.compiledNode)
 				structured.compiledNode = structured.rawNode.cloneNode(true) as Node;
-				
-            structured.compiledNode.textContent = RenderHelper.resolveInterpolationIfHave(structured.compiledNode.textContent, structured.scope);
+			
+			if (structured.hasInterpolationInText) {
+				const content = RenderHelper.resolveInterpolationIfHave(structured.compiledNode.textContent, structured.scope);
+				structured.compiledNode.textContent = content;
+			}
         }
 
         if (!structured.hasParent)
@@ -130,26 +132,29 @@ export class RenderAbstract {
         return structured.compiledNode;
     }
 
-    public recompileElementFromStructure(structured: ElementStructure): boolean {
+    public recompileElementFromStructure(structured: ElementStructure): void {
+		let time = performance.now();
         if (!structured.isText) {
 			if (!structured.compiledNode)
 				structured.compiledNode = structured.rawNode.cloneNode(structured.isPureElement) as Node;
 
+			let iterationResponses: IterateDirectiveResponse[] = [];
+
 			// ITERATION DIRECTIVE
 			if (structured.hasIterationDirectivesToApply) {
-				let attr = structured.getIterationDirective();
-				let directiveInstance = attr.directiveInstance as IterationDirective;
+				const attr = structured.getIterationDirective();
+				const directiveInstance = attr.directiveInstance as IterationDirective;
 
-				let iterationResponses = directiveInstance.onIterate();
+				iterationResponses = directiveInstance.onIterate();
 
 				if (iterationResponses.length <= 0) {
 					structured.removeCompiledNode((structure) => {
 						this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
 					});
 
-					let iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
+					const iterationChildren = structured.getIterationStructuresFromSelf() as ElementIterationStructure[];
 					if (iterationChildren) {
-						for(let iterationChild of iterationChildren) {
+						for(const iterationChild of iterationChildren) {
 							iterationChild.removeCompiledNode((structure) => {
 								this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
 							});
@@ -170,9 +175,9 @@ export class RenderAbstract {
 
 					// REMOVE LEFTOVERS
 					if (currentIterationChildren.length > iterationResponses.length) {
-						let toRemove = currentIterationChildren.slice(iterationResponses.length);
+						const toRemove = currentIterationChildren.slice(iterationResponses.length);
 						currentIterationChildren = currentIterationChildren.slice(0, iterationResponses.length);
-						for(let iterationChild of toRemove) {
+						for(const iterationChild of toRemove) {
 							this.listenersCollector.unsubscribeAllFromElement(iterationChild.compiledNode as HTMLElement);
 							iterationChild.removeCompiledNode((structure) => {
 								this.listenersCollector.unsubscribeAllFromElement(structure.compiledNode as HTMLElement);
@@ -182,25 +187,17 @@ export class RenderAbstract {
 					}
 					// ADD THE NEW ONES
 					else if (currentIterationChildren.length < iterationResponses.length) {
-						let childrenDiff = iterationResponses.length - currentIterationChildren.length;
-						let currentIndex = currentIterationChildren.length > 0
+						const childrenDiff = iterationResponses.length - currentIterationChildren.length;
+						const currentIndex = currentIterationChildren.length > 0
 							? structured.parent.children.findIndex(x => x === currentIterationChildren[currentIterationChildren.length - 1])
 							: structured.parent.children.findIndex(x => x === structured);
 
 						for(let i = 1; i <= childrenDiff; i++) {
-							let interation = iterationResponses[currentIterationChildren.length + i - 1];
-							let nextIndex = currentIndex + i;
+							const interation = iterationResponses[currentIterationChildren.length + i - 1];
+							const nextIndex = currentIndex + i;
 							structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
 						}
 					}
-
-					for (let i = 0; i < currentIterationChildren.length; i++) {
-						let interationResponse = iterationResponses[i];
-						let iterationChild = currentIterationChildren[i];
-						iterationChild.compiledBeginFn = interationResponse.beginFn;
-						iterationChild.compiledEndFn = interationResponse.endFn;
-					}
-
 				}
 			}
 			
@@ -208,22 +205,33 @@ export class RenderAbstract {
 				structured.compiledBeginFn();
 
 			// ATRIBUTES
+			time = performance.now();
 			structured.resolveAttrs();
+			if (structured.tagName === 'tr') console.log(`ATTR ${performance.now() - time}\n`);
 
 			// INSTANTIATE DIRECTIVES
+			time = performance.now();
 			structured.instantiateAttrDirectives();
+			if (structured.tagName === 'tr') console.log(`INSTANC ${performance.now() - time}\n`);
 
 			// RENDER
+			time = performance.now();
 			structured.renderNodeIfNot();
+			if (structured.tagName === 'tr') console.log(`RENDER ${performance.now() - time}\n`);
 
 			// CHILDREN
+			time = performance.now();
 			for(let i = 0; i < structured.children.length; i++) {
 				let structChild = structured.children[i];
 				this.recompileElementFromStructure(structChild);
 			}
+			if (structured.tagName === 'tr') console.log(`CHILDRENS ${performance.now() - time}\n`);
 
 			// DIRECTIVES
+			time = performance.now();
 			structured.resolveAttrDirectivesIfNeeded();
+			if (structured.tagName === 'tr') console.log(`RESOLVES ${performance.now() - time}\n`);
+			if (structured.tagName === 'tr') console.log('');
 
 			// ACTIONS 
 			this.checkStructureNodeActions(structured);
@@ -235,19 +243,19 @@ export class RenderAbstract {
             if (!structured.compiledNode)
                 structured.compiledNode = structured.rawNode.cloneNode(true) as Node;
 
-            if (structured.rawNode.textContent) {
-				let textContent = RenderHelper.resolveInterpolationIfHave(structured.rawNode.textContent, structured.scope);
+            if (structured.hasInterpolationInText && structured.rawNode.textContent) {
+				const textContent = RenderHelper.resolveInterpolationIfHave(structured.rawNode.textContent, structured.scope);
 				if (textContent !== structured.compiledNode.textContent)
 					structured.compiledNode.textContent = textContent;
 			}
 
             // RENDER
             structured.renderNodeIfNot();
-        }
+		}
     }
 
     private checkStructureNodeActions(structure: ElementStructureAbstract) {
-		let element = structure.compiledNode as HTMLElement;
+		const element = structure.compiledNode as HTMLElement;
 
         if (structure.compiledBeginFn) {
             this.listenersCollector.addActionsInElementsListeners(element, structure.compiledBeginFn, structure.compiledEndFn);
@@ -262,7 +270,7 @@ export class RenderAbstract {
     }
 
     private cloneStructureDueIteration(structure: ElementStructure, beginFn: () => void, endFn: () => void): ElementIterationStructure {
-        let iterationStructure = new ElementIterationStructure(structure);
+        const iterationStructure = new ElementIterationStructure(structure);
         iterationStructure.compiledBeginFn = beginFn;
         iterationStructure.compiledEndFn = endFn;
 

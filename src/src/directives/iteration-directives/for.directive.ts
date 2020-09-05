@@ -8,6 +8,8 @@ import { isArray } from 'util';
 })
 export class ForDirective extends IterationDirective {
 
+	private lastData: IterateDirectiveResponse[] = [];
+
     constructor() {
         super();
 	}
@@ -33,30 +35,32 @@ export class ForDirective extends IterationDirective {
             this.element.remove();
             console.error(`SyntaxError: Invalid expression: ${iterationArray.expressionOrName} does not appear to be an array.`);
             return [];
-        }
+		}
 
-        let response: IterateDirectiveResponse[] = iterationArray.value.map((item, index) => {
-            let existingVarNameBefore = iterationVarName in this.scope;
-            let varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
-            
-            return new IterateDirectiveResponse({
-                beginFn: () => {
-                    this.scope[iterationVarName] = item;
-                    this.scope['$index'] = index;
-                },
-                endFn: () => {
-                    delete this.scope['$index'];
-                    if (existingVarNameBefore) {
-                        this.scope[iterationVarName] = varValueBefore;
-                    }
-                    else {
-                        delete this.scope[iterationVarName];
-                    }
-                }
-            });
-        });
+		if (this.lastData.length !== iterationArray.value.length) {
+			this.lastData = iterationArray.value.map((item, index) => {
+				let existingVarNameBefore = iterationVarName in this.scope;
+				let varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
+				
+				return new IterateDirectiveResponse({
+					beginFn: () => {
+						this.scope[iterationVarName] = iterationArray.value[index];
+						this.scope['$index'] = index;
+					},
+					endFn: () => {
+						delete this.scope['$index'];
+						if (existingVarNameBefore) {
+							this.scope[iterationVarName] = varValueBefore;
+						}
+						else {
+							delete this.scope[iterationVarName];
+						}
+					}
+				});
+			});
+		}
 
-        return response;
+        return this.lastData;
 	}
 	
 	public onChange(): void {

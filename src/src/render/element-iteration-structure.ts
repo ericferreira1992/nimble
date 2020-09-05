@@ -45,6 +45,7 @@ export class ElementIterationStructure extends ElementStructureAbstract {
             child.rawNode = x.rawNode.cloneNode(x.isPureElement);
             child.isVoid = x.isVoid;
 			child.isPureElement = x.isPureElement;
+			child.hasInterpolationInText = x.hasInterpolationInText;
 			
 			child.attrs = x.attrs.map(a => new AttributeStructure(
 				a.name, a.value, child, a.directiveType, true

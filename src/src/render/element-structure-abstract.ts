@@ -40,9 +40,8 @@ export abstract class ElementStructureAbstract {
     
     public isVoid: boolean = false;
     public isPureElement: boolean = false;
-
-    // ITERATION CONTROL
     public isRendered: boolean = false;
+    public hasInterpolationInText: boolean = false;
 
     public get hasParent(): boolean { return !isNullOrUndefined(this.parent); }
     public get hasChildren(): boolean { return this.children.length > 0; }
@@ -58,7 +57,7 @@ export abstract class ElementStructureAbstract {
 
     public removeCompiledNode(onRemoveNode?: (structure: ElementStructureAbstract) => void) {
         if (this.hasChildren) {
-            for(let child of this.children) {
+            for(const child of this.children) {
                 child.removeCompiledNode(onRemoveNode);
             }
         }
@@ -72,7 +71,7 @@ export abstract class ElementStructureAbstract {
 	}
 	
 	public destroyAllDirectives() {
-		for(let attr of this.attrDirectives.default) {
+		for(const attr of this.attrDirectives.default) {
 			attr.directive.destroyDirective();
 		}
 
@@ -82,8 +81,8 @@ export abstract class ElementStructureAbstract {
 	}
 
     public getIterationDirective(): AttributeStructure<IterationDirective> {
-		let attr = this.attrDirectives.iterate.directive;
-		let props = this.attrDirectives.iterate.props;
+		const attr = this.attrDirectives.iterate.directive;
+		const props = this.attrDirectives.iterate.props;
 
         if (attr) {
             let instance = this.directivesInstance.find(x => x.selector === attr.name);
@@ -108,6 +107,7 @@ export abstract class ElementStructureAbstract {
 					);
 				});
 				
+				attr.directiveInstance = instance;
 				this.directivesInstance.push(instance);
             }
             else {
@@ -120,13 +120,14 @@ export abstract class ElementStructureAbstract {
     }
     
     public resolveAttrs() {
-        for (let attr of this.attrs) {
-            RenderHelper.resolveDefaultAttribute(this.compiledNode as HTMLElement, attr.name, attr.value, this.scope);
+        for (const attr of this.attrs.filter(x => x.hasInterpolationInText || !x.isResolved)) {
+			RenderHelper.resolveDefaultAttribute(this.compiledNode as HTMLElement, attr.name, attr.value, this.scope);
+			attr.isResolved = true;
         }
     }
     
     public resolveAttrDirectivesIfNeeded() {
-        for (let attr of this.attrDirectives.default) {
+        for (const attr of this.attrDirectives.default) {
             attr.directive.resolveDirectiveIfNeeded();
         }
     }
@@ -136,10 +137,10 @@ export abstract class ElementStructureAbstract {
     }
 
     public instantiateAttrDirectives() {
-		let attrsDefaults = this.attrDirectives.default.filter(x => !x.directive.isResolved);
-        for (let attrDefault of attrsDefaults) {
-			let attr = attrDefault.directive;
-			let props = attrDefault.props;
+		const attrsDefaults = this.attrDirectives.default.filter(x => !x.directive.isResolved);
+        for (const attrDefault of attrsDefaults) {
+			const attr = attrDefault.directive;
+			const props = attrDefault.props;
             let instance = this.directivesInstance.find(x => x.selector === attr.name.replace(/\[|\]/g, ''));
             if (!instance) {
 				instance = NimbleApp.inject<Directive>(attr.directiveType);
@@ -147,11 +148,11 @@ export abstract class ElementStructureAbstract {
 				instance.scope = this.scope;
 				instance.selectorActive = attr.name;
 				
-				let inputs = props.in.map(x => ({
+				const inputs = props.in.map(x => ({
 					name: x.name,
 					value: () => AttributeStructure.getCompiledValue(attr.name, attr.value, this.scope),
 				}));
-				let outputs = props.out.map(x => ({
+				const outputs = props.out.map(x => ({
 					name: x.name.replace(/\(|\)/g, ''),
 					value: () => x.value,
 				}));
@@ -173,6 +174,7 @@ export abstract class ElementStructureAbstract {
 					attr.directiveInstance.all = () => this.directivesInstance;
 				}
 				
+				attr.directiveInstance = instance;
                 this.directivesInstance.push(instance);
             }
         }
@@ -182,20 +184,20 @@ export abstract class ElementStructureAbstract {
         this.checkRenderedCorrectly();
 
         if (!this.isRendered && this.parent && this.parent.compiledNode) {
-            let structureIndex = this.parent.children.findIndex(x => x === this);
+            const structureIndex = this.parent.children.findIndex(x => x === this);
 
-            let getNextNodeAbove = () => {
+            const getNextNodeAbove = () => {
                 for(let i = structureIndex - 1; i >= 0; i--) {
-                    let node = this.parent.children[i];
+                    const node = this.parent.children[i];
                     if (node.compiledNode && node.compiledNode.parentNode === this.parent.compiledNode && node.nodeIsRenderedInDOM) {
                         return (node.compiledNode as HTMLElement).nextSibling;
                     }
                 }
                 return null; 
             };
-            let getNextNodeBelow = () => {
+            const getNextNodeBelow = () => {
                 for(let i = structureIndex + 1; i < this.parent.children.length; i++) {
-                    let node = this.parent.children[i];
+                    const node = this.parent.children[i];
                     if (node.compiledNode && node.compiledNode.parentNode === this.parent.compiledNode && node.nodeIsRenderedInDOM) {
                         return node.compiledNode as HTMLElement;
                     }
@@ -203,13 +205,13 @@ export abstract class ElementStructureAbstract {
                 return null; 
             };
 
-            let nodeAbove = getNextNodeAbove();
+            const nodeAbove = getNextNodeAbove();
             if (nodeAbove) {
                 this.parent.compiledNode.insertBefore(this.compiledNode, nodeAbove);
                 this.isRendered = true;
             }
             else {
-                let nodeBelow = getNextNodeBelow();
+                const nodeBelow = getNextNodeBelow();
                 if (nodeBelow) {
                     this.parent.compiledNode.insertBefore(this.compiledNode, nodeBelow);
                     this.isRendered = true;
@@ -235,22 +237,16 @@ export class AttributeStructure<T extends Directive> {
     public get allDirectives() { return NimbleApp.instance.directives; }
 	
 	public isResolved: boolean = false;
+	public hasInterpolationInText: boolean = false;
     public structure: ElementStructureAbstract = null;
     public name: string = '';
     public value: string = '';
     public directiveType: Type<T> = null;
+    public directiveInstance: Directive = null;
 
     public get isIterationDirective() { return this.directiveType != null && this.directiveType.prototype.type === 'IterationDirective'; }
     public get isDefaultDirective() { return this.directiveType != null && this.directiveType.prototype.type !== 'IterationDirective'; }
     public get isNotDirective() { return !this.directiveType; }
-	public get directiveInstance() {
-		let instances = this.structure.directivesInstance;
-		return instances.find(x => {
-			if (x.selectorIsOutput) 
-				return `(${x.selector})` === this.name;
-			return x.selector === this.name.replace(/\[|\]/g, '');
-		});
-	}
 
     constructor(name: string, value: string, strucutre: ElementStructureAbstract, directiveType: Type<T> = null, fromClone: boolean = false) {
         this.name = name;
@@ -263,18 +259,10 @@ export class AttributeStructure<T extends Directive> {
 		if (!this.isResolved) {
 			this.isResolved = true;
 			this.checkDirectiveBeforeResolve();
-
-			// let timeBegin = performance.now();
 			this.directiveInstance.onRender();
-			// if (this.structure.tagName === 'tr' && this.structure.hasIterationDirectivesToApply) {
-			// 	console.log(`${this.name} ${(performance.now() - timeBegin)} ms`);
-			// }
 		}
 		else {
 			this.checkDirectiveBeforeResolve();
-			if (!this.directiveInstance) {
-				let teste = '';
-			}
 			this.directiveInstance.onChange();
 		}
 	}
@@ -300,10 +288,10 @@ export class AttributeStructure<T extends Directive> {
 	
 	private getDirective(): Type<T> {
         let directive: Type<T> = null
-		let attrName = this.name.toLowerCase();
+		const attrName = this.name.toLowerCase();
         for(let directiveType of this.allDirectives) {
-            let selectors = directiveType.prototype.selectors as string[];
-            let selector = selectors.find(selector => {
+            const selectors = directiveType.prototype.selectors as string[];
+            const selector = selectors.find(selector => {
                 if (selector) {
                     selector = selector.toLowerCase();
                     if (/^\[([^)]+)\]$/g.test(attrName) && /^(?!\(\/).*(?!\))$/g.test(selector))

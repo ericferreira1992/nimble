@@ -95,16 +95,20 @@ export class NativesAttrsDirective extends Directive {
 				classesRemove = this.previousValue.class.add.filter(x => classesAdd.indexOf(x) < 0);
             }
             else{
-                value = this.scope.compile(value);
-                if (value && typeof value === 'string') {
-                    value = value.trim();
-                    if(value.includes(' '))
-                        classesAdd = value.split(' ');
-                    else
+				value = (this.scope.compile(value) ?? '').toString();
+				value = value.trim();
+				
+				if (value) {
+					if(value.includes(' '))
+						classesAdd = value.split(' ');
+					else
 						classesAdd = [value];
-						
-					classesRemove = this.previousValue.class.add.filter(x => classesAdd.indexOf(x) < 0);
-                }
+				}
+				else {
+					classesAdd = [];
+				}
+					
+				classesRemove = this.previousValue.class.add.filter(x => classesAdd.indexOf(x) < 0);
             }
 
 			if (classesAdd.sort().join(',') !== (this.previousValue.class.add ?? []).sort().join('')) {
