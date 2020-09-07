@@ -10,23 +10,43 @@ declare module '../app' {
 }
 
 NimbleApp.prototype.pluginGoogleAnalytics = function (this: NimbleApp, config: Partial<GAConfig>): NimbleApp {
-	if (!config.disabled) {
+	if (!config.disabled && !('pre-rendering' in window)) {
 		if (this.state === NimbleAppState.INITIALIZING) {
-			let script = document.createElement('script');
-			script.setAttribute('async', '');
-			script.setAttribute('src', `https://www.googletagmanager.com/gtag/js?id=${config.id}`);
-			document.head.append(script);
-
 			window['dataLayer'] = window['dataLayer'] || [];
-			const gtag = (a, b, c?) => {
-				let args = [a, b];
-				if (c) args.push(c);
-				window['dataLayer'].push(args);
+			const gtag = function(){ (window['dataLayer'] || []).push(arguments) } as any;
+
+			let routeIsLoaded = false;
+			let scriptIsLoaded = false;
+
+			const src = `https://www.googletagmanager.com/gtag/js?id=${config.id}`;
+			const exisingScript = document.head.querySelector(`[src="${src}"]`) as HTMLScriptElement;
+			const onload = () => {
+				scriptIsLoaded = true;
+				if (routeIsLoaded) {
+					gtag('config', config.id, {'page_path': `/${Router.currentPath}`});
+					console.log('GA SEND FROM SCRIPT LOADED');
+				}
 			};
+			if (!exisingScript) {
+				const script = document.createElement('script');
+				script.async = true;
+				script.onload = onload.bind(this);
+				script.src = src;
+				document.head.append(script);
+			}
+			else {
+				exisingScript.onload = onload.bind(this);
+			}
+
 			gtag('js', new Date());
 			gtag('config', config.id);
+
 			Router.addListener('FINISHED_CHANGE', (event: RouterEvent) => {
-				gtag('config', config.id, {'page_path': `/${event.route.completePath()}` });
+				routeIsLoaded = true;
+				if (scriptIsLoaded) {
+					gtag('config', config.id, {'page_path': `/${event.route.completePath()}`});
+					console.log('GA SEND FROM ROUTE LOADED');
+				}
 			});
 		}
 		else {
