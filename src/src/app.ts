@@ -6,7 +6,7 @@ import { NimblePage } from './elements/nimble-page.element';
 import { NimbleRouter } from './elements/nimble-router.element';
 import { NimbleDialog } from './elements/nimble-dialog.element';
 import { NimbleDialogArea } from './elements/nimble-dialog-area.element';
-import { RouterEvent } from './route/router-event.enum';
+import { RouterState } from './route/router-state.enum';
 import { Directive } from './directives/abstracts/directive';
 import { INTERNAL_DIRECTIVES } from './directives/internal-directives';
 import { Type } from './inject/type.interface';
@@ -16,6 +16,7 @@ import { IterationDirective } from './directives/abstracts/iteration-directive';
 import { INTERNAL_PROVIDERS } from './providers/internal-providers';
 import { ElementListener } from './render/listener';
 import { RouteRender } from './route/route-render';
+import { RouterEvent } from './route/router-event';
 
 export class NimbleApp {
     public static instance: NimbleApp;
@@ -124,21 +125,21 @@ export class NimbleApp {
     public start() {
         if (this.state === NimbleAppState.INITIALIZING) {
             this.registerElements();
-            Router.addListener(RouterEvent.STARTED_CHANGE, this.onRouteStartChange.bind(this));
-            Router.addListener(RouterEvent.FINISHED_CHANGE, this.onRouteFinishedChange.bind(this));
-            Router.addListener(RouterEvent.CHANGE_ERROR, this.onRouteChangeError.bind(this));
-            Router.addListener(RouterEvent.STARTED_LOADING, this.onRouteStartedLoading.bind(this));
-            Router.addListener(RouterEvent.FINISHED_LOADING, this.onRouteFinishedLoading.bind(this));
-            Router.addListener(RouterEvent.ERROR_LOADING, this.onRouteErrorLoading.bind(this));
-            Router.addListener(RouterEvent.STARTED_RERENDER, this.onRouteStartRerender.bind(this));
-            Router.addListener(RouterEvent.FINISHED_RERENDER, this.onRouteFinishedRerender.bind(this));
-            Router.addListener(RouterEvent.RENDERING, this.onRouteRendering.bind(this));
+            Router.addListener(RouterState.STARTED_CHANGE, this.onRouteStartChange.bind(this));
+            Router.addListener(RouterState.FINISHED_CHANGE, this.onRouteFinishedChange.bind(this));
+            Router.addListener(RouterState.CHANGE_ERROR, this.onRouteChangeError.bind(this));
+            Router.addListener(RouterState.STARTED_LOADING, this.onRouteStartedLoading.bind(this));
+            Router.addListener(RouterState.FINISHED_LOADING, this.onRouteFinishedLoading.bind(this));
+            Router.addListener(RouterState.ERROR_LOADING, this.onRouteErrorLoading.bind(this));
+            Router.addListener(RouterState.STARTED_RERENDER, this.onRouteStartRerender.bind(this));
+            Router.addListener(RouterState.FINISHED_RERENDER, this.onRouteFinishedRerender.bind(this));
+            Router.addListener(RouterState.RENDERING, this.onRouteRendering.bind(this));
             Router.start();
             this.state = NimbleAppState.INITIALIZED;
         }
 
         return NimbleApp.instance;
-    }
+	}
 
     private registerElements() {
         window.customElements.define('nimble-page', NimblePage);
@@ -147,48 +148,48 @@ export class NimbleApp {
         window.customElements.define('nimble-dialog-area', NimbleDialogArea);
     }
 
-    private onRouteStartChange(route: Route) {
+    private onRouteStartChange(event: RouterEvent) {
 		this.changedRoute = false; 
 	}
 
-    private async onRouteRendering(route: Route) {
-        if (route) {
+    private async onRouteRendering(event: RouterEvent) {
+        if (event.route) {
             // if (Router.rerenderedBeforeFinishedRouteChange) {}
-            await this.routeRender.prepareRouteToCompileAndRender(route);
-            this.routeRender.compileAndRenderRoute(route);
+            await this.routeRender.prepareRouteToCompileAndRender(event.route);
+            this.routeRender.compileAndRenderRoute(event.route);
         }
     }
 
-    private async onRouteFinishedChange(route: Route) {
-        if (route) {
+    private async onRouteFinishedChange(event: RouterEvent) {
+        if (event.route) {
 			this.state = NimbleAppState.RERENDERING;
 
-			let { isRendered } = await this.routeRender.notifyRoutesAfterRouteChanged(route); 
+			let { isRendered } = await this.routeRender.notifyRoutesAfterRouteChanged(event.route); 
 			
 			this.changedRoute = true;
 			if (isRendered) {
 				await this.checkHashLinkAfterRouteChanged();
 			}
 
-			route.pageInstance?.render();
+			event.route.pageInstance?.render();
         }
     }
 
-    private onRouteChangeError(route: Route) {}
+    private onRouteChangeError(event: RouterEvent) {}
 
-    private onRouteStartedLoading(route: Route) {}
+    private onRouteStartedLoading(route: RouterEvent) {}
 
-    private onRouteFinishedLoading(route: Route) {}
+    private onRouteFinishedLoading(event: RouterEvent) {}
 
-    private onRouteErrorLoading(error, route: Route) {}
+    private onRouteErrorLoading(event: RouterEvent) {}
 
-    private onRouteStartRerender(route: Route) {
+    private onRouteStartRerender(event: RouterEvent) {
         this.state = NimbleAppState.RERENDERING;
-        this.routeRender.rerenderRoute(route);
+        this.routeRender.rerenderRoute(event.route);
     }
 
-    private async onRouteFinishedRerender(route: Route) {
-		let { isRendered } = await this.routeRender.notifyRoutesAfterRerender(route);
+    private async onRouteFinishedRerender(event: RouterEvent) {
+		let { isRendered } = await this.routeRender.notifyRoutesAfterRerender(event.route);
 		
 		if (this.changedRoute && isRendered) {
 			await this.checkHashLinkAfterRouteChanged();
@@ -243,7 +244,5 @@ export class NimbleApp {
 export enum NimbleAppState {
     INITIALIZING = 'INITIALIZING',
     INITIALIZED = 'INITIALIZED',
-
-    IN_ROUTING = 'RERENDERING',
     RERENDERING = 'RERENDERING'
 }

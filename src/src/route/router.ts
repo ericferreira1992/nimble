@@ -3,8 +3,9 @@ import { isNullOrUndefined, isArray } from 'util';
 import { RouteBase } from './route-base';
 import { NimbleApp, NimbleAppState } from '../app';
 import { Page } from '../page/page';
-import { RouterEvent } from './router-event.enum';
-import { RouterEventType } from './router-event-type.enum';
+import { RouterState } from './router-state.enum';
+import { RouterStateType } from './router-event-type.enum';
+import { RouterEvent } from './router-event';
 
 export class Router {
     public static get app() { return NimbleApp.instance; }
@@ -14,16 +15,16 @@ export class Router {
     private static _next: Route;
     private static _previous: Route;
 
-    private static _state: RouterEvent;
+    private static _state: RouterState;
     public static get state() { return this._state; };
 
-    private static _previousState: RouterEvent;
+    private static _previousState: RouterState;
     public static get previousState() { return this._previousState; };
 
     private static lastLocationPath: string;
     private static stopListening: boolean = false;
 
-    private static listeners: { event: RouterEvent, callback: (route?: any) => void, internal: boolean }[] = [];
+    private static listeners: { state: RouterState, callback: (event?: RouterEvent) => void, internal: boolean }[] = [];
 
     public static useHash: boolean = false;
 
@@ -68,7 +69,7 @@ export class Router {
 
     public static get onRoute() { return !isNullOrUndefined(this._current); }
 
-    public static get rerenderedBeforeFinishedRouteChange() { return this.previousState === RouterEvent.FINISHED_RERENDER || this.previousState === RouterEvent.STARTED_RERENDER; }
+    public static get rerenderedBeforeFinishedRouteChange() { return this.previousState === RouterState.FINISHED_RERENDER || this.previousState === RouterState.STARTED_RERENDER; }
 
     public static registerRoutes(routes: RouteBase[]) {
         if (this.app.state === NimbleAppState.INITIALIZING) {
@@ -101,11 +102,11 @@ export class Router {
 		return false;
 	}
 
-    private static async setState(state: RouterEvent, senderNotify?: any) {
+    private static async setState(state: RouterState, event: RouterEvent) {
         this._previousState = this._state;
         this._state = state;
-		
-		await this.notifyListeners(state, senderNotify);
+		event = event ?? new RouterEvent({});
+		await this.notifyListeners(state, { state: state, ...event });
     }
 
     public static start() {
@@ -130,21 +131,21 @@ export class Router {
     /**
      * Adds a listener for when the routing state changes.
      * Also it returns a void function to cancel listen when want. 
-     * @param events 
+     * @param states 
      * @param callback 
      */
-    public static addListener(events: string | RouterEvent | (RouterEvent | string)[], callback: () => void) {
-        let initial: (RouterEvent | string)[] = !isArray(events) ? [events] : events;
-        let filtered = initial.filter(event => Object.values(RouterEvent).map(x => x.toString()).includes(event)) as RouterEvent[];
+    public static addListener(states: string | RouterState | (RouterState | string)[], callback: (event?: RouterEvent) => void) {
+        let initial: (RouterState | string)[] = !isArray(states) ? [states] : states;
+        let filtered = initial.filter(state => Object.values(RouterState).map(x => x.toString()).includes(state)) as RouterState[];
         let listeners = [];
 
-        if (initial.some(x => filtered.indexOf(x as RouterEvent) < 0)) {
-            let invalids = initial.filter(x => !filtered.includes(x as RouterEvent)).map(x => `'${x}'`);
-            console.warn(`The following events are invalids: ${invalids.join(', ')}.`);
+        if (initial.some(x => filtered.indexOf(x as RouterState) < 0)) {
+            let invalids = initial.filter(x => !filtered.includes(x as RouterState)).map(x => `'${x}'`);
+            console.warn(`The following states are invalids: ${invalids.join(', ')}.`);
         }
 
-        for(let event of filtered) {
-            let listener = { event, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
+        for(let state of filtered) {
+            let listener = { state, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
             listeners.push(listener);
             this.listeners.push(listener);
         }
@@ -157,9 +158,9 @@ export class Router {
      * Adds a listener for when the routing change start.
      * Also it returns a void function to cancel listen when want. 
      */
-	public static onStartChange(action: () => void): () => void {
-		return this.addListener('STARTED_CHANGE', async () => {
-			await action();
+	public static onStartChange(action: (event?: RouterEvent) => void): () => void {
+		return this.addListener('STARTED_CHANGE', async (event: RouterEvent) => {
+			await action(event);
 		});
 	}
 
@@ -167,16 +168,16 @@ export class Router {
      * Adds a listener for when the routing change end.
      * Also it returns a void function to cancel listen when want. 
      */
-	public static onEndChange(action: () => void): () => void {
-		return this.addListener(['FINISHED_CHANGE', 'CHANGE_REJECTED', 'CHANGE_ERROR'], async () => {
-			await action();
+	public static onEndChange(action: (event?: RouterEvent) => void): () => void {
+		return this.addListener(['FINISHED_CHANGE', 'CHANGE_REJECTED', 'CHANGE_ERROR'], async (event: RouterEvent) => {
+			await action(event);
 		});
 	}
 
-    private static async notifyListeners(event: RouterEvent, sender?: any) {
-        let listeners = this.listeners.filter(x => x.event === event);
+    private static async notifyListeners(state: RouterState, event: RouterEvent) {
+        let listeners = this.listeners.filter(x => x.state === state);
 
-        if (this.getEventType() === RouterEventType.START)
+        if (this.getEventType() === RouterStateType.START)
             listeners = listeners.sort((a,b) => {
                 let internalA = a.internal;
                 let internalB = b.internal;
@@ -190,7 +191,7 @@ export class Router {
             });
         
         for (let listener of listeners) {
-			await listener.callback(sender);
+			await listener.callback(event);
 		}
     }
 
@@ -297,21 +298,22 @@ export class Router {
     }
 
     private static async loadCurrentRoutePage() {
-        await this.setState(RouterEvent.STARTED_CHANGE, this.next);
+        await this.setState(RouterState.STARTED_CHANGE, new RouterEvent({ route: this.next }));
 
         if (this.next.hasParent)
             this.loadRoutesPageFromAllParents();
         else
             this.loadRoutePage(this.next).then(
                 async () => {
-                    await this.defineCurrentAfterFinished();
-                    await this.setState(RouterEvent.FINISHED_LOADING, this.current);
-                    await this.setState(RouterEvent.RENDERING, this.current);
-                    await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+					await this.defineCurrentAfterFinished();
+					const event = new RouterEvent({route: this.current});
+                    await this.setState(RouterState.FINISHED_LOADING, event);
+                    await this.setState(RouterState.RENDERING, event);
+                    await this.setState(RouterState.FINISHED_CHANGE, event);
                 },
                 async () => {
                     await this.abortChangeRoute();
-                    await this.setState(RouterEvent.CHANGE_ERROR, this.current)
+                    await this.setState(RouterState.CHANGE_ERROR, new RouterEvent({route: this.current}));
                 },
             );
     }
@@ -342,21 +344,22 @@ export class Router {
                     },
                     async (error) => {
                         await this.abortChangeRoute();
-                        await this.setState(RouterEvent.ERROR_LOADING, error);
+                        await this.setState(RouterState.ERROR_LOADING, error);
                     }
                 );
             }
             else{
                 this.loadRoutePage(this.next).then(
                     async () => {
-                        await this.defineCurrentAfterFinished();
-                        await this.setState(RouterEvent.FINISHED_LOADING, this.current);
-                        await this.setState(RouterEvent.RENDERING, this.current);
-                        await this.setState(RouterEvent.FINISHED_CHANGE, this.current);
+						await this.defineCurrentAfterFinished();
+						const event = new RouterEvent({route: this.current});
+                        await this.setState(RouterState.FINISHED_LOADING, event);
+                        await this.setState(RouterState.RENDERING, event);
+                        await this.setState(RouterState.FINISHED_CHANGE, event);
                     },
                     async () => {
                         await this.abortChangeRoute();
-                        await this.setState(RouterEvent.CHANGE_ERROR, this.current)
+                        await this.setState(RouterState.CHANGE_ERROR, new RouterEvent({route: this.current}));
                     },
                 );
             }
@@ -446,24 +449,24 @@ export class Router {
 
     private static loadRoutePage(route: Route, makeNewInstacePage: boolean = true) {
         return new Promise<Route>(async (resolve, reject) => {
-            await this.setState(RouterEvent.STARTED_LOADING, route);
+            await this.setState(RouterState.STARTED_LOADING, new RouterEvent({route: route}));
             
             route.loadPage(
                 async (route: Route) => {
                     if (this.routeCanActivate(route)) {
                         route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         route.pageInstance.pageParent = route.parent ? route.parent.pageInstance : null;
-                        await this.setState(RouterEvent.FINISHED_LOADING, route);
+                        await this.setState(RouterState.FINISHED_LOADING, new RouterEvent({route: route}));
                         resolve(route);
                     }
                     else{
-                        await this.setState(RouterEvent.CHANGE_REJECTED, route);
+                        await this.setState(RouterState.CHANGE_REJECTED, new RouterEvent({route: route}));
                         reject(null);
                     }
                 },
                 async (error) => {
                     console.error(error);
-                    await this.setState(RouterEvent.ERROR_LOADING, error);
+                    await this.setState(RouterState.ERROR_LOADING, error);
                     reject(error);
                 },
                 () => {
@@ -557,16 +560,16 @@ export class Router {
     }
 
     private static async whenRerenderIsRequested(page: Page): Promise<any> {
-        if (this.state !== RouterEvent.RENDERING) {
-			let changingRouteInProgress = this.state === RouterEvent.STARTED_CHANGE;
+        if (this.state !== RouterState.RENDERING) {
+			let changingRouteInProgress = this.state === RouterState.STARTED_CHANGE;
 			
 			let routeToRender = (changingRouteInProgress && this.previous) ? this.previous : this.current;
 
-			await this.setState(RouterEvent.STARTED_RERENDER, routeToRender);
-			await this.setState(RouterEvent.FINISHED_RERENDER, this.current);
+			await this.setState(RouterState.STARTED_RERENDER, new RouterEvent({route: routeToRender}));
+			await this.setState(RouterState.FINISHED_RERENDER, new RouterEvent({route: this.current}));
 	
 			if (changingRouteInProgress)
-				this._state = RouterEvent.STARTED_CHANGE;
+				this._state = RouterState.STARTED_CHANGE;
         }
         else {
             console.warn(`The render() was requested and did not work because the page was being constructing.`);
@@ -584,24 +587,24 @@ export class Router {
         return null;
     }
 
-    private static getEventType(state?: RouterEvent) {
+    private static getEventType(state?: RouterState) {
         state = state ? state : this.state;
         switch(state) {
-            case RouterEvent.STARTED_CHANGE:
-            case RouterEvent.STARTED_LOADING:
-            case RouterEvent.STARTED_RERENDER:
-                return RouterEventType.START
+            case RouterState.STARTED_CHANGE:
+            case RouterState.STARTED_LOADING:
+            case RouterState.STARTED_RERENDER:
+                return RouterStateType.START
 
-            case RouterEvent.FINISHED_CHANGE:
-            case RouterEvent.FINISHED_LOADING:
-            case RouterEvent.ERROR_LOADING:
-            case RouterEvent.FINISHED_RERENDER:
-            case RouterEvent.CHANGE_ERROR:
-                return RouterEventType.END
+            case RouterState.FINISHED_CHANGE:
+            case RouterState.FINISHED_LOADING:
+            case RouterState.ERROR_LOADING:
+            case RouterState.FINISHED_RERENDER:
+            case RouterState.CHANGE_ERROR:
+                return RouterStateType.END
 
-            case RouterEvent.RENDERING:
+            case RouterState.RENDERING:
             default:
-                return RouterEventType.NONE
+                return RouterStateType.NONE
         }
     }
 }

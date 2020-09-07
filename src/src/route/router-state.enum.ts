@@ -1,4 +1,4 @@
-export enum RouterEvent {
+export enum RouterState {
     NONE = 'NONE',
     STARTED_CHANGE = 'STARTED_CHANGE',
     FINISHED_CHANGE = 'FINISHED_CHANGE',

@@ -198,6 +198,13 @@ export class RenderAbstract {
 							structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
 						}
 					}
+
+					for (let i = 0; i < currentIterationChildren.length; i++) {	
+						let interationResponse = iterationResponses[i];	
+						let iterationChild = currentIterationChildren[i];	
+						iterationChild.compiledBeginFn = interationResponse.beginFn;	
+						iterationChild.compiledEndFn = interationResponse.endFn;	
+					}
 				}
 			}
 			
