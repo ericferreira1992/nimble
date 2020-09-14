@@ -44,18 +44,14 @@ export class Router {
         else {
 			var path = (this.useHash ? location.hash : location.pathname).replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
 			path = this.removeBaseHrefPath(path).replace(/^(\/)/g, '');
-
-            var splittedPath = path.split('#');
-            return splittedPath.length > 0 ? splittedPath[0] : path;
+            return path.split('#')[0];
         }
     }
     public static get nextPath() {
         if (this._nextPath) {
 			var nextPath = this._nextPath.replace(/^(\/#\/|#\/|\/#|\/|#)|(\/)$/g, '');
 			nextPath = this.removeBaseHrefPath(nextPath).replace(/^(\/)/g, '');
-			
-            var splittedPath = nextPath.split('#');
-            return splittedPath.length > 0 ? splittedPath[0] : nextPath;
+            return nextPath.split('#')[0];
         }
         return this._nextPath;
     }

@@ -2,6 +2,7 @@
 import { NimbleApp, NimbleAppState } from '../app';
 import { Router } from '../route';
 import { RouterEvent } from '../route/router-event';
+import { inPreRenderingStage } from '../utils';
 
 declare module '../app' {
 	interface NimbleApp {
@@ -10,7 +11,7 @@ declare module '../app' {
 }
 
 NimbleApp.prototype.pluginGoogleAnalytics = function (this: NimbleApp, config: Partial<GAConfig>): NimbleApp {
-	if (!config.disabled && !('pre-rendering' in window)) {
+	if (!config.disabled && !inPreRenderingStage()) {
 		if (this.state === NimbleAppState.INITIALIZING) {
 			window['dataLayer'] = window['dataLayer'] || [];
 			const gtag = function(){ (window['dataLayer'] || []).push(arguments) } as any;
@@ -24,7 +25,7 @@ NimbleApp.prototype.pluginGoogleAnalytics = function (this: NimbleApp, config: P
 				scriptIsLoaded = true;
 				if (routeIsLoaded) {
 					gtag('config', config.id, {'page_path': `/${Router.currentPath}`});
-					console.log('GA SEND FROM SCRIPT LOADED');
+					console.log(`Sended to GA: /${Router.currentPath}`);
 				}
 			};
 			if (!exisingScript) {
@@ -45,7 +46,7 @@ NimbleApp.prototype.pluginGoogleAnalytics = function (this: NimbleApp, config: P
 				routeIsLoaded = true;
 				if (scriptIsLoaded) {
 					gtag('config', config.id, {'page_path': `/${event.route.completePath()}`});
-					console.log('GA SEND FROM ROUTE LOADED');
+					console.log(`Sended to GA: /${event.route.completePath()}`);
 				}
 			});
 		}
