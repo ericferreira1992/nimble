@@ -1,5 +1,5 @@
 import { Route } from './route';
-import { isNullOrUndefined, isArray } from 'util';
+import { isNullOrUndefined } from 'util';
 import { RouteBase } from './route-base';
 import { NimbleApp, NimbleAppState } from '../app';
 import { Page } from '../page/page';
@@ -131,7 +131,7 @@ export class Router {
      * @param callback 
      */
     public static addListener(states: string | RouterState | (RouterState | string)[], callback: (event?: RouterEvent) => void) {
-        let initial: (RouterState | string)[] = !isArray(states) ? [states] : states;
+        let initial: (RouterState | string)[] = !Array.isArray(states) ? [states] : states;
         let filtered = initial.filter(state => Object.values(RouterState).map(x => x.toString()).includes(state)) as RouterState[];
         let listeners = [];
 
@@ -193,32 +193,43 @@ export class Router {
 
     private static onRedirect() {
         if (this.currentPath !== this.lastLocationPath) {
-            if (isNullOrUndefined(this.nextPath)){ 
+            if (this.nextPath == null){ 
                 this.lastLocationPath = this.currentPath;
             }
 
-            let changed = false;
+			let routeIsChanged = false;
+			
             if (this.checkPageCanBeCurrent()) {
-                changed = this.defineCurrentPage();
-                if (changed && !isNullOrUndefined(this.next.redirect)) {
-                    let redirectPath = `${this.app.baseHref}${this.next.redirect}`.replace(/\/\//g,'/');;
-                    this._next = null;
-					this.updateURLPath(redirectPath, { pathRedirect: true });
-					this._nextPath = redirectPath;
-                    this.onRedirect();
-                    return;
-                }
-                else if(!changed) {
-                    if (this.current && this.current.completePath() !== this.realCurrentPath) {
-                        let redirectPath = this.current.completePath();
-                        this._next = null;
-                        this.updateURLPath(redirectPath, { pathRedirect: true });
-                        this.lastLocationPath = redirectPath;                             
-                        return;
-                    }
-                }
+				let { changed, isSamePath } = this.defineNextPage();
+				if (!isSamePath) {
+					routeIsChanged = changed;
+					
+					if (changed && this.next.redirect != null) {
+						let redirectPath = `${this.app.baseHref}${this.next.redirect}`.replace(/\/\//g,'/');;
+						this._next = null;
+						this.updateURLPath(redirectPath, { pathRedirect: true });
+						this._nextPath = redirectPath;
+						this.onRedirect();
+						return;
+					}
+					else if(!changed) {
+						if (this.current && this.current.completePath() !== this.realCurrentPath) {
+							let redirectPath = this.current.completePath();
+							this._next = null;
+							this.updateURLPath(redirectPath, { pathRedirect: true });
+							this.lastLocationPath = redirectPath;                             
+							return;
+						}
+					}
+				}
+				else {
+					this._next = null;
+					this.updateURLPath(this.current.completePath(), { pathRedirect: true });
+					this.lastLocationPath = this.currentPath;
+					return;
+				}
             }
-            this.onRouterChange(changed);
+            this.onRouterChange(routeIsChanged);
         }
     }
 
@@ -238,10 +249,9 @@ export class Router {
         return found;
     }
 
-    private static defineCurrentPage(): boolean {
-        let newRoute = null;
+    private static defineNextPage(): { changed: boolean, isSamePath: boolean } {
+        let newRoute: Route = null;
 
-        // Find the matched route path
         for (let i = 0; i < this.routes.length; i++) {
             let route = this.routes[i];
             newRoute = route.getMatchedPageWithLocation();
@@ -249,12 +259,6 @@ export class Router {
             if (newRoute) {
                 break;
             }
-            // Check if there is another route ahead with the same path as the current one.
-            /* else if(i < ((this.routes.length - 1)) && !this.routes.slice(i + 1).some(x => x.path === route.path)) {
-                newRoute = route.getMatchedPageWithLocation();
-                if (newRoute)
-                    break;
-            } */
         }
 
         if (!newRoute) {
@@ -268,12 +272,21 @@ export class Router {
             }
         }
 
-        if (!isNullOrUndefined(newRoute) && newRoute !== this.current) {
-            this._next = newRoute;
-            return true;
+		let changed = false;
+		let isSamePath = false;
+
+        if (!isNullOrUndefined(newRoute)) {
+			if (newRoute !== this.current) {
+				changed = true;
+				this._next = newRoute;
+				isSamePath = (`/${this.current?.completePath()}` === (newRoute.redirect ? newRoute.redirect : `/${newRoute.completePath()}`));
+			}
+			else {
+				isSamePath = true;
+			}
         }
 
-        return false;
+        return { changed, isSamePath };
     }
 
     private static onRouterChange(changedPage: boolean) {

@@ -45,7 +45,7 @@ export class HrefDirective extends Directive {
 					let prefix = this.baseHref;
                     href = `${prefix.replace(/(\/)$/g, '')}/${href}`;
 				}
-
+				
 				if (!this.isListening) {
 					this.isListening = true;
 					this.listenersCollector.subscribe(this.element, 'click', (e: MouseEvent) => {
@@ -75,6 +75,7 @@ export class HrefDirective extends Directive {
 	}
 
     public onDestroy() {
+		this.isListening = false;
     }
 
 }
