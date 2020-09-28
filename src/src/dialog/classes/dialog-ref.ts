@@ -10,12 +10,17 @@ export class DialogRef<T extends Dialog> {
     public onOpen: Promise<any>;
     public onClose: Promise<any>;
     public instance: T;
-    public type: Type<T>;
+	public type: Type<T>;
+
+	public get element(): HTMLElement {
+		return this.getElement();
+	}
 
     private promiseCloseResolve: (a: any) => void;
     
     constructor(
-        obj: Partial<DialogRef<T>>,
+		obj: Partial<DialogRef<T>>,
+		private getElement: () => HTMLElement,
         private builderClose: (ref: DialogRef<T>, resolver: (a: any) => void, data?: any) => void
     ) {
         Object.assign(this, obj);

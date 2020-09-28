@@ -15,10 +15,10 @@ export abstract class Dialog implements IScope {
     /**
      * Method to render and update current template
      */
-    public render(action?: () => void): Promise<any> {
+    public async render(action?: () => void): Promise<any> {
+        if (action) action();
         if (this.onNeedRerender) {
-            if (action) action();
-            this.onNeedRerender(this);
+            return await this.onNeedRerender(this);
         }
         return new Promise<any>((resolve) => resolve());
     }
@@ -29,6 +29,7 @@ export abstract class Dialog implements IScope {
         }
         catch(e) {
             console.error(e.message);
+			return null;
         }
     }
 }

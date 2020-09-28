@@ -12,16 +12,14 @@ export class DialogRenderRef<T extends Dialog> {
     public get dialogElement(): HTMLElement { return this.structuredTemplate.compiledNode as HTMLElement; }
 
     public get containerElement(): HTMLElement {
-        let dialogContainerElement = this.rootElement.querySelector('.nimble-dialog-container');
-        if (dialogContainerElement) {
-            return dialogContainerElement as HTMLElement;
-        }
-        return null;
+        return this.rootElement.querySelector('.nimble-dialog-container') as HTMLElement;
+    }
+    public get panelElement(): HTMLElement {
+        return this.rootElement.querySelector('.nimble-dialog-panel') as HTMLElement;
     }
 
     public get areaElement(): HTMLElement {
-        let dialogAreaElement = this.rootElement.querySelector('.nimble-dialog-area');
-        return (dialogAreaElement) ? dialogAreaElement as HTMLElement : null;
+        return this.rootElement.querySelector('.nimble-dialog-area') as HTMLElement;
     }
     
     constructor(init: { dialogRef: DialogRef<T>, structuredTemplate: ElementStructure }) {
@@ -37,6 +35,7 @@ export class DialogRenderRef<T extends Dialog> {
         RenderHelper.removeAllChildrenOfElement(container);
         container.appendChild(node);
         this.applyConfigDimesions();
+        this.applyAnotherConfig();
     }
 
     public closeElements(onEnd: () => void) {
@@ -57,8 +56,15 @@ export class DialogRenderRef<T extends Dialog> {
             this.rootElement.parentElement.removeChild(this.rootElement);
     }
 
+    private applyAnotherConfig() {
+		const panelClass = this.dialogRef.config?.panelClass;
+		if (panelClass) {
+			this.panelElement?.classList.add(panelClass);
+		}
+	}
+
     private applyConfigDimesions() {
-        let areaElement = this.rootElement.querySelector('.nimble-dialog-area') as HTMLElement;
+        let areaElement = this.areaElement;
         if (areaElement) {
             if (this.dialogRef.config?.width)
                 areaElement.style.width = this.dialogRef.config.width;

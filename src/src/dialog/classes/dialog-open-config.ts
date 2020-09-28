@@ -3,6 +3,7 @@ export class DialogOpenConfig {
     width?: string;
     maxWidth?: string;
     minWidth?: string;
+    panelClass?: string;
     
     constructor(obj: Partial<DialogOpenConfig>) {
         Object.assign(this, obj);

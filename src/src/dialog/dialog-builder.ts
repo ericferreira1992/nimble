@@ -25,15 +25,18 @@ export class DialogBuilder {
 
     public open<T extends Dialog>(dialog: Type<T>, config?: DialogOpenConfig): DialogRef<T> {
 
+		let dialogRenderRef: DialogRenderRef<T>;
+
         let openResolve: () => void;
-        let dialogRef = new DialogRef<T>(
+        const dialogRef = new DialogRef<T>(
             {
                 config: config,
                 type: dialog,
                 onOpen: new Promise<any>((resolve) => {
                     openResolve = resolve;
-                })
+				})
             },
+			() => dialogRenderRef.rootElement,
             this.close.bind(this)
         );
 
@@ -42,7 +45,7 @@ export class DialogBuilder {
         dialogRef.instance = NimbleApp.inject(dialog);
         dialogRef.instance.onNeedRerender = this.rerender.bind(this);
 
-        let dialogRenderRef = this.dialogRender.renderDialog(dialogRef);
+        dialogRenderRef = this.dialogRender.renderDialog(dialogRef);
         this.dialogCollector.add(dialogRenderRef);
         
         openResolve();
