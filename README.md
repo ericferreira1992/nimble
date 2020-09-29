@@ -1,5 +1,5 @@
 <h1 align="center" style="color: #444">
-	<p>Nimble Framework</p>
+	<a href="https://ericferreira1992.github.io/nimble-page">Nimble Framework</a>
 </h1>
 <p align="center">
 	<img align="center" src="nimble_icon.png" alt="nimble" width="80px"/>
@@ -17,3 +17,5 @@ Nimble is a Javascript framework focused in build web-sites or applications base
 The goal is to generate sites and simple applications with initial bundle very small, so that it can be nimble loaded way in the browser.
 
 It has all the tools that any framework or front-end library has else, But much more descomplicated, easy and agile.
+
+<a href="https://ericferreira1992.github.io/nimble-page">Documentation</a>
