@@ -1,4 +1,4 @@
-import { RouteBase } from '@nimble-ts/core';
+import { RouteBase } from '@nimble-ts/core/route';
 import { AuthRouteActivate } from './services/auth/auth.route-activate';
 
 export const ROUTES: RouteBase[] = [

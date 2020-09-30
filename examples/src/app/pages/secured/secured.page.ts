@@ -1,5 +1,5 @@
-import { Page, PreparePage, Router } from '@nimble-ts/core';
-import { AuthService } from '../../services/auth/auth.service';
+import { Page, PreparePage } from '@nimble-ts/core/page';
+import { AuthService } from 'src/app/services/auth/auth.service';
 
 @PreparePage({
     template: require('./secured.page.html'),

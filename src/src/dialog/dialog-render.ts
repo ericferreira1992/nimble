@@ -26,7 +26,8 @@ export class DialogRender extends RenderAbstract {
         });
 
         this.createElementFromStructure(renderRef.structuredTemplate);
-        let templateCompiled = this.compileElementFromStructure(renderRef.structuredTemplate);
+		let templateCompiled = this.compileElementFromStructure(renderRef.structuredTemplate);
+		this.rerenderDialog(renderRef);
         renderRef.insertDialogArea(templateCompiled);
 
         this.applyCloseEvents(renderRef);

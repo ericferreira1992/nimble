@@ -1,9 +1,10 @@
 {
     "name": "@nimble-ts/core",
-    "version": "1.3.10",
+    "version": "1.3.10-alpha.0",
     "scripts": {
         "build": "rm -rf dist && tsc && node copy",
-        "publish-version": "npm run build && pushd dist && npm publish --access public"
+        "publish-version": "npm run build && pushd dist && npm publish --access public",
+        "publish-beta-version": "npm run build && pushd dist && npm publish --access public --tag alpha"
     },
     "main": "index.js",
     "repository": {

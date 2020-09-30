@@ -1,4 +1,6 @@
-import { Dialog, PrepareDialog, Inject, DIALOG_REF, DialogRef, Form, Validators } from '@nimble-ts/core';
+import { Dialog, PrepareDialog, DIALOG_REF, DialogRef } from '@nimble-ts/core/dialog';
+import { Inject } from '@nimble-ts/core/inject';
+import { Form, Validators } from '@nimble-ts/core/forms';
 
 @PrepareDialog({
     template: require('./task-edit.dialog.html'),

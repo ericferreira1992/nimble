@@ -1,4 +1,4 @@
-import { Page, PreparePage } from '@nimble-ts/core';
+import { Page, PreparePage } from '@nimble-ts/core/page';
 import { AuthService } from 'src/app/services/auth/auth.service';
 
 @PreparePage({
@@ -7,7 +7,9 @@ import { AuthService } from 'src/app/services/auth/auth.service';
 })
 export class PublicPage extends Page {
 
-    constructor(private authService: AuthService) {
+    constructor(
+		private authService: AuthService
+	) {
         super();
     }
 

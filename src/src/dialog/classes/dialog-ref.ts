@@ -32,6 +32,6 @@ export class DialogRef<T extends Dialog> {
     }
 
     public close(data?: any) {
-        this.builderClose(this, this.promiseCloseResolve, data);
+        setTimeout(() => this.builderClose(this, this.promiseCloseResolve, data));
     }
 }

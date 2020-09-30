@@ -1,4 +1,6 @@
-import { Injectable, Router, HttpClient } from '@nimble-ts/core';
+import { Injectable } from '@nimble-ts/core/inject';
+import { HttpClient } from '@nimble-ts/core/providers/http-client';
+import { Router } from '@nimble-ts/core/route';
 
 @Injectable({
     single: true
