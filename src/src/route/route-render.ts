@@ -119,7 +119,7 @@ export class RouteRender extends RenderAbstract {
         let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
 
         await this.notifyOldRoutesElementDestroyed(commonParentRoute, previousRoute);
-		let isRendered = await this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route);
+		const isRendered = await this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route);
 		
         return { isRendered };
     }
@@ -134,9 +134,24 @@ export class RouteRender extends RenderAbstract {
         let highestParentRoute = route.getHighestParentOrHimself();
 		let commonParentRoute = previousRoute ? Router.getCommonParentOfTwoRoutes(route, previousRoute) : highestParentRoute;
 		
-		let isRendered = await this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route, true);
+		const isRendered = await this.notifyNewRoutesElementRendered(commonParentRoute, highestParentRoute, route, true);
 
         return { isRendered };
+    }
+
+    /**
+     * Notifies the "onAfterInit()" methods of pages after rendered
+     * @param route 
+     */
+    public async notifyRoutesAfterInit(route: Route): Promise<void> {
+        let allRoutes = [route, ...route.getAllParents()];
+
+		for (let route of allRoutes.reverse()) {
+			if (!route.pageInstance.isAfterInitialized) {
+				route.pageInstance.isAfterInitialized = true;
+				await route.pageInstance.onAfterInit();
+			}
+		};
     }
 
     private async notifyOldRoutesElementDestroyed(commonParentRoute: Route, previousRoute: Route) {
@@ -151,7 +166,7 @@ export class RouteRender extends RenderAbstract {
 
 			for (let route of onlyOldRoutesRemoved.reverse()) {
                 if (!route.pageInstance.isDestroyed) {
-                    route.pageInstance.isDestroyed = true;
+					route.pageInstance.isDestroyed = true;
                     await route.pageInstance.onDestroy();
                 } 
 			}
@@ -177,17 +192,23 @@ export class RouteRender extends RenderAbstract {
             }
         }
         else
-            onlyNewRoutesRendered = allRoutes;
+			onlyNewRoutesRendered = allRoutes;
 
 		let isRendered = true;
+		// let init = 0;
         for (let route of onlyNewRoutesRendered.reverse()) {
 			isRendered = route.structuredTemplate.isRendered;
-            if (!route.pageInstance.isInitialized && route.structuredTemplate.isRendered) {
+            if (!route.pageInstance.isInitialized && isRendered) {
+				// if (route.path === '{id}') {
+				// 	console.log('RUN onInit', route.path, inRerender ? '(rerender)' : '(changed)');
+				// 	init = performance.now();
+				// }
 				route.pageInstance.isInitialized = true;
 				await route.pageInstance.onInit();
             }
 		};
 		
+		// if (init > 0) console.log('RUN onInit', performance.now() - init, inRerender ? '(rerender)' : '(changed)');
 		return isRendered;
     }
 

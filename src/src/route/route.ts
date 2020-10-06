@@ -44,7 +44,7 @@ export class Route extends RouteBase {
         });
     }
 	
-	public loadPage(success: (route: Route) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true){
+	public async loadPage(success: (route: Route) => void, error: (error: any) => void, complete: () => void, makeNewInstancePage: boolean = true){
 		if (typeof this.page === 'string') {
 			try {
 				if (makeNewInstancePage || !this.pageInstance) {
@@ -52,26 +52,26 @@ export class Route extends RouteBase {
 					this.pageInstance = new TemplatedPage(this.page);
 					this.structureTemplate();
 				}
-				success(this);
-				complete();
+				await success(this);
+				await complete();
 			}
 			catch (e) {
-				error(e);
+				await error(e);
 				throw e;
 			}
 		}
 		else if (this.page.name === 'page') {
 			try {
 				(this.page as () => Promise<any>)()
-					.then((pageType) => {
+					.then(async (pageType) => {
 						try {
 							if (makeNewInstancePage || !this.pageInstance) {
 								this.instancePage(pageType)
 							}
-							success(this);
+							await success(this);
 						}
 						catch (e) {
-							error(e);
+							await error(e);
 							throw e;
 						}
 					})
@@ -88,11 +88,11 @@ export class Route extends RouteBase {
 				if (makeNewInstancePage || !this.pageInstance) {
 					this.instancePage(this.page as Type<Page>);
 				}
-				success(this);
-				complete();
+				await success(this);
+				await complete();
 			}
 			catch (e) {
-				error(e);
+				await error(e);
 				throw e;
 			}
 		}

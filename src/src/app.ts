@@ -164,12 +164,15 @@ export class NimbleApp {
         if (event.route) {
 			this.state = NimbleAppState.RERENDERING;
 
-			let { isRendered } = await this.routeRender.notifyRoutesAfterRouteChanged(event.route); 
+			// const init = performance.now();
+			// console.log('WILL-CHANGED', event.route.path);
+			await this.routeRender.notifyRoutesAfterRouteChanged(event.route); 
+			// console.log('CHANGED', event.route.path, performance.now() - init);
 			
 			this.changedRoute = true;
-			if (isRendered) {
-				await this.checkHashLinkAfterRouteChanged();
-			}
+			// if (isRendered) {
+			// 	await this.checkHashLinkAfterRouteChanged();
+			// }
 
 			event.route.pageInstance?.render();
         }
@@ -184,14 +187,17 @@ export class NimbleApp {
     private onRouteErrorLoading(event: RouterEvent) {}
 
     private onRouteStartRerender(event: RouterEvent) {
+		const routeState = Router.state;
+		const routePrevState = Router.previousState;
         this.state = NimbleAppState.RERENDERING;
         this.routeRender.rerenderRoute(event.route);
     }
 
     private async onRouteFinishedRerender(event: RouterEvent) {
-		let { isRendered } = await this.routeRender.notifyRoutesAfterRerender(event.route);
+		const { isRendered } = await this.routeRender.notifyRoutesAfterRerender(event.route);
 		
 		if (this.changedRoute && isRendered) {
+			await this.routeRender.notifyRoutesAfterInit(event.route);
 			await this.checkHashLinkAfterRouteChanged();
 		}
 

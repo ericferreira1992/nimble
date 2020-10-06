@@ -105,12 +105,11 @@ export class RenderAbstract {
 			if (structured.compiledEndFn)
 				structured.compiledEndFn();
 				
-                
 			if (iterationResponses.length > 0) {
 				const currentIndex = structured.parent.children.findIndex(x => x === structured);
 
 				for(let i = 1; i <= iterationResponses.length; i++) {
-					const interation = iterationResponses[iterationResponses.length - 1];
+					const interation = iterationResponses[i - 1];
 					const nextIndex = currentIndex + i;
 					structured.parent.children.splice(nextIndex, 0, this.cloneStructureDueIteration(structured, interation.beginFn, interation.endFn));
 				}

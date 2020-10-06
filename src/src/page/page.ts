@@ -8,14 +8,21 @@ export class Page implements IScope {
 
     public pageParent: any;
     public isInitialized: boolean = false;
+    public isAfterInitialized: boolean = false;
     public isDestroyed: boolean = false;
 
     public onNeedRerender: (page: Page) => Promise<any>;
 
     /**
-     * When page element is rendered
+     * Called When page element is rendered
      */
     onInit() {
+    }
+
+    /**
+     * Called after onInit is terminated and rendered
+     */
+    onAfterInit() {
     }
 
     /**

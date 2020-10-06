@@ -65,8 +65,6 @@ export class Router {
 
     public static get onRoute() { return !isNullOrUndefined(this._current); }
 
-    public static get rerenderedBeforeFinishedRouteChange() { return this.previousState === RouterState.FINISHED_RERENDER || this.previousState === RouterState.STARTED_RERENDER; }
-
     public static registerRoutes(routes: RouteBase[]) {
         if (this.app.state === NimbleAppState.INITIALIZING) {
             let route = routes.find(x => !isNullOrUndefined(x.redirect) && !isNullOrUndefined(x.page));
@@ -175,15 +173,11 @@ export class Router {
 
         if (this.getEventType() === RouterStateType.START)
             listeners = listeners.sort((a,b) => {
-                let internalA = a.internal;
-                let internalB = b.internal;
-                return (internalA === internalB)? 0 : (internalA ? -1 : 1);
+                return (a.internal === b.internal)? 0 : (a.internal ? -1 : 1);
             });
         else
             listeners = listeners.sort((a,b) => {
-                let internalA = a.internal;
-                let internalB = b.internal;
-                return (internalA === internalB)? 0 : (internalA ? 1 : -1);
+                return (a.internal === b.internal) ? 0 : ((a.internal || a.state === RouterState.FINISHED_CHANGE) ? 1 : -1);
             });
         
         for (let listener of listeners) {
@@ -460,25 +454,25 @@ export class Router {
         return new Promise<Route>(async (resolve, reject) => {
             await this.setState(RouterState.STARTED_LOADING, new RouterEvent({route: route}));
             
-            route.loadPage(
+            await route.loadPage(
                 async (route: Route) => {
                     if (this.routeCanActivate(route)) {
                         route.pageInstance.onNeedRerender = this.whenRerenderIsRequested.bind(this);
                         route.pageInstance.pageParent = route.parent ? route.parent.pageInstance : null;
                         await this.setState(RouterState.FINISHED_LOADING, new RouterEvent({route: route}));
-                        resolve(route);
+                        await resolve(route);
                     }
                     else{
                         await this.setState(RouterState.CHANGE_REJECTED, new RouterEvent({route: route}));
-                        reject(null);
+                        await reject(null);
                     }
                 },
                 async (error) => {
                     console.error(error);
                     await this.setState(RouterState.ERROR_LOADING, error);
-                    reject(error);
+                    await reject(error);
                 },
-                () => {
+                async () => {
                 },
                 makeNewInstacePage
             );
