@@ -195,20 +195,20 @@ export class RouteRender extends RenderAbstract {
 			onlyNewRoutesRendered = allRoutes;
 
 		let isRendered = true;
-		// let init = 0;
+		let init = 0;
         for (let route of onlyNewRoutesRendered.reverse()) {
 			isRendered = route.structuredTemplate.isRendered;
             if (!route.pageInstance.isInitialized && isRendered) {
-				// if (route.path === '{id}') {
-				// 	console.log('RUN onInit', route.path, inRerender ? '(rerender)' : '(changed)');
-				// 	init = performance.now();
-				// }
+				if (route.path === '{id}') {
+					console.log('RUN onInit', route.path, inRerender ? '(rerender)' : '(changed)');
+					init = performance.now();
+				}
 				route.pageInstance.isInitialized = true;
 				await route.pageInstance.onInit();
             }
 		};
 		
-		// if (init > 0) console.log('RUN onInit', performance.now() - init, inRerender ? '(rerender)' : '(changed)');
+		if (init > 0) console.log('RUN onInit', performance.now() - init, inRerender ? '(rerender)' : '(changed)');
 		return isRendered;
     }
 

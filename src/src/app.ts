@@ -164,10 +164,10 @@ export class NimbleApp {
         if (event.route) {
 			this.state = NimbleAppState.RERENDERING;
 
-			// const init = performance.now();
-			// console.log('WILL-CHANGED', event.route.path);
+			const init = performance.now();
+			console.log('WILL-CHANGED', event.route.path);
 			await this.routeRender.notifyRoutesAfterRouteChanged(event.route); 
-			// console.log('CHANGED', event.route.path, performance.now() - init);
+			console.log('CHANGED', event.route.path, performance.now() - init);
 			
 			this.changedRoute = true;
 			// if (isRendered) {

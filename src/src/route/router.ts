@@ -24,7 +24,7 @@ export class Router {
     private static lastLocationPath: string;
     private static stopListening: boolean = false;
 
-    private static listeners: { state: RouterState, callback: (event?: RouterEvent) => void, internal: boolean }[] = [];
+    private static listeners: { order: number, state: RouterState, callback: (event?: RouterEvent) => void, internal: boolean }[] = [];
 
     public static useHash: boolean = false;
 
@@ -139,7 +139,11 @@ export class Router {
         }
 
         for(let state of filtered) {
-            let listener = { state, callback, internal: this.app.state === NimbleAppState.INITIALIZING };
+            let listener = {
+				order: this.listeners.filter(x => x.state === state).length,
+				state,
+				callback, internal: this.app.state === NimbleAppState.INITIALIZING
+			};
             listeners.push(listener);
             this.listeners.push(listener);
         }
@@ -169,19 +173,38 @@ export class Router {
 	}
 
     private static async notifyListeners(state: RouterState, event: RouterEvent) {
-        let listeners = this.listeners.filter(x => x.state === state);
-
-        if (this.getEventType() === RouterStateType.START)
-            listeners = listeners.sort((a,b) => {
-                return (a.internal === b.internal)? 0 : (a.internal ? -1 : 1);
-            });
-        else
-            listeners = listeners.sort((a,b) => {
-                return (a.internal === b.internal) ? 0 : ((a.internal || a.state === RouterState.FINISHED_CHANGE) ? 1 : -1);
-            });
-        
-        for (let listener of listeners) {
-			await listener.callback(event);
+		let listeners = this.listeners.filter(x => x.state === state);
+		if (listeners.length) {
+			let reversed = false;
+			let count = 0;
+			listeners.sort((a,b) => {
+				if (count === 0) {
+					reversed = (a === listeners[0]);
+					count++;
+				}
+				return 0;
+			});
+	
+			if (this.getEventType() === RouterStateType.START)
+				listeners = listeners.sort((a ,b) => {
+					if (a.internal && !b.internal) return -1;
+					if (!a.internal && b.internal) return 1;
+					if (a.order > b.order) return -1;
+					if (a.order < b.order) return 1;
+					return 0;
+				});
+			else
+				listeners = listeners.sort((a ,b) => {
+					if ((a.internal && !b.internal) || (b.internal && state === RouterState.FINISHED_CHANGE)) return reversed ? -1 : 1;
+					if (!a.internal && b.internal) return reversed ? 1 : -1;
+					if (a.order > b.order) return reversed ? -1 : 1;
+					if (a.order < b.order) return reversed ? 1 : -1;
+					return 0;
+				});
+			
+			for (let listener of listeners) {
+				await listener.callback(event);
+			}
 		}
     }
 

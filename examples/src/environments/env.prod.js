@@ -1,4 +1,4 @@
 module.exports = {
     production: true,
-    baseUrl: 'https://your-prod-url.com.br'
+    baseUrl: 'https://nimble.getsandbox.com'
 };
