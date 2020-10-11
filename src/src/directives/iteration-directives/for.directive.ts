@@ -8,7 +8,10 @@ import { isArray } from 'util';
 })
 export class ForDirective extends IterationDirective {
 
-	private lastData: IterateDirectiveResponse[] = [];
+	private last = {
+		iteration: [] as IterateDirectiveResponse[],
+		data: [],
+	};
 
     constructor() {
         super();
@@ -25,8 +28,8 @@ export class ForDirective extends IterationDirective {
         }
 		
 		const startWithVariable = expression.startsWith('let ') || expression.startsWith('var ') || expression.startsWith('const ');
-        let iterationVarName = expression.split(' ')[startWithVariable ? 1 : 0];
-        let iterationArray = {
+        const iterationVarName = expression.split(' ')[startWithVariable ? 1 : 0];
+        const iterationArray = {
             expressionOrName: expression.split(' ').slice(startWithVariable ? 3 : 2).join(''),
             value: this.compile(expression.split(' ').slice(startWithVariable ? 3 : 2).join('')) as any[]
         };
@@ -40,13 +43,14 @@ export class ForDirective extends IterationDirective {
 		let existingVarNameBefore = false;
 		let varValueBefore = null;
 
-		if (this.lastData.length !== iterationArray.value.length) {
-			this.lastData = iterationArray.value.map((_, i) => new IterateDirectiveResponse({
+		this.last.data = iterationArray.value;
+		if (this.last.iteration.length !== iterationArray.value.length) {
+			this.last.iteration = iterationArray.value.map((_, i) => new IterateDirectiveResponse({
 				beginFn: () => {
 					existingVarNameBefore = iterationVarName in this.scope;
 					varValueBefore = existingVarNameBefore ? this.scope[iterationVarName] : null;
 					
-					this.scope[iterationVarName] = iterationArray.value[i];
+					this.scope[iterationVarName] = this.last.data[i];
 					this.scope['$index'] = i;
 				},
 				endFn: () => {
@@ -59,7 +63,7 @@ export class ForDirective extends IterationDirective {
 			}));
 		}
 
-        return this.lastData;
+        return this.last.iteration;
 	}
 	
 	public onChange(): void {
