@@ -20,7 +20,9 @@ export abstract class Dialog implements IScope {
         if (this.onNeedRerender) {
             return await this.onNeedRerender(this);
         }
-        return new Promise<any>((resolve) => resolve());
+        return new Promise<any>((resolve: (value?: any) => void) => {
+			return resolve();
+		});
     }
 
     public compile(expression: string): any {
@@ -28,7 +30,7 @@ export abstract class Dialog implements IScope {
             return (new Function(`with(this) { return ${expression} }`)).call(this);
         }
         catch(e) {
-            console.error(e.message);
+            console.error(e);
 			return null;
         }
     }

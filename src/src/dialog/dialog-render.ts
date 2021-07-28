@@ -7,13 +7,15 @@ import { ElementListener } from "../render/listener";
 import { ElementListenersCollector } from "../providers/listeners-collector";
 import { RenderHelper } from "../render/render-helper";
 import { ElementStructure } from "../render/element-structure";
+import { DialogRefCollector } from "./dialog-ref-collector";
 
 @Injectable({ single: true })
 export class DialogRender extends RenderAbstract {
 
     constructor(
         protected listenersCollector: ElementListenersCollector,
-        private listener: ElementListener
+        private listener: ElementListener,
+        private dialogRefCollector: DialogRefCollector
     ) {
         super(listenersCollector);
     }
@@ -59,7 +61,8 @@ export class DialogRender extends RenderAbstract {
 
         let canClose = false;
         renderRef.listenerCancelFunctions.push(this.listener.listen(renderRef.rootElement, 'mousedown', (e: MouseEvent) => {
-            if (!canClose && renderRef && renderRef.areaElement && (backdropElement === e.target || containerElement === e.target)) {
+			const lastDialogRenderRef = this.dialogRefCollector.getLast();
+            if (!canClose && renderRef?.dialogRef === lastDialogRenderRef.dialogRef && (backdropElement === e.target || containerElement === e.target)) {
                 let bounds = areaElement.getBoundingClientRect();
                 if (e.pageX < bounds.left || e.pageX > bounds.right || e.pageY < bounds.top || e.pageY > bounds.bottom){
                     if (renderRef.dialogRef.clickoutClose) {
@@ -77,7 +80,8 @@ export class DialogRender extends RenderAbstract {
 
     private applyEscapeEvent<T extends Dialog>(renderRef: DialogRenderRef<T>) {
         renderRef.listenerCancelFunctions.push(this.listener.listen(window, 'keydown', (e: KeyboardEvent) => {
-            if (renderRef && renderRef.dialogRef) {
+			const lastDialogRenderRef = this.dialogRefCollector.getLast();
+            if (renderRef?.dialogRef === lastDialogRenderRef.dialogRef) {
                 if (e.keyCode === 27 && renderRef.dialogRef.escClose)
                     renderRef.dialogRef.close();
             }

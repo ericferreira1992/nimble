@@ -27,7 +27,7 @@ export class DialogBuilder {
 
 		let dialogRenderRef: DialogRenderRef<T>;
 
-        let openResolve: () => void;
+        let openResolve: (value?: any) => void;
         const dialogRef = new DialogRef<T>(
             {
                 config: config,

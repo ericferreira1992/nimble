@@ -200,7 +200,7 @@ export class RouteRender extends RenderAbstract {
 			isRendered = route.structuredTemplate.isRendered;
             if (!route.pageInstance.isInitialized && isRendered) {
 				if (route.path === '{id}') {
-					console.log('RUN onInit', route.path, inRerender ? '(rerender)' : '(changed)');
+					// console.log('RUN onInit', route.path, inRerender ? '(rerender)' : '(changed)');
 					init = performance.now();
 				}
 				route.pageInstance.isInitialized = true;
@@ -208,7 +208,7 @@ export class RouteRender extends RenderAbstract {
             }
 		};
 		
-		if (init > 0) console.log('RUN onInit', performance.now() - init, inRerender ? '(rerender)' : '(changed)');
+		// if (init > 0) console.log('RUN onInit', performance.now() - init, inRerender ? '(rerender)' : '(changed)');
 		return isRendered;
     }
 

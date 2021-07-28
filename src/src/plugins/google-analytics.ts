@@ -25,7 +25,7 @@ NimbleApp.prototype.pluginGoogleAnalytics = function (this: NimbleApp, config: P
 				scriptIsLoaded = true;
 				if (routeIsLoaded) {
 					gtag('config', config.id, {'page_path': `/${Router.currentPath}`});
-					console.log(`Sended to GA: /${Router.currentPath}`);
+					// console.log(`Sended to GA: /${Router.currentPath}`);
 				}
 			};
 			if (!exisingScript) {
@@ -46,7 +46,7 @@ NimbleApp.prototype.pluginGoogleAnalytics = function (this: NimbleApp, config: P
 				routeIsLoaded = true;
 				if (scriptIsLoaded) {
 					gtag('config', config.id, {'page_path': `/${event.route.completePath()}`});
-					console.log(`Sended to GA: /${event.route.completePath()}`);
+					// console.log(`Sended to GA: /${event.route.completePath()}`);
 				}
 			});
 		}
