@@ -46,7 +46,7 @@ export class DialogBuilder {
         dialogRef.instance.onNeedRerender = this.rerender.bind(this);
 
         dialogRenderRef = this.dialogRender.renderDialog(dialogRef);
-        this.dialogCollector.add(dialogRenderRef);
+        this.dialogCollector.addOpenedDialog(dialogRenderRef);
         
         openResolve();
         dialogRef.instance.onOpen();

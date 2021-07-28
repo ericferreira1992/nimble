@@ -14,8 +14,9 @@ export class DialogRefCollector {
 
     private dialogInstances: DialogRenderRef<Dialog>[] = [];
 
-    public add(dialog: DialogRenderRef<Dialog>){
+    public addOpenedDialog(dialog: DialogRenderRef<Dialog>){
         this.dialogInstances.push(dialog);
+		document.body.style.overflow = 'hidden';
     }
 
     public remove(renderRef: DialogRenderRef<Dialog>){
@@ -23,6 +24,9 @@ export class DialogRefCollector {
         let index = this.dialogInstances.indexOf(renderRef);
         delete this.dialogInstances[index];
         this.dialogInstances = this.dialogInstances.filter((x, i) => i !== index);
+		if (this.dialogInstances.length === 0) {
+			document.body.style.overflow = '';
+		}
     }
 
     public getDialogRefByDialogInstance(dialog: Dialog) {
