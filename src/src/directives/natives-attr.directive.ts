@@ -90,7 +90,7 @@ export class NativesAttrsDirective extends Directive {
             else if (value.startsWith('[') && value.endsWith(']')) {
                 value = this.scope.compile(value);
                 if (isArray(value))
-					classesAdd = value;
+					classesAdd = value as string[];
 				
 				classesRemove = this.previousValue.class.add.filter(x => classesAdd.indexOf(x) < 0);
             }
@@ -144,7 +144,7 @@ export class NativesAttrsDirective extends Directive {
             else if (value.startsWith('[') && value.endsWith(']')) {
                 value = this.scope.compile(value);
                 if (isArray(value))
-                    value.forEach((style) => {
+                    value.forEach((style: string) => {
                         if(style.includes(':')) {
                             try {
 								toAdd.push({ prop: style.split(':')[0].trim(), value: style.split(':')[1].trim() });

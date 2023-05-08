@@ -78,8 +78,8 @@ export class RenderHelper {
         }
     }
 
-    public static buildStructureFromTemplate(htmlTemplate: string, scope: IScope, rootTagName: string): ElementStructure {
-        htmlTemplate = htmlTemplate?.trim().replace(/<!--(.|\s)*?-->/g, '').trim() ?? '';
+    public static buildStructureFromTemplate(htmlTemplate: any, scope: IScope, rootTagName: string): ElementStructure {
+        htmlTemplate = htmlTemplate?.default.replace(/<!--(.|\s)*?-->/g, '').trim() ?? '';
         if (htmlTemplate) {
             let serializer = new XMLSerializer();
             let domParser = new DOMParser();

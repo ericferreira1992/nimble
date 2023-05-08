@@ -51,7 +51,7 @@ export class Page implements IScope {
         if (this.onNeedRerender) {
             return await this.onNeedRerender(this);
         }
-        return new Promise<any>((resolve) => resolve());
+        return new Promise<any>((resolve) => resolve(null));
     }
 
     public compile(expression: string): any {

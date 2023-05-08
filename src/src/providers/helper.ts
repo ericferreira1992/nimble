@@ -4,7 +4,7 @@ import { isArray, isNullOrUndefined } from "util";
 @Injectable({ single: true })
 export class Helper {
 
-    public uid() {
+	public uid() {
 		let pad4 = (num: number) => {
 			let ret: string = num.toString(16);
 			while (ret.length < 4) {
@@ -12,7 +12,7 @@ export class Helper {
 			}
 			return ret;
 		};
-		
+
 		let random4 = () => {
 			return Math.floor((1 + Math.random()) * 0x10000)
 				.toString(16)
@@ -30,15 +30,14 @@ export class Helper {
 
 	public splitStringJSONtoKeyValue(jsonString: string): { key: string, value: string }[] {
 		let list = [];
-		let matchGroup = jsonString.replace(/\"/g, '\'').matchAll((/(?:\"|\')([^("|'|)]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[0-9a-zA-Z\(\)\@\:\/\!\+\-\.\$\&\%\=\ \\\']*|[-0-9]+[\.]*[\d]*(?=,))(?:\")?/gm));
-		let grouped = matchGroup.next();
-		while(grouped && isArray(grouped.value) && grouped.value.length > 2) {
-			let key = grouped.value[1].trim();
-			let value = grouped.value[2].trim()
-										.replace(/\,$/g, '')
-										.trim();
-			list.push({ key: key, value: value });
-			grouped = matchGroup.next();
+		let matchGroup = jsonString.replace(/\"/g, '\'').match(/(?:\"|\')([^("|'|)]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[0-9a-zA-Z\(\)\@\:\/\!\+\-\.\$\&\%\=\ \\\']*|[-0-9]+[\.]*[\d]*(?=,))(?:\")?/gm);
+		for (let i = 0; i < matchGroup.length; i ++) {
+			const keyValueSplitted = matchGroup[i].split(':');
+			const key = keyValueSplitted[0].trim();
+			const value = keyValueSplitted[1].trim()
+				.replace(/\,$/g, '')
+				.trim();
+			list.push({ key, value });
 		}
 		return list;
 	}
@@ -46,11 +45,10 @@ export class Helper {
 	public insertInText(target: string, source: string, index: number) {
 		if ((typeof target === 'string') &&
 			(typeof source === 'string' && source !== '') &&
-			index >= 0)
-		{
+			index >= 0) {
 			let left = target.substr(0, index);
 			let right = target.substr(index);
-			target =  left + source + right;
+			target = left + source + right;
 		}
 
 		return target;
@@ -59,11 +57,10 @@ export class Helper {
 	public insertInTextWithInterval(target: string, source: string, startIndex: number, endIndex: number) {
 		if ((typeof target === 'string') &&
 			(typeof source === 'string' && source !== '') &&
-			startIndex >= 0 && endIndex >= 0 && (startIndex <= endIndex))
-		{
+			startIndex >= 0 && endIndex >= 0 && (startIndex <= endIndex)) {
 			let left = target.substr(0, startIndex);
 			let right = target.substr(endIndex);
-			target =  left + source + right;
+			target = left + source + right;
 		}
 
 		return target;

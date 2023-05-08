@@ -205,7 +205,7 @@ export class NimbleApp {
 	private async checkHashLinkAfterRouteChanged() {
 		this.changedRoute = false;
 		if (location.hash && !this.config.useHash) {
-			await new Promise((resolve) => {
+			await new Promise<void>((resolve) => {
 				setTimeout(() => {
 					let currentHash = location.hash;
 					location.hash = '';
@@ -217,7 +217,7 @@ export class NimbleApp {
 		else {
 			document.body.style.scrollBehavior = 'initial';
 			(document.children.item(0) as HTMLElement).style.scrollBehavior = 'initial';
-			await new Promise((resolve) => {
+			await new Promise<void>((resolve) => {
 				setTimeout(() => {
 					document.body.scrollTo({top: 0, left: 0});
 					document.children.item(0).scrollTo({top: 0, left: 0});
