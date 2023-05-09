@@ -1,4 +1,4 @@
-import { Page, PreparePage, Listener } from '@nimble-ts/core';
+import { Page, PreparePage, ElementListener } from '@nimble-ts/core';
 
 @PreparePage({
     template: require('./second.page.html'),
@@ -13,7 +13,7 @@ export class SecondPage extends Page {
 	public boxPosition = { X: 0, Y: 0 };
 
     constructor(
-		private listener: Listener
+		private listener: ElementListener	
 	) {
 		super();
 		this.mousePrevPosition.X = window.innerWidth / 2;

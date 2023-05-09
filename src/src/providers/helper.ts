@@ -33,10 +33,15 @@ export class Helper {
 		let matchGroup = jsonString.replace(/\"/g, '\'').match(/(?:\"|\')([^("|'|)]*)(?:\"|\')(?=:)(?:\:\s*)(?:\")?(true|false|[0-9a-zA-Z\(\)\@\:\/\!\+\-\.\$\&\%\=\ \\\']*|[-0-9]+[\.]*[\d]*(?=,))(?:\")?/gm);
 		for (let i = 0; i < matchGroup.length; i ++) {
 			const keyValueSplitted = matchGroup[i].split(':');
-			const key = keyValueSplitted[0].trim();
-			const value = keyValueSplitted[1].trim()
+			let key = keyValueSplitted[0].trim();
+			let value = keyValueSplitted[1].trim()
 				.replace(/\,$/g, '')
 				.trim();
+
+			if(/^('|").*('|")$/g.test(key)){
+				key = eval(key);
+			}
+
 			list.push({ key, value });
 		}
 		return list;

@@ -18,17 +18,16 @@
             "node_modules/@types"
         ],
         "lib": [
-            "es2018",
+            "es2017",
             "dom"
         ],
         "paths": {
             "src/*": ["./src/*"],
             "@nimble-ts/core/style.scss": ["../../src/style.scss"],
-            "@nimble-ts/core": ["../../src/index"]
+            "@nimble-ts/core": ["../../src/index.ts"]
         }
     },
     "include": [
-        "./src/**/*",
-        "./../src/**/*"
+        "./src/**/*"
     ]
 }
