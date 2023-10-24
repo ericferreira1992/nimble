@@ -110,6 +110,7 @@ export class Route extends RouteBase {
             if (instance instanceof RouteParams) {
                 instance.data = this.data;
                 instance.params = this.getParams();
+                instance.queryParams = this.getQueryParams();
                 instance.parent = this.parent && this.parent.routeParams;
                 this.routeParams = instance;
             }
@@ -145,6 +146,19 @@ export class Route extends RouteBase {
                     params[paramName] = paramValue;
                 }
             });
+        }
+
+        return params;
+    }
+
+    private getQueryParams(): { [key: string]: any } {
+        let params = {} as any;
+
+        for(const strParam of location.search.substring(1).split('&')) {
+            const splitted = strParam.split('=');
+            if (splitted[0] !== '') {
+                params[splitted[0]] = splitted.length > 1 ? splitted[1] : null;
+            }
         }
 
         return params;

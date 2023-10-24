@@ -8,7 +8,7 @@ export class RouteParams {
     public parent: RouteParams;
     public data: { [key: string]: any } = {};
     public params: { [key: string]: any } = {};
-    // public queryParams: { [key: string]: any } = {};
+    public queryParams: { [key: string]: any } = {};
 
     constructor(){
     }
