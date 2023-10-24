@@ -1,6 +1,6 @@
 {
     "name": "@nimble-ts/core",
-    "version": "1.3.11-alpha.6",
+    "version": "1.3.12-alpha.1",
     "scripts": {
         "build": "rm -rf dist && tsc && node copy",
         "publish-version": "npm run build && pushd dist && npm publish --access public",
