@@ -9,7 +9,9 @@ import { ElementListenersCollector } from '../../providers/listeners-collector';
     selector: [
         '[form-field]',
         'form-field-name',
-        '(valueChange)'
+    ],
+    outputs: [
+        'valuechange'
     ]
 })
 export class FormFieldDirective extends BaseFormFieldDirective {
@@ -23,17 +25,14 @@ export class FormFieldDirective extends BaseFormFieldDirective {
 
     public onRender(): void {
         if (this.checkForm()) {
-			if (['form-field', 'form-field-name'].some(x => x === this.selector)) {
-                if (this.elementIsValid() && (this.value instanceof FormField || this.formFieldNameSelectorIsValid())) {
-                    this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
-                    if (this.canApplyFormField()) {
-                        this.resolveFormFieldSelector();
-						this.resolveFormFieldSpecifications()
-                    }
+            if (this.elementIsValid() && (this.value instanceof FormField || this.formFieldNameSelectorIsValid())) {
+                this.formField.setElement(this.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement);
+                if (this.canApplyFormField()) {
+                    this.resolveFormFieldSelector();
+                    this.resolveFormFieldSpecifications()
                 }
-			}
-            else if (this.selector === '(valueChange)')
-                this.resolveValueChangeSelector();
+            }
+            this.resolveValueChangeOutput();
         }
     }
 	
@@ -139,14 +138,16 @@ export class FormFieldDirective extends BaseFormFieldDirective {
         }
     }
 
-    private resolveValueChangeSelector() {
-        if (this.formField) {
-            this.internalEventsCollector.add(this.scope, '(valueChanges)', this.formField.valueChanges.subscribe((value) => {
-                this.outputs.valueChanges(value);
-            }));
-        }
-        else {
-            console.error('The directive (valueChanges) cannot be appplied, because the [form-field] directive must exist before it.');
+    private resolveValueChangeOutput() {
+        if (this.outputs.valuechange) {
+            if (this.formField) {
+                this.internalEventsCollector.add(this.scope, '(valueChanges)', this.formField.valueChanges.subscribe((value) => {
+                    this.outputs.valuechange(value);
+                }));
+            }
+            else {
+                console.error('The directive (valueChanges) cannot be appplied, because the [form-field] directive must exist before it.');
+            }
         }
     }
 

@@ -173,7 +173,7 @@ export class RenderHelper {
 				const checkHasInputOrOutput = (attrDirective: AttributeStructure<Directive>, attr: AttributeStructure<Directive>, type: string): boolean => {
 					if (attr.isNotDirective) {
 						let props = attrDirective.directiveType.prototype[`_${type}`] ?? [];
-						if (props.some(x => (type === 'outputs' ? `(${x})` : x) === attr.name)) {
+						if (props.some(x => (type === 'outputs' ? `(${x})` : `${x}`).toLowerCase() === attr.name)) {
 							if (isDirectiveProps.indexOf(attr) < 0)
 								isDirectiveProps.push(attr);
 							return true;

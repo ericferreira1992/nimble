@@ -169,13 +169,16 @@ export abstract class ElementStructureAbstract {
 
 				inputs.forEach((x) => instance.insertInput(x.name, x.value));
 				outputs.forEach((x) => instance.insertOutput(x.name, x.value));
+				
+				attr.directiveInstance = instance;
+                this.directivesInstance.push(instance);
 			
 				if (attr.directiveInstance) {
 					attr.directiveInstance.all = () => this.directivesInstance;
 				}
-				
+            }
+            else {
 				attr.directiveInstance = instance;
-                this.directivesInstance.push(instance);
             }
         }
     }
@@ -246,7 +249,7 @@ export class AttributeStructure<T extends Directive> {
 
     public get isIterationDirective() { return this.directiveType != null && this.directiveType.prototype.type === 'IterationDirective'; }
     public get isDefaultDirective() { return this.directiveType != null && this.directiveType.prototype.type !== 'IterationDirective'; }
-    public get isNotDirective() { return !this.directiveType; }
+    public get isNotDirective() { return !(this.directiveType); }
 
     constructor(name: string, value: string, strucutre: ElementStructureAbstract, directiveType: Type<T> = null, fromClone: boolean = false) {
         this.name = name;
